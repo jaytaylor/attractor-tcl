@@ -81,6 +81,36 @@ Suggested file breakdown (non-binding, but reduces bikeshedding):
 - `lib/attractor/dot/*.tcl` (tokenize/parse/stylesheet)
 - `lib/attractor/engine/*.tcl` (runner/state/handlers/interviewer/events)
 
+## Public API Contracts (Tcl)
+These are the intended "stable surfaces" for downstream consumers (CLIs, UIs, other tools). Keep them small and versioned.
+
+Unified LLM (`package require unified_llm`):
+- `::unified_llm::set_default_client $client_cmd`
+- `::unified_llm::default_client` -> client cmd (lazy `from_env` init)
+- `::unified_llm::generate args...` -> dict (GenerateResult)
+- `::unified_llm::stream args... -on_event $cmdPrefix` -> stream handle
+- `::unified_llm::generate_object args...` -> dict
+- `::unified_llm::stream_object args... -on_object $cmdPrefix` -> stream handle
+- Client object command:
+  - `$client complete $requestDict`
+  - `$client stream $requestDict -on_event $cmdPrefix`
+  - `$client close`
+
+Coding Agent Loop (`package require coding_agent_loop`):
+- `::coding_agent_loop::session new -profile $profileCmd -env $envCmd ?-config $dict?` -> session cmd
+- `$session submit $text` (blocking by default; optionally `-async 1`)
+- `$session steer $text`
+- `$session follow_up $text`
+- `$session events -on_event $cmdPrefix` (subscribe) and `$session close`
+
+Attractor (`package require attractor`):
+- `::attractor::parse_dot $dotSource` -> graph dict
+- `::attractor::validate $graphDict` -> list of diagnostics
+- `::attractor::run $graphDict ?-backend $codergenBackendCmd? ?-interviewer $interviewerCmd? ...` -> final outcome dict
+- `::attractor::runner new ...` -> runner cmd for event subscription / incremental control
+
+Note: object commands above can be implemented via `snit` or command-prefix closures; prefer whichever is simplest in Tcl 8.5.
+
 ## High-Level Architecture
 
 ### Attractor (Pipeline Runner)
@@ -211,6 +241,37 @@ Requirement ID conventions:
 - `CAL-DOD-9.x-*` for Coding Agent Loop DoD checkboxes
 - `ATR-DOD-11.x-*` for Attractor DoD checkboxes
 - `ULLM-REQ-*`, `CAL-REQ-*`, `ATR-REQ-*` for MUST/REQUIRED statements not already in DoD lists
+
+## Tricky Rules Cheat Sheet (Implementer Guardrails)
+These are common sources of subtle non-compliance; treat them as "must get right the first time":
+
+Unified LLM:
+- Middleware execution order: request in registration order, response in reverse order (onion model).
+- Tool loop parallelism: execute all N calls concurrently, then send all N results back in a single continuation request (preserve ordering).
+- OpenAI adapter: Responses API required for reasoning token reporting; do not silently downgrade to Chat Completions.
+
+Coding Agent Loop:
+- Tool output truncation order is mandatory: character truncation FIRST, line truncation SECOND; TOOL_CALL_END must carry full output.
+- Shell timeout handling must be killable: SIGTERM then SIGKILL after 2 seconds (process group).
+- Unknown tool calls return error ToolResult (model can recover); do not throw.
+
+Attractor:
+- Edge selection priority order: condition match -> preferred label -> suggested IDs -> highest weight -> lexical tiebreak.
+- Start/exit resolution must match spec (shape-based first; id fallback); enforce no incoming edges to start, no outgoing edges from exit.
+- Fidelity precedence: edge fidelity > node fidelity > graph default_fidelity > compact; full fidelity requires thread key resolution.
+- Checkpoint resume must perform the one-hop fidelity degrade when prior node was full fidelity (in-memory sessions not serializable).
+
+## Test Harness Approach (Provider Mocks)
+Provider adapters MUST be testable without real API keys.
+Plan:
+- Implement a tiny HTTP test server in Tcl under `tests/support/mock_http_server.tcl`.
+- It should support:
+  - Request capture (method/path/headers/body)
+  - Scripted responses (JSON) and scripted streaming (SSE frames / chunked JSON)
+  - Per-route assertions (e.g., "OpenAI adapter used /v1/responses", "Anthropic alternation was fixed up")
+- Tests should:
+  - Run entirely offline by default
+  - Gate live-provider tests behind env vars and mark them as "smoke" only
 
 ## Execution Order (Tracks)
 This plan is dependency-ordered to minimize rewrites:
