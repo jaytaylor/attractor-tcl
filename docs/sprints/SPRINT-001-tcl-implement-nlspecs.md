@@ -386,6 +386,12 @@ Carry the golden sample's "auditability" discipline forward:
     - `bash tools/docs_lint.sh` (exit 0)
     - `bash tools/evidence_lint.sh docs/sprints/SPRINT-001-tcl-implement-nlspecs.md` (exit 0)
 
+### Acceptance Criteria - Track A
+- [ ] From a clean checkout, `tclsh tests/all.tcl` passes and produces deterministic output.
+- [ ] Baseline notes exist and capture known constraints/assumptions for Tcl 8.5 implementation.
+- [ ] `tools/docs_lint.sh` passes and `tools/evidence_lint.sh` passes on this sprint plan.
+- [ ] CI runs `tclsh tests/all.tcl` on PRs (and optionally runs live-provider smoke tests only when explicitly enabled).
+
 ## Track B - Unified LLM Client (unified-llm-spec.md)
 
 ### B0 - Requirements Indexing
@@ -498,6 +504,14 @@ Carry the golden sample's "auditability" discipline forward:
   - Evidence:
     - Logs under `.scratch/verification/SPRINT-001/unified_llm/smoke/...`
 
+### Acceptance Criteria - Track B
+- [ ] Offline adapter tests (mock server) validate: request translation, tool call/result handling, streaming event normalization, error mapping, and usage accounting.
+- [ ] `generate()` tool loop passes a deterministic test proving: parallel tool calls execute concurrently, all results are batched into one continuation request, and result ordering is preserved.
+- [ ] OpenAI adapter uses Responses API endpoints (not Chat Completions) in tests; reasoning_tokens + cache_read_tokens are surfaced when present.
+- [ ] Anthropic adapter enforces strict alternation and round-trips thinking signatures; caching injection is implemented and testable.
+- [ ] Gemini adapter assigns synthetic tool call IDs and correctly maps functionResponse payloads back to ToolResults.
+- [ ] Parity matrix (ULLM DoD 8.9) is green offline; live-provider smoke tests are green when keys are present (and are gated by env vars/secrets).
+
 ## Track C - Coding Agent Loop (coding-agent-loop-spec.md)
 
 ### C0 - Requirements Indexing
@@ -577,6 +591,14 @@ Carry the golden sample's "auditability" discipline forward:
 ### C6 - CAL Parity Matrix + Smoke Test
 - [ ] **C6.1 - Cross-provider parity matrix (CAL DoD 9.12)**
 - [ ] **C6.2 - Integration smoke test (CAL DoD 9.13)**
+
+### Acceptance Criteria - Track C
+- [ ] Agent loop runs deterministically against the mock Unified LLM provider(s): submit -> tool loop -> natural completion.
+- [ ] Truncation is spec-correct: character truncation first, line truncation second; TOOL_CALL_END events contain full untruncated output.
+- [ ] ExecutionEnvironment timeouts kill process groups reliably (SIGTERM then SIGKILL after 2s) and surface actionable timeout markers.
+- [ ] Provider profiles are aligned: OpenAI uses apply_patch, Anthropic uses edit_file(old_string/new_string), Gemini uses gemini-cli-like toolset.
+- [ ] Session emits the required event kinds and supports steer/follow_up, loop detection warnings, and limit enforcement.
+- [ ] Subagents work with depth limiting and independent history (shared filesystem), and can be used from a profile toolset.
 
 ## Track D - Attractor (attractor-spec.md)
 
@@ -668,6 +690,14 @@ Carry the golden sample's "auditability" discipline forward:
 - [ ] **D12.1 - Cross-feature parity matrix (ATR DoD 11.12)**
 - [ ] **D12.2 - Integration smoke test (ATR DoD 11.13)**
 
+### Acceptance Criteria - Track D
+- [ ] DOT parsing + validation match the spec: supported subset, typed attrs, defaults, chained edges, subgraph flattening, comment stripping, and stylesheet parsing.
+- [ ] Engine traversal is deterministic and spec-correct: handler resolution, checkpointing, edge selection priority, retries/backoff/jitter, failure routing, goal gates, and loop_restart.
+- [ ] Run directory contract is stable: `checkpoint.json`, per-node `status.json`, and codergen `prompt.md/response.md` are written as specified.
+- [ ] Human gates work via Interviewers (AutoApprove/Queue for tests; Console for manual), including timeouts/default choice behavior.
+- [ ] Parallel fan-out/fan-in run with isolated cloned contexts; fan-in selection and consolidation are deterministic and tested.
+- [ ] The parity matrix (ATR DoD 11.12) and smoke test (ATR DoD 11.13) are green using mock backends by default.
+
 ## Track E - Cross-Spec Integration + Coverage Closure
 - [ ] **E1 - Attractor codergen backend uses Unified LLM**
   - Demonstrate an Attractor pipeline that:
@@ -685,6 +715,11 @@ Carry the golden sample's "auditability" discipline forward:
 - [ ] **E4 - Spec coverage report is green**
   - Verification:
     - `tclsh tools/spec_coverage.tcl` (exit 0)
+
+### Acceptance Criteria - Track E
+- [ ] A single command can run an Attractor example pipeline end-to-end using the Unified LLM backend (mocked by default) and produces the expected run directory artifacts.
+- [ ] A second example demonstrates CodergenBackend integration via Coding Agent Loop for a tool-using stage (read/edit/shell), with event logs proving tool usage.
+- [ ] `tools/spec_coverage.tcl` is green and traceability demonstrates 100% coverage of DoD checklists and MUST/REQUIRED requirements across all three specs.
 
 ## Test Strategy (By Layer)
 - Unit tests:
