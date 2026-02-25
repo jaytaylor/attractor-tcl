@@ -273,6 +273,48 @@ Plan:
   - Run entirely offline by default
   - Gate live-provider tests behind env vars and mark them as "smoke" only
 
+## On-Disk Contracts (Attractor)
+Attractor is required to produce a stable run directory structure for auditability and resume:
+```
+{logs_root}/
+  manifest.json
+  checkpoint.json
+  artifacts/
+    {artifact_id}.json
+  {node_id}/
+    status.json
+    prompt.md
+    response.md
+```
+
+`status.json` must align with the spec's Status File Contract (Appendix C in attractor-spec.md). Internally we can use `preferred_label`, but the on-disk contract uses `preferred_next_label`; explicitly map between them and accept both when reading for forward/backward compatibility.
+
+## Event Taxonomy (Minimal Shapes)
+Keep events as plain Tcl dicts so host apps can consume them without object coupling.
+
+Unified LLM streaming events:
+- Emit spec StreamEventType names (STREAM_START, TEXT_DELTA, TOOL_CALL_END, FINISH, ERROR, etc.) with fields from unified-llm-spec.md Section 3.13/3.14.
+
+Coding Agent Loop session events:
+- Emit the DoD-required events from coding-agent-loop-spec.md (Section 2.9/9.10) with at least:
+  - `SESSION_START`, `SESSION_END`
+  - `USER_INPUT`
+  - `ASSISTANT_TEXT_END`
+  - `TOOL_CALL_START`, `TOOL_CALL_END` (TOOL_CALL_END must include full untruncated output)
+  - `STEERING_INJECTED`, `LOOP_DETECTION`, `TURN_LIMIT`, `WARNING`
+
+Attractor pipeline events:
+- Emit the pipeline/stage/parallel/human/checkpoint events described in attractor-spec.md Section 9.6.
+
+## Evidence Directory Convention
+Standardize where proof lives so "100% coverage" is auditable:
+- `.scratch/verification/SPRINT-001/attractor/...`
+- `.scratch/verification/SPRINT-001/unified_llm/...`
+- `.scratch/verification/SPRINT-001/coding_agent_loop/...`
+- `.scratch/verification/SPRINT-001/integration/...`
+
+Each checklist item marked `[X]` must link to at least one artifact in those folders.
+
 ## Execution Order (Tracks)
 This plan is dependency-ordered to minimize rewrites:
 1. Track A - Scaffolding and shared utilities
