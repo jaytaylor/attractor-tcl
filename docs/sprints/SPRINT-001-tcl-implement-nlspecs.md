@@ -323,7 +323,31 @@ This plan is dependency-ordered to minimize rewrites:
 4. Track D - Attractor pipeline runner
 5. Track E - Integration, e2e, and coverage closure
 
+## Implementation Plan Refresh (2026-02-25)
+This is the initial sprint plan for this repository. When reality diverges, do not rewrite history: append a new dated "refresh" section describing:
+- what changed
+- why it changed
+- what is now the critical path
+
+## Evidence + Verification Logging Plan
+Carry the golden sample's "auditability" discipline forward:
+- Every `[X]` line must include at least one concrete verification command and at least one artifact path under `.scratch/verification/SPRINT-001/...`.
+- Prefer timeboxed verification commands so CI/humans don't hang:
+  - Use `perl -e 'alarm 60; exec @ARGV' <cmd...>` as the default cross-platform timeout wrapper.
+  - If `timeout` is available, it's fine too, but use one convention consistently.
+- Standardize log capture:
+  - `bash -lc '<cmd> 2>&1 | tee <logpath>; printf \"exit_code=%d\\n\" ${PIPESTATUS[0]} >> <logpath>'`
+  - For negative tests, record the expected non-zero exit code explicitly in the log.
+- Add (and then use everywhere) a tiny helper script:
+  - `tools/verify_cmd.sh` (runs a command, tees output to a log, appends exit_code=, returns the command's exit code)
+
 ## Track A - Project Scaffolding (Tcl Packages + Test Harness)
+- [ ] **A0 - Baseline notes (scope + environment)**
+  - Deliverables:
+    - `.scratch/notes/sprint-001-baseline.md` capturing: Tcl version, available packages, OS, and any known limitations (no TclOO, streaming approach, etc.)
+  - Verification:
+    - `test -f .scratch/notes/sprint-001-baseline.md` (exit 0)
+
 - [ ] **A1 - Package scaffolding**
   - Deliverables:
     - `pkgIndex.tcl` at repo root
@@ -353,6 +377,14 @@ This plan is dependency-ordered to minimize rewrites:
     - A separate job (manual trigger) for live-provider smoke tests, gated by secrets.
   - Verification:
     - CI run link (captured in `.scratch/verification/SPRINT-001/ci/...`)
+
+- [ ] **A5 - Plan guardrails (docs lint + evidence lint)**
+  - Deliverables:
+    - `tools/docs_lint.sh` that fails on: `T[O]DO`, `{placeholder`, and missing required headings in sprint docs
+    - `tools/evidence_lint.sh` that fails if any `[X]` item in this sprint doc lacks a `.scratch/verification/SPRINT-001/...` reference
+  - Verification:
+    - `bash tools/docs_lint.sh` (exit 0)
+    - `bash tools/evidence_lint.sh docs/sprints/SPRINT-001-tcl-implement-nlspecs.md` (exit 0)
 
 ## Track B - Unified LLM Client (unified-llm-spec.md)
 
