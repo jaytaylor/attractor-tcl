@@ -18,6 +18,17 @@ Success means:
 - A traceable spec-to-tests matrix proving coverage (not just high unit test line coverage).
 - A runnable, documented Tcl implementation with deterministic tests.
 
+## Scope
+In scope:
+- A working Tcl implementation of all three specs (library + minimal CLIs) suitable as a foundation for a "software factory".
+- Deterministic test suite with local mocks for providers; live-provider smoke tests gated by env vars.
+- A spec coverage system (traceability) proving completeness.
+
+Out of scope (unless required by the specs):
+- A polished TUI/GUI/IDE integration (we expose event streams/hooks; UI is a separate concern).
+- Production-grade multi-tenant HTTP service (Attractor HTTP server mode is optional per spec; if implemented, it is minimal).
+- Packaging for every Tcl distribution system (TEA/teapot). We focus on repo-local packages first.
+
 ## Current State Snapshot
 This repository currently contains NLSpecs only (no Tcl implementation yet). The sprint delivers the initial Tcl implementation from scratch, plus tests and examples.
 
@@ -29,6 +40,7 @@ This repository currently contains NLSpecs only (no Tcl implementation yet). The
   - A "pull" test harness that buffers events for deterministic assertions.
 - **Provider networking:** Use TLS-enabled `http` for HTTPS calls.
 - **Spec coverage definition:** "100%" means every checkbox in each spec's DoD section is green with evidence, and every MUST/SHALL requirement is either implemented or explicitly documented as out-of-scope only where the spec itself marks it optional (e.g., Attractor HTTP server mode: "if implemented").
+- **Security/privacy default:** never log API keys or secrets; redact known secret patterns in logs and error messages; keep `.scratch/verification` artifacts safe for sharing.
 
 ## Golden Sample Review (SPRINT-047-google-oauth.md)
 This sprint plan should match the quality bar demonstrated by `~/src/ai-digital-twin2/docs/sprints/SPRINT-047-google-oauth.md`.
@@ -55,9 +67,19 @@ Create three Tcl packages plus a small shared core:
 
 Top-level:
 - `bin/attractor` CLI entrypoint
+- `bin/agentloop_smoke` optional small driver for Coding Agent Loop smoke runs
 - `tests/` unit + integration + e2e tests
 - `examples/` DOT pipelines and agent loop examples
 - `docs/` additional usage docs as needed
+
+Suggested file breakdown (non-binding, but reduces bikeshedding):
+- `lib/unified_llm/client.tcl`, `lib/unified_llm/highlevel.tcl`, `lib/unified_llm/errors.tcl`
+- `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, `lib/unified_llm/adapters/gemini.tcl`
+- `lib/unified_llm/streaming/sse.tcl`, `lib/unified_llm/streaming/accumulator.tcl`
+- `lib/coding_agent_loop/session.tcl`, `lib/coding_agent_loop/events.tcl`, `lib/coding_agent_loop/profiles/*.tcl`
+- `lib/coding_agent_loop/tools/*.tcl` (read_file/write_file/edit_file/apply_patch/shell/grep/glob/subagents)
+- `lib/attractor/dot/*.tcl` (tokenize/parse/stylesheet)
+- `lib/attractor/engine/*.tcl` (runner/state/handlers/interviewer/events)
 
 ## High-Level Architecture
 
@@ -176,6 +198,20 @@ To claim 100% NLSpec coverage, we will build a traceability system:
   - Fails CI if any requirement is missing tests
   - Emits a coverage report summary
 
+Traceability file format (keep it grep-friendly):
+- One requirement per block with stable keys:
+  - `id:`
+  - `spec:` (file + section anchor)
+  - `impl:` (file paths)
+  - `tests:` (file paths)
+  - `verify:` (commands)
+
+Requirement ID conventions:
+- `ULLM-DOD-8.x-*` for Unified LLM DoD checkboxes
+- `CAL-DOD-9.x-*` for Coding Agent Loop DoD checkboxes
+- `ATR-DOD-11.x-*` for Attractor DoD checkboxes
+- `ULLM-REQ-*`, `CAL-REQ-*`, `ATR-REQ-*` for MUST/REQUIRED statements not already in DoD lists
+
 ## Execution Order (Tracks)
 This plan is dependency-ordered to minimize rewrites:
 1. Track A - Scaffolding and shared utilities
@@ -208,6 +244,13 @@ This plan is dependency-ordered to minimize rewrites:
   - Verification:
     - `test -f .scratch/verification/SPRINT-001/README.md` (exit 0)
 
+- [ ] **A4 - CI smoke workflow**
+  - Deliverables:
+    - A minimal CI job (GitHub Actions or equivalent) that runs: `tclsh tests/all.tcl`
+    - A separate job (manual trigger) for live-provider smoke tests, gated by secrets.
+  - Verification:
+    - CI run link (captured in `.scratch/verification/SPRINT-001/ci/...`)
+
 ## Track B - Unified LLM Client (unified-llm-spec.md)
 
 ### B0 - Requirements Indexing
@@ -236,6 +279,12 @@ This plan is dependency-ordered to minimize rewrites:
     - `Client.from_env`
     - Adapter registry + default provider resolution (never guess)
     - Middleware chain order (request forward, response reverse), including streaming middleware wrapping.
+    - Module-level default client (`set_default_client`, lazy `from_env` on first use)
+
+- [ ] **B1.4 - RateLimitInfo + usage math**
+  - Deliverables:
+    - Parse provider rate limit headers into RateLimitInfo when present
+    - `Usage` supports addition for multi-step totals (None treated as 0 for optional fields)
 
 ### B2 - Provider Utilities
 - [ ] **B2.1 - HTTP helper**
@@ -243,6 +292,7 @@ This plan is dependency-ordered to minimize rewrites:
     - TLS
     - timeouts (connect/request/stream_read) mapped to Tcl http behaviors
     - header capture for rate limit fields
+    - request/response logging hooks with secret redaction
 
 - [ ] **B2.2 - SSE parser + stream accumulator**
   - Requirements:
@@ -257,16 +307,19 @@ This plan is dependency-ordered to minimize rewrites:
     - Message translation (instructions extraction, input items)
     - Tool call + tool result translation
     - Streaming translation of Responses SSE events
+    - Reasoning token reporting via Responses usage fields
 
 - [ ] **B3.2 - Anthropic adapter**
   - Hard requirements:
     - Messages API shape, strict alternation handling, thinking signature round-tripping
     - Prompt caching injection via `cache_control` and beta headers when needed
+    - Strict alternation fixups (merge consecutive same-role content)
 
 - [ ] **B3.3 - Gemini adapter**
   - Hard requirements:
     - Native Gemini API shape, synthetic tool call IDs mapping to function names
     - Streaming translation (JSON chunk or SSE alt)
+    - thoughtsTokenCount -> reasoning_tokens mapping when present
 
 ### B4 - High-Level APIs + Tool Loop
 - [ ] **B4.1 - generate()/stream() wrappers**
@@ -281,6 +334,13 @@ This plan is dependency-ordered to minimize rewrites:
     - max_tool_rounds semantics (`0` disables)
     - Parallel tool calls: execute concurrently, batch results into a single continuation request, preserve ordering
     - Unknown tool calls become error ToolResult (not thrown)
+    - ToolChoice mode translations (auto/none/required/named), including Anthropic "none" via omitting tools
+
+- [ ] **B4.4 - Prompt caching**
+  - Deliverables:
+    - OpenAI: surface cache_read_tokens from Responses usage fields
+    - Anthropic: automatic cache_control injection + required beta header when enabled
+    - Gemini: surface cache_read_tokens when present
 
 - [ ] **B4.3 - generate_object()/stream_object()**
   - Requirements:
@@ -320,6 +380,9 @@ This plan is dependency-ordered to minimize rewrites:
     - shell with timeouts and process group kill semantics
     - env var filtering defaults (exclude `*_API_KEY`, `*_SECRET`, etc.)
     - grep/glob implementations (prefer `rg` when present)
+  - Explicit tests:
+    - env filtering excludes `*_API_KEY`, `*_SECRET`, `*_TOKEN`, `*_PASSWORD`, `*_CREDENTIAL` by default
+    - timeout sends SIGTERM then SIGKILL after 2s and returns partial output + timeout marker
 
 ### C2 - Truncation + Context Awareness
 - [ ] **C2.1 - Tool output truncation**
@@ -335,10 +398,16 @@ This plan is dependency-ordered to minimize rewrites:
 - [ ] **C3.1 - OpenAI profile (codex-rs-aligned)**
   - Requirements:
     - apply_patch tool (v4a) + system prompt topics
+  - Deliverables:
+    - apply_patch v4a parser + executor (add/update/delete/move)
+    - Verification of hunk matching rules and multi-hunk updates
 
 - [ ] **C3.2 - Anthropic profile (Claude Code-aligned)**
   - Requirements:
     - edit_file old_string/new_string semantics + system prompt topics
+  - Deliverables:
+    - edit_file exact match with "not found" and "not unique" errors
+    - optional whitespace-normalization fallback with explicit reporting (per spec guidance)
 
 - [ ] **C3.3 - Gemini profile (gemini-cli-aligned)**
 
@@ -383,10 +452,17 @@ This plan is dependency-ordered to minimize rewrites:
 - [ ] **D1.1 - Comment stripping + tokenizer**
 - [ ] **D1.2 - Parser: digraph subset + typed attributes**
 - [ ] **D1.3 - Defaults (graph/node/edge), chained edges, subgraphs flattening**
+  - Must cover:
+    - qualified keys (`a.b.c`)
+    - typed values (string/int/float/bool/duration)
+    - multi-line attribute blocks
+    - commas required between attrs
 
 ### D2 - Stylesheet + Transforms
 - [ ] **D2.1 - Stylesheet parser + specificity rules**
 - [ ] **D2.2 - Transform registry + built-in transforms ($goal expansion, stylesheet apply)**
+  - Also include:
+    - Preamble transform (execution-time) for fidelity modes that require summarization/compact carryover
 
 ### D3 - Validation / Linting
 - [ ] **D3.1 - Diagnostic model**
@@ -398,6 +474,10 @@ This plan is dependency-ordered to minimize rewrites:
 - [ ] **D4.2 - Outcome model + status.json contract**
 - [ ] **D4.3 - Checkpoint save/load + resume behavior (fidelity degrade hop)**
 - [ ] **D4.4 - Artifact store + run directory layout**
+  - Deliverables:
+    - `{logs_root}/{node_id}/status.json` written for each non-terminal node
+    - `{logs_root}/{node_id}/prompt.md` + `response.md` for codergen
+    - `{logs_root}/checkpoint.json` updated after each node
 
 ### D5 - Condition Expression Language
 - [ ] **D5.1 - Condition parser + evaluator**
@@ -420,7 +500,12 @@ This plan is dependency-ordered to minimize rewrites:
 - [ ] **D7.5 - conditional**
 - [ ] **D7.6 - parallel fan-out + fan-in (Thread package, isolated cloned contexts)**
 - [ ] **D7.7 - tool handler (shell/exec)**
+  - Spec-aligned node attributes:
+    - `tool_command` (required)
 - [ ] **D7.8 - stack.manager_loop handler (child pipeline supervision)**
+  - Spec-aligned attributes:
+    - graph attrs: `stack.child_dotfile`, `stack.child_workdir`, `stack.child_autostart`
+    - node attrs: `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, `manager.actions`
 
 ### D8 - Human-in-the-Loop (Interviewers)
 - [ ] **D8.1 - Interviewer interface**
@@ -495,4 +580,3 @@ This plan is dependency-ordered to minimize rewrites:
 - [ ] At least one end-to-end Attractor pipeline runs using:
   - Unified LLM backend (mocked by default, live gated by env)
   - Coding Agent Loop backend for a tool-using node
-
