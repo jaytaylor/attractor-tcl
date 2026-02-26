@@ -294,75 +294,132 @@ Evidence:
 ```
 
 ## Phase 3 - Coding Agent Loop Spec Closure
-- [ ] Close ToolRegistry behavior for schema validation and unknown-tool error results.
+- [X] Close ToolRegistry behavior for schema validation and unknown-tool error results.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-tool-registry-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-unknown-tool-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Close LocalExecutionEnvironment behavior for shell/read/write/edit/apply_patch/grep/glob operations.
+- [X] Close LocalExecutionEnvironment behavior for shell/read/write/edit/apply_patch/grep/glob operations.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-apply-patch-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-edit-file-errors-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-shell-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Close truncation behavior with strict order: character truncation first, line truncation second.
+- [X] Close truncation behavior with strict order: character truncation first, line truncation second.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-truncate-order-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Ensure `TOOL_CALL_END` event includes full untruncated output.
+- [X] Ensure `TOOL_CALL_END` event includes full untruncated output.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-tool-call-full-output-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Close process-group cancellation behavior (terminate then force kill) with deterministic assertions.
+- [X] Close process-group cancellation behavior (terminate then force kill) with deterministic assertions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-shell-cancel-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Close provider profile parity: OpenAI `apply_patch` workflow, Anthropic `edit_file` workflow, Gemini profile behavior.
+- [X] Close provider profile parity: OpenAI `apply_patch` workflow, Anthropic `edit_file` workflow, Gemini profile behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-profile-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Close session lifecycle/events/steering/loop-detection/limit-enforcement semantics.
+- [X] Close session lifecycle/events/steering/loop-detection/limit-enforcement semantics.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-session-events-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-steer-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-turn-limit-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Close subagent depth control and independent-history behavior.
+- [X] Close subagent depth control and independent-history behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-subagent-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 
 ### Positive Test Cases - Phase 3
-- [ ] Submit flow test proves deterministic loop: user input -> tool calls -> final assistant text.
+- [X] Submit flow test proves deterministic loop: user input -> tool calls -> final assistant text.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-integration.log`
 ```
-- [ ] Event tests prove required event taxonomy and ordering.
+- [X] Event tests prove required event taxonomy and ordering.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-session-events-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-integration.log`
 ```
-- [ ] Subagent tests prove depth limiting and command routing correctness.
+- [X] Subagent tests prove depth limiting and command routing correctness.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-subagent-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 
 ### Negative Test Cases - Phase 3
-- [ ] Cancellation tests prove partial output + explicit cancellation marker on interrupted shell commands.
+- [X] Cancellation tests prove partial output + explicit cancellation marker on interrupted shell commands.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-shell-cancel-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] Environment filtering tests prove secrets are excluded by default from tool-visible env vars.
+- [X] Environment filtering tests prove secrets are excluded by default from tool-visible env vars.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-env-filter-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
-- [ ] `edit_file` tests prove deterministic `not found` and `not unique` error paths.
+- [X] `edit_file` tests prove deterministic `not found` and `not unique` error paths.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-edit-file-errors-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 
 ### Acceptance Criteria - Phase 3
-- [ ] Coding Agent Loop DoD and MUST requirements are fully mapped and green in traceability.
+- [X] Coding Agent Loop DoD and MUST requirements are fully mapped and green in traceability.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/spec-coverage.log`
 ```
-- [ ] Deterministic tests cover tool execution, truncation order, event semantics, cancellation, and profile-specific workflows.
+- [X] Deterministic tests cover tool execution, truncation order, event semantics, cancellation, and profile-specific workflows.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
+- `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-integration.log`
 ```
 
 ## Phase 4 - Attractor Spec Closure
