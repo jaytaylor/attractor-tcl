@@ -1,0 +1,89 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require attractor
+package require attractor_core
+
+namespace eval ::tests::attractor {}
+
+proc ::tests::attractor::backend {request} {
+    set nodeId [dict get $request node_id]
+    if {$nodeId eq "build"} {
+        return [dict create text "build complete" preferred_label success]
+    }
+    return [dict create text "ok"]
+}
+
+test attractor-parse-validate-1.0 {parse and validate simple graph} -body {
+    set dot {
+        digraph demo {
+            start [shape=start];
+            build [handler=codergen, prompt="do build"];
+            exit [shape=doublecircle];
+            start -> build;
+            build -> exit [label=success, weight=10];
+        }
+    }
+    set graph [::attractor::parse_dot $dot]
+    set diagnostics [::attractor::validate $graph]
+    list [dict get $graph id] [llength [dict get $graph edges]] [llength $diagnostics]
+} -result {demo 2 0}
+
+test attractor-run-artifacts-1.0 {run creates checkpoint and node artifacts} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-001 attractor test-run-[pid]]
+    file delete -force $logsRoot
+    set dot {
+        digraph demo {
+            start [shape=start];
+            build [handler=codergen, prompt="build now"];
+            exit [shape=doublecircle];
+            start -> build;
+            build -> exit [label=success, weight=10];
+        }
+    }
+    set graph [::attractor::parse_dot $dot]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::attractor::backend -logs_root $logsRoot]
+    list \
+      [dict get $result status] \
+      [file exists [file join $logsRoot checkpoint.json]] \
+      [file exists [file join $logsRoot build status.json]] \
+      [file exists [file join $logsRoot build prompt.md]] \
+      [file exists [file join $logsRoot build response.md]]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1 1 1 1}
+
+test attractor-edge-selection-1.0 {edge selection uses label then weight} -body {
+    set edges [list \
+      [dict create from a to b attrs [dict create label x weight 1]] \
+      [dict create from a to c attrs [dict create label y weight 99]] \
+      [dict create from a to d attrs [dict create label x weight 2]]]
+    set outcome [dict create preferred_label x suggested_next_ids {}]
+    set selected [::attractor::__select_next_edge $edges $outcome {}]
+    dict get $selected to
+} -result d
+
+test attractor-resume-1.0 {resume starts from checkpoint node} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-001 attractor test-resume-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+    ::attractor::__write_json_file [file join $logsRoot checkpoint.json] [dict create timestamp now current_node build completed_nodes {start} node_retries {} context_values {}]
+    set dot {
+        digraph demo {
+            start [shape=start];
+            build [handler=codergen, prompt="build now"];
+            exit [shape=doublecircle];
+            start -> build;
+            build -> exit [label=success, weight=1];
+        }
+    }
+    set graph [::attractor::parse_dot $dot]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::attractor::backend -logs_root $logsRoot -resume 1]
+    list [dict get $result status] [lsearch -exact [dict get $result completed_nodes] build]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1}

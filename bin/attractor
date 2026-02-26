@@ -1,0 +1,73 @@
+#!/usr/bin/env tclsh
+set root [file normalize [file join [file dirname [info script]] ..]]
+lappend auto_path $root
+package require attractor
+
+proc usage {} {
+    puts stderr "usage: bin/attractor run <pipeline.dot> ?--logs-root PATH? ?--resume?"
+    exit 2
+}
+
+if {$argc < 2} {
+    usage
+}
+
+set cmd [lindex $argv 0]
+if {$cmd ne "run"} {
+    usage
+}
+
+set dotPath [lindex $argv 1]
+if {![file exists $dotPath]} {
+    puts stderr "dot file not found: $dotPath"
+    exit 2
+}
+
+set logsRoot ""
+set resume 0
+set idx 2
+while {$idx < $argc} {
+    set token [lindex $argv $idx]
+    switch -- $token {
+        --logs-root {
+            incr idx
+            if {$idx >= $argc} {
+                usage
+            }
+            set logsRoot [lindex $argv $idx]
+        }
+        --resume {
+            set resume 1
+        }
+        default {
+            usage
+        }
+    }
+    incr idx
+}
+
+set fh [open $dotPath r]
+set dotSource [read $fh]
+close $fh
+
+set graph [::attractor::parse_dot $dotSource]
+set diagnostics [::attractor::validate $graph]
+if {[llength $diagnostics] > 0} {
+    puts [::attractor_core::json_encode [dict create status validation_failed diagnostics $diagnostics]]
+    exit 1
+}
+
+set args {}
+if {$logsRoot ne ""} {
+    lappend args -logs_root $logsRoot
+}
+if {$resume} {
+    lappend args -resume 1
+}
+
+set result [::attractor::run $graph {*}$args]
+puts [::attractor_core::json_encode $result]
+if {[dict exists $result status] && [dict get $result status] eq "success"} {
+    exit 0
+}
+exit 1

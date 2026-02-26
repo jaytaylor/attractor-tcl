@@ -1,0 +1,47 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require unified_llm
+package require attractor_core
+
+namespace eval ::tests::integration::ullm {
+    variable seen {}
+}
+
+proc ::tests::integration::ullm::transport {req} {
+    variable seen
+    dict lappend seen requests $req
+
+    set provider [dict get $req provider]
+    switch -- $provider {
+        openai {
+            set body [dict create output_text openai-ok usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 1 cache_read_tokens 0]]
+        }
+        anthropic {
+            set body [dict create content [list [dict create type text text anthropic-ok]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        }
+        gemini {
+            set body [dict create candidates [list [dict create content [dict create parts [list [dict create text gemini-ok]]]]] usageMetadata [dict create promptTokenCount 1 candidatesTokenCount 1 thoughtsTokenCount 1]]
+        }
+        default {
+            set body [dict create text unknown]
+        }
+    }
+
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
+test integration-unified-llm-parity-1.0 {cross-provider basic parity} -setup {
+    set ::tests::integration::ullm::seen {}
+    set client [::unified_llm::client_new -provider openai -transport ::tests::integration::ullm::transport]
+} -body {
+    set a [::unified_llm::generate -client $client -provider openai -prompt hi -model gpt-4.1]
+    set b [::unified_llm::generate -client $client -provider anthropic -prompt hi -model claude]
+    set c [::unified_llm::generate -client $client -provider gemini -prompt hi -model gemini]
+
+    list [dict get $a text] [dict get $b text] [dict get $c text] [llength [dict get $::tests::integration::ullm::seen requests]]
+} -cleanup {
+    $client close
+} -result {openai-ok anthropic-ok gemini-ok 3}

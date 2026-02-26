@@ -1,0 +1,12 @@
+digraph branching {
+  start [shape=start];
+  decide [handler=conditional, condition="branch == left"];
+  left [handler=codergen, prompt="left path"];
+  right [handler=codergen, prompt="right path"];
+  exit [shape=doublecircle];
+  start -> decide;
+  decide -> left [label=true, weight=2];
+  decide -> right [label=false, weight=1];
+  left -> exit [weight=1];
+  right -> exit [weight=1];
+}

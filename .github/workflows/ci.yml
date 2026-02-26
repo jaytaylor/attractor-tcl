@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live_smoke:
+        description: "Run live-provider smoke tests"
+        required: false
+        default: "false"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Tcl
+        run: sudo apt-get update && sudo apt-get install -y tcl tcllib ripgrep graphviz
+      - name: Run test suite
+        run: tclsh tests/all.tcl
+
+  live-smoke:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.live_smoke == 'true' }}
+    runs-on: ubuntu-latest
+    environment: live-provider-smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Tcl
+        run: sudo apt-get update && sudo apt-get install -y tcl tcllib ripgrep graphviz
+      - name: Validate provider secrets are present
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          test -n "$OPENAI_API_KEY"
+          test -n "$ANTHROPIC_API_KEY"
+          test -n "$GEMINI_API_KEY"
+      - name: Run smoke-tagged tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: tclsh tests/all.tcl -match "integration-*"

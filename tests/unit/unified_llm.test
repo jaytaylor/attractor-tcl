@@ -1,0 +1,157 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require unified_llm
+package require attractor_core
+
+namespace eval ::tests::unified_llm {
+    variable requests {}
+    variable call_count 0
+}
+
+proc ::tests::unified_llm::transport_capture {req} {
+    variable requests
+    dict lappend requests items $req
+
+    set provider [dict get $req provider]
+    set body [dict create text "ok-$provider" usage [dict create input_tokens 1 output_tokens 2 reasoning_tokens 3 cache_read_tokens 4]]
+
+    if {$provider eq "openai"} {
+        set body [dict create output_text "ok-openai" usage [dict create input_tokens 1 output_tokens 2 reasoning_tokens 3 cache_read_tokens 4]]
+    }
+    if {$provider eq "anthropic"} {
+        set body [dict create content [list [dict create type text text "ok-anthropic"]] usage [dict create input_tokens 3 output_tokens 5 reasoning_tokens 0 cache_read_tokens 0]]
+    }
+    if {$provider eq "gemini"} {
+        set body [dict create candidates [list [dict create content [dict create parts [list [dict create text "ok-gemini"]]]]] usageMetadata [dict create promptTokenCount 9 candidatesTokenCount 4 thoughtsTokenCount 2]]
+    }
+
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
+proc ::tests::unified_llm::transport_tool_loop {req} {
+    variable call_count
+    variable requests
+    incr call_count
+    dict lappend requests tool_loop $req
+
+    if {$call_count == 1} {
+        set body [dict create \
+            id first \
+            output_text "" \
+            tool_calls [list \
+                [dict create id tc1 name uppercase arguments [dict create text alpha]] \
+                [dict create id tc2 name uppercase arguments [dict create text beta]]] \
+            usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+
+    set payload [dict get $req payload]
+    set toolResults [dict get $payload tool_results]
+    set values {}
+    foreach r $toolResults {
+        lappend values [dict get $r output]
+    }
+    set body [dict create \
+        id second \
+        output_text [join $values ","] \
+        usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
+proc ::tests::unified_llm::tool_uppercase {args _toolCall} {
+    string toupper [dict get $args text]
+}
+
+test unified_llm-provider-endpoints-1.0 {providers map to native endpoints} -setup {
+    set ::tests::unified_llm::requests {}
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_capture]
+} -body {
+    set openai [::unified_llm::generate -client $client -provider openai -prompt hello -model gpt-4.1]
+    set anthropic [::unified_llm::generate -client $client -provider anthropic -prompt hello -model claude-sonnet]
+    set gemini [::unified_llm::generate -client $client -provider gemini -prompt hello -model gemini-1.5-pro]
+
+    set reqs [dict get $::tests::unified_llm::requests items]
+    list \
+      [dict get [lindex $reqs 0] endpoint] \
+      [dict get [lindex $reqs 1] endpoint] \
+      [dict get [lindex $reqs 2] endpoint] \
+      [dict get $openai text] \
+      [dict get $anthropic text] \
+      [dict get $gemini text]
+} -cleanup {
+    $client close
+} -result {/v1/responses /v1/messages /v1beta/models/gemini-1.5-pro:generateContent ok-openai ok-anthropic ok-gemini}
+
+test unified_llm-tool-loop-batch-1.0 {tool results batched and order preserved} -setup {
+    set ::tests::unified_llm::call_count 0
+    set ::tests::unified_llm::requests {}
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_tool_loop]
+} -body {
+    set resp [::unified_llm::generate \
+        -client $client \
+        -provider openai \
+        -prompt tools \
+        -model gpt-4.1 \
+        -tools [dict create uppercase ::tests::unified_llm::tool_uppercase] \
+        -max_tool_rounds 2]
+
+    set calls [dict get $::tests::unified_llm::requests tool_loop]
+    set continuationPayload [dict get [lindex $calls 1] payload]
+    list [dict get $resp text] [llength [dict get $continuationPayload tool_results]] [dict get [lindex [dict get $continuationPayload tool_results] 0] output] [dict get [lindex [dict get $continuationPayload tool_results] 1] output]
+} -cleanup {
+    $client close
+} -result {ALPHA,BETA 2 ALPHA BETA}
+
+test unified_llm-unknown-tool-1.0 {unknown tool call returns error tool result} -setup {
+    set ::tests::unified_llm::call_count 0
+    proc ::tests::unified_llm::transport_unknown {req} {
+        variable call_count
+        incr call_count
+        if {$call_count == 1} {
+            set body [dict create id first output_text "" tool_calls [list [dict create id tc1 name missing_tool arguments {}]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        } else {
+            set body [dict create id second output_text done usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        }
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_unknown]
+} -body {
+    set resp [::unified_llm::generate -client $client -provider openai -prompt x -model gpt-4.1 -tools {} -max_tool_rounds 2]
+    dict get $resp text
+} -cleanup {
+    rename ::tests::unified_llm::transport_unknown {}
+    $client close
+} -result done
+
+test unified_llm-generate-object-1.0 {schema validation for object output} -setup {
+    proc ::tests::unified_llm::transport_obj {req} {
+        set body [dict create output_text {{"name":"jay","age":4}} usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_obj]
+} -body {
+    set schema [dict create type object required [list name age] properties [dict create name [dict create type string] age [dict create type integer]]]
+    set result [::unified_llm::generate_object -client $client -provider openai -prompt x -model gpt-4.1 -schema $schema]
+    dict get [dict get $result object] name
+} -cleanup {
+    rename ::tests::unified_llm::transport_obj {}
+    $client close
+} -result jay
+
+test unified_llm-generate-object-negative-1.0 {invalid object payload raises NO_OBJECT_GENERATED} -setup {
+    proc ::tests::unified_llm::transport_bad_obj {req} {
+        set body [dict create output_text {{"other":3}} usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_bad_obj]
+} -body {
+    set schema [dict create type object required [list name] properties [dict create name [dict create type string]]]
+    catch {::unified_llm::generate_object -client $client -provider openai -prompt x -model gpt-4.1 -schema $schema} err opts
+    list [dict get $opts -errorcode] [expr {[string length $err] > 0}]
+} -cleanup {
+    rename ::tests::unified_llm::transport_bad_obj {}
+    $client close
+} -result {{UNIFIED_LLM NO_OBJECT_GENERATED} 1}

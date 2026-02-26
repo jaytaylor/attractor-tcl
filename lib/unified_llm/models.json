@@ -1,0 +1,21 @@
+{
+  "openai": {
+    "latest": "gpt-4.1",
+    "models": [
+      {"id": "gpt-4.1", "family": "gpt-4.1", "supports_tools": true},
+      {"id": "gpt-4o-mini", "family": "gpt-4o", "supports_tools": true}
+    ]
+  },
+  "anthropic": {
+    "latest": "claude-sonnet-4-5",
+    "models": [
+      {"id": "claude-sonnet-4-5", "family": "claude", "supports_tools": true}
+    ]
+  },
+  "gemini": {
+    "latest": "gemini-1.5-pro",
+    "models": [
+      {"id": "gemini-1.5-pro", "family": "gemini", "supports_tools": true}
+    ]
+  }
+}

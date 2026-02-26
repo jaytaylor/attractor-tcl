@@ -1,0 +1,26 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+
+namespace eval ::tests::e2e {}
+set ::tests::e2e::root $root
+
+proc ::tests::e2e::run_attractor {dotPath logsRoot} {
+    variable root
+    set cmd [list [file join $root bin attractor] run $dotPath --logs-root $logsRoot]
+    if {[catch {exec {*}$cmd} out]} {
+        return [dict create ok 0 output $out]
+    }
+    return [dict create ok 1 output $out]
+}
+
+test e2e-attractor-cli-linear-1.0 {CLI runs linear pipeline and writes artifacts} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-001 integration e2e-linear-[pid]]
+    file delete -force $logsRoot
+} -body {
+    set result [::tests::e2e::run_attractor [file join $root examples linear.dot] $logsRoot]
+    list [dict get $result ok] [file exists [file join $logsRoot checkpoint.json]] [file exists [file join $logsRoot build status.json]]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {1 1 1}

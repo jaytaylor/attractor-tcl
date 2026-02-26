@@ -1,0 +1,7 @@
+digraph linear {
+  start [shape=start];
+  build [handler=codergen, prompt="build linear"];
+  exit [shape=doublecircle];
+  start -> build;
+  build -> exit [label=success, weight=1];
+}

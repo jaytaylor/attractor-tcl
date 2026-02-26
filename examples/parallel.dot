@@ -1,0 +1,14 @@
+digraph parallel {
+  start [shape=start];
+  fanout [handler=parallel, branches="lint,test"];
+  lint [handler=tool, tool_command="printf lint"];
+  test [handler=tool, tool_command="printf test"];
+  join [handler=codergen, prompt="join results"];
+  exit [shape=doublecircle];
+  start -> fanout;
+  fanout -> lint [weight=2];
+  fanout -> test [weight=1];
+  lint -> join;
+  test -> join;
+  join -> exit;
+}

@@ -1,0 +1,7 @@
+digraph toolhandler {
+  start [shape=start];
+  shellstep [handler=tool, tool_command="printf hello-tool"];
+  exit [shape=doublecircle];
+  start -> shellstep;
+  shellstep -> exit;
+}

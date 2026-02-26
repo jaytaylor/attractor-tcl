@@ -1,0 +1,101 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require coding_agent_loop
+package require unified_llm
+package require attractor_core
+
+namespace eval ::tests::coding_agent_loop {
+    variable call_count 0
+}
+
+proc ::tests::coding_agent_loop::transport_tool {req} {
+    variable call_count
+    incr call_count
+
+    if {$call_count == 1} {
+        set body [dict create \
+            id first \
+            output_text "" \
+            tool_calls [list [dict create id call1 name shell arguments [dict create command {printf "abcdef\nline2\nline3\nline4\n"}]]] \
+            usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+    } else {
+        set body [dict create id second output_text done usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+    }
+
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
+test coding_agent_loop-env-filter-1.0 {default env filter removes secrets} -setup {
+    set ::env(TEST_API_KEY) hidden
+    set ::env(TEST_SECRET) hidden
+    set ::env(TEST_TOKEN) hidden
+    set ::env(TEST_PASSWORD) hidden
+    set ::env(TEST_CREDENTIAL) hidden
+    set ::env(TEST_VISIBLE) visible
+} -body {
+    set filtered [::coding_agent_loop::default_env]
+    list \
+      [dict exists $filtered TEST_API_KEY] \
+      [dict exists $filtered TEST_SECRET] \
+      [dict exists $filtered TEST_VISIBLE]
+} -cleanup {
+    unset -nocomplain ::env(TEST_API_KEY) ::env(TEST_SECRET) ::env(TEST_TOKEN) ::env(TEST_PASSWORD) ::env(TEST_CREDENTIAL) ::env(TEST_VISIBLE)
+} -result {0 0 1}
+
+test coding_agent_loop-truncate-order-1.0 {truncation applies char then line} -body {
+    set full "12345\n67890\nabcde\nfghij\nzzzzz"
+    set trunc [::coding_agent_loop::tools::truncate_output $full 20 2]
+    set display [dict get $trunc display]
+    list [expr {[dict get $trunc removed_chars] > 0}] [expr {[string first "TRUNCATED_LINES" $display] >= 0}]
+} -result {1 1}
+
+test coding_agent_loop-shell-cancel-1.0 {shell cancellation marker} -body {
+    set output [::coding_agent_loop::tools::shell [dict create command {sleep 2; printf done} max_ms 50] {}]
+    expr {[string first "\[CANCELLED" $output] >= 0}
+} -result 1
+
+test coding_agent_loop-session-events-1.0 {session emits required basic events} -setup {
+    set client [::unified_llm::client_new -provider mock]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
+} -body {
+    set _ [$session submit "hello"]
+    set events [$session events]
+    set types {}
+    foreach event $events {
+        lappend types [dict get $event type]
+    }
+    list [lsearch -exact $types SESSION_START] [lsearch -exact $types USER_INPUT] [lsearch -exact $types ASSISTANT_TEXT_END]
+} -cleanup {
+    $session close
+    $client close
+} -result {0 1 2}
+
+test coding_agent_loop-tool-call-full-output-1.0 {TOOL_CALL_END keeps full output untruncated} -setup {
+    set ::tests::coding_agent_loop::call_count 0
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_tool]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
+    set sid [lindex [split $session ::] end]
+    dict set ::coding_agent_loop::sessions $sid tools shell char_limit 8
+    dict set ::coding_agent_loop::sessions $sid tools shell line_limit 2
+} -body {
+    set _ [$session submit "run a shell tool"]
+    set events [$session events]
+    set toolEnd {}
+    foreach event $events {
+        if {[dict get $event type] eq "TOOL_CALL_END"} {
+            set toolEnd $event
+        }
+    }
+    list \
+      [expr {[string first "TRUNCATED" [dict get $toolEnd output]] >= 0}] \
+      [expr {[string first "line4" [dict get $toolEnd full_output]] >= 0}] \
+      [dict get $toolEnd is_error]
+} -cleanup {
+    $session close
+    $client close
+} -result {1 1 0}

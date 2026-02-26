@@ -1,0 +1,45 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require coding_agent_loop
+package require unified_llm
+package require attractor_core
+
+namespace eval ::tests::integration::cal {
+    variable calls 0
+}
+
+proc ::tests::integration::cal::transport {req} {
+    variable calls
+    incr calls
+
+    if {$calls == 1} {
+        set body [dict create id first output_text "" tool_calls [list [dict create id t1 name read_file arguments [dict create path [file join [pwd] README.md]]]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+    } else {
+        set body [dict create id second output_text "tool-finished" usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+    }
+
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
+test integration-coding-agent-loop-tool-flow-1.0 {session executes tool loop and emits tool events} -setup {
+    set ::tests::integration::cal::calls 0
+    set client [::unified_llm::client_new -provider openai -transport ::tests::integration::cal::transport]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
+} -body {
+    set response [$session submit "read the readme"]
+    set events [$session events]
+    set hasStart 0
+    set hasEnd 0
+    foreach event $events {
+        if {[dict get $event type] eq "TOOL_CALL_START"} { set hasStart 1 }
+        if {[dict get $event type] eq "TOOL_CALL_END"} { set hasEnd 1 }
+    }
+    list [dict get $response text] $hasStart $hasEnd
+} -cleanup {
+    $session close
+    $client close
+} -result {tool-finished 1 1}

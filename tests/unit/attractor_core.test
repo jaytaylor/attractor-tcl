@@ -1,0 +1,39 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require attractor_core
+
+test attractor_core-json-roundtrip-1.0 {json encode/decode roundtrip} -body {
+    set payload [dict create a 1 b two c [dict create nested true level high]]
+    set encoded [::attractor_core::json_encode $payload]
+    set decoded [::attractor_core::json_decode $encoded]
+    expr {[dict get $decoded a] == 1 && [dict get $decoded b] eq "two" && [dict get [dict get $decoded c] nested] eq "true"}
+} -result 1
+
+test attractor_core-schema-validate-1.0 {schema required/type checks} -body {
+    set schema [dict create \
+        type object \
+        required [list foo] \
+        properties [dict create foo [dict create type integer]]]
+    set ok [::attractor_core::schema_validate $schema [dict create foo 4]]
+    set bad [::attractor_core::schema_validate $schema [dict create foo nope]]
+    list [llength $ok] [llength $bad] [dict get [lindex $bad 0] code]
+} -result {0 1 type}
+
+test attractor_core-sse-parse-1.0 {parse SSE frames} -body {
+    set payload "event: message\ndata: hello\n\n:event ignored\nevent: done\ndata: world\n\n"
+    set events [::attractor_core::sse_parse $payload]
+    list [llength $events] [dict get [lindex $events 0] data] [dict get [lindex $events 1] event]
+} -result {2 hello done}
+
+test attractor_core-exec-success-1.0 {exec helper success path} -body {
+    set result [::attractor_core::exec_with_control -command [list sh -lc {printf hello}] -max_ms 5000]
+    list [dict get $result exit_code] [string trim [dict get $result stdout]] [dict get $result timed_out]
+} -result {0 hello 0}
+
+test attractor_core-exec-timeout-1.0 {exec helper timeout path} -body {
+    set result [::attractor_core::exec_with_control -command [list sh -lc {sleep 2; printf done}] -max_ms 50]
+    list [dict get $result exit_code] [dict get $result timed_out]
+} -result {124 1}

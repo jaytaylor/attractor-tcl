@@ -1,0 +1,7 @@
+digraph manager {
+  start [shape=start];
+  supervise [handler=stack.manager_loop, manager.max_cycles=3];
+  exit [shape=doublecircle];
+  start -> supervise;
+  supervise -> exit;
+}

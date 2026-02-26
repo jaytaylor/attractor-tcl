@@ -1,0 +1,10 @@
+digraph goalgates {
+  start [shape=start];
+  gate [handler=conditional, condition="goal == done"];
+  finish [handler=codergen, prompt="goal complete"];
+  exit [shape=doublecircle];
+  start -> gate;
+  gate -> finish [label=true, weight=2];
+  gate -> gate [label=false, weight=1];
+  finish -> exit;
+}
