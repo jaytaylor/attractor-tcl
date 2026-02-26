@@ -97,6 +97,10 @@ Out of scope:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+- [ ] Align default client/provider resolution with the spec (explicit configuration errors when no provider is configured, deterministic handling for ambiguous multi-key environments, and correct provider routing when `provider` is omitted).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Implement multimodal content parts (image URL, image base64, local image path) with per-provider translation or deterministic “unsupported” errors.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -147,18 +151,23 @@ Positive cases to cover:
 - Generate with `prompt`
 - Generate with `messages`
 - Reject when both prompt + messages are provided
+- Provider routing chooses the correct adapter when `provider` is omitted but a default is configured
 - Streaming emits STREAM_START, one-or-more deltas, and FINISH; concatenated deltas equal blocking output
 - Image input (URL)
 - Image input (base64)
 - Image input (local file path)
-- Tool loop:
-  - single tool call
-  - multiple tool calls in one response
-  - continuation request includes all tool results in one payload
-- Structured output success (valid JSON matching schema)
-- Provider-specific options pass through and are visible to the adapter layer
+ - Tool loop:
+   - single tool call
+   - multiple tool calls in one response
+   - continuation request includes all tool results in one payload
+ - Structured output success (valid JSON matching schema)
+ - Reasoning/thinking usage fields are mapped into the unified `Usage` model where providers surface them
+ - Prompt caching usage fields are mapped into the unified `Usage` model where providers surface them
+ - Provider-specific options pass through and are visible to the adapter layer
 
 Negative cases to cover:
+- No provider configured and no default -> deterministic configuration error
+- Multiple provider API keys set with no explicit provider -> deterministic configuration error
 - Unknown tool call produces error tool result (not an exception)
 - Tool execute handler throws -> error tool result
 - Structured output invalid JSON -> deterministic error type
@@ -201,6 +210,10 @@ Details to cover:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+- [ ] Implement loop detection based on consecutive identical tool call patterns and emit the required warning/steering event.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Implement provider profiles that generate full system prompts including identity/tool guidance, environment context, and project doc discovery.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -221,6 +234,7 @@ Positive cases to cover:
 - Tool output truncation marker appears and full output preserved in TOOL_CALL_END
 - Steering injected after a tool round changes the next model request
 - Subagent lifecycle: spawn -> send_input -> wait -> close
+- Loop detection emits the required warning/steering event after repeated identical tool call patterns
 
 Negative cases to cover:
 - Unknown tool call -> error tool result and loop continues
@@ -260,6 +274,10 @@ Details to cover:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+- [ ] Implement the Interviewer interface plus built-in implementations (AutoApprove, Console, Callback, Queue) and ensure `wait.human` uses it to present outgoing edge labels as choices.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Implement condition expression language parity (`=`, `!=`, `&&`, `outcome`, `preferred_label`, `context.*`).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -283,8 +301,15 @@ Positive cases to cover:
 - Parse chained edges and multi-line node attrs
 - Execute linear pipeline and produce status.json + prompt.md/response.md
 - Goal gate blocks exit until satisfied
-- Checkpoint/resume yields same completion and artifacts
-- Wait.human offers edge labels and routes on selection
+ - Checkpoint/resume yields same completion and artifacts
+ - Wait.human offers edge labels and routes on selection
+ - Model stylesheet applies overrides by shape/class/id with correct specificity order
+ - Prompt variable expansion (`$goal`) works in codergen prompts
+- Interviewer implementations:
+  - AutoApprove picks first option deterministically
+  - Queue-based interviewer consumes pre-seeded answers
+  - Callback interviewer delegates to a provided function
+  - Console interviewer input parsing is deterministic under tests (fixture-driven)
 
 Negative cases to cover:
 - Missing start node -> validation error
