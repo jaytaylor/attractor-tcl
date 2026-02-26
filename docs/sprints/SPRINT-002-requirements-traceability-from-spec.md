@@ -26,15 +26,33 @@ This sprint removes that gap by making the requirement catalog a first-class, sp
 ## Current State Snapshot (Verified 2026-02-26)
 - [ ] `make -j10 test` passes on a clean checkout.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/make-test.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] `tclsh tools/spec_coverage.tcl` reports green (but is not completeness-proof).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/spec-coverage.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Spec DoD checkboxes materially exceed the current traceability ID count (signals under-inventory).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n '^id:' docs/spec-coverage/traceability.md | wc -l` (exit code 0)
+- `awk 'NR>=1967 && $0 ~ /^- \\[ \\]/ {c++} END {print c+0}' unified-llm-spec.md` (exit code 0)
+- `awk 'NR>=1135 && $0 ~ /^- \\[ \\]/ {c++} END {print c+0}' coding-agent-loop-spec.md` (exit code 0)
+- `awk 'NR>=1776 && $0 ~ /^- \\[ \\]/ {c++} END {print c+0}' attractor-spec.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/spec-checkbox-vs-traceability.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 Baseline metrics (2026-02-26):
@@ -62,39 +80,84 @@ Out of scope:
 ### Phase 0 - Baseline Audit (Make The Gap Measurable)
 - [ ] Record baseline counts: DoD checkbox totals per spec, normative statement totals per spec, and current traceability ID count.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n '^id:' docs/spec-coverage/traceability.md | wc -l` (exit code 0)
+- `rg -n '\\bMUST\\b|\\bMUST NOT\\b|\\bREQUIRED\\b' attractor-spec.md coding-agent-loop-spec.md unified-llm-spec.md | wc -l` (exit code 0)
+- (DoD checkbox counts) See the four `awk ...` commands in “Current State Snapshot”.
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/counts.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Add a human-readable audit report under `.scratch/verification/SPRINT-002/baseline/` summarizing the deltas and listing the largest missing spec areas.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `ls .scratch/verification/SPRINT-002/baseline/` (exit code 0)
+- `test -f .scratch/verification/SPRINT-002/baseline/README.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/README.md`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Acceptance Criteria - Phase 0
 - [ ] The repo contains an auditable baseline report that explains why “traceability green” can still be incomplete today.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `test -f .scratch/verification/SPRINT-002/baseline/README.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/README.md`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Phase 1 - Requirement Catalog (Spec -> Canonical IDs)
 - [ ] Define a stable requirement ID scheme and document it (examples for ULLM/CAL/ATR, DoD + normative requirements).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `test -f docs/spec-coverage/requirements_id_scheme.md` (exit code 0)
+Evidence:
+- `docs/spec-coverage/requirements_id_scheme.md`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Update the three spec docs to include explicit requirement IDs for every DoD checkbox and every normative MUST/MUST NOT/REQUIRED statement (so the catalog is stable and reviewable).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/catalog/spec-id-check.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Implement a deterministic catalog generator: `tools/requirements_catalog.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/requirements_catalog.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/catalog/requirements-catalog.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Emit a machine-readable catalog artifact under `docs/spec-coverage/requirements.json` (generated) and a human-readable summary under `docs/spec-coverage/requirements.md` (generated).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `test -f docs/spec-coverage/requirements.json` (exit code 0)
+- `test -f docs/spec-coverage/requirements.md` (exit code 0)
+Evidence:
+- `docs/spec-coverage/requirements.json`
+- `docs/spec-coverage/requirements.md`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Add unit tests proving stable extraction for DoD checkbox bullets, normative MUST/MUST NOT/REQUIRED statements, and DoD-section scoping.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/catalog/requirements-catalog-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 Details to cover in tests:
 - DoD checkbox bullets (including nested lists)
@@ -120,25 +183,61 @@ Negative cases to cover (must be represented in tests):
 ### Acceptance Criteria - Phase 1
 - [ ] The catalog generator produces deterministic output (no ordering churn) and fails with actionable errors when spec parsing fails.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/requirements_catalog.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/catalog/requirements-catalog.log`
+- `.scratch/verification/SPRINT-002/catalog/requirements-catalog-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] The derived catalog count is at least the DoD checkbox total and cannot silently shrink without an intentional spec edit.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/catalog/requirements-summary.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Phase 2 - Traceability v2 + Coverage Enforcement
 - [ ] Extend `tools/spec_coverage.tcl` to load the derived catalog and enforce “no missing requirements” (catalog completeness), while preserving current well-formedness checks.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/coverage/spec-coverage-tool-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Update `docs/spec-coverage/traceability.md` to include a mapping block for every catalog requirement ID.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/coverage/spec-coverage.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Add integration tests covering missing/unknown/duplicate requirement IDs and malformed mapping blocks.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/coverage/spec-coverage-tool-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Add a static “verify command sanity” check: every `verify:` command must reference at least one real test (e.g., `tests/all.tcl -match ...` patterns must match existing test names).
+```text
+Verification:
+- `tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/coverage/verify-sanity-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 Details to cover in tests:
 - catalog requirement missing from traceability
@@ -160,23 +259,45 @@ Negative cases:
 ### Acceptance Criteria - Phase 2
 - [ ] Running the coverage tool fails whenever the specs change in a way that introduces new requirements without corresponding traceability updates.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/coverage/spec-coverage-tool-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Phase 3 - Developer Workflow + Guardrails
 - [ ] Add a short developer guide under `docs/spec-coverage/README.md` describing how to update specs, regenerate catalogs, update traceability, and add tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `test -f docs/spec-coverage/README.md` (exit code 0)
+Evidence:
+- `docs/spec-coverage/README.md`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Add an “evidence reference guardrail” tool that checks sprint docs for referenced artifacts and fails if links point to non-existent files (opt-in, not required for every commit).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/docs/evidence-guardrail-tests.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Acceptance Criteria - Phase 3
 - [ ] A new contributor can follow the guide to add one new spec requirement and get to green coverage with a test and mapping update.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/requirements_catalog.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/docs/new-requirement-walkthrough.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Appendix - Mermaid Diagrams (Verify Render With mmdc)
