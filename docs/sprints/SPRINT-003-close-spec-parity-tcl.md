@@ -38,15 +38,30 @@ The current Tcl implementation is a functional baseline with deterministic tests
 ## Current State Snapshot (Verified 2026-02-26)
 - [ ] Baseline tests pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/baseline/make-test.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Baseline coverage tool is green under the *current* traceability scheme.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/baseline/spec-coverage.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 - [ ] Baseline spec parity audit exists and is referenced from this sprint (lists the largest behavior gaps).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `test -f .scratch/verification/SPRINT-003/baseline/parity-audit.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/baseline/parity-audit.md`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Scope
@@ -301,7 +316,12 @@ Details to cover:
 ### Acceptance Criteria - Phase 4
 - [ ] Running `make -j10 test` is sufficient to prove spec parity in offline mode.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/phase-4/make-test.log`
+Notes:
+- {placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Phase 5 - Documentation + Closeout
