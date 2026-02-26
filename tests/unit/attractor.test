@@ -87,3 +87,60 @@ test attractor-resume-1.0 {resume starts from checkpoint node} -setup {
 } -cleanup {
     file delete -force $logsRoot
 } -result {success 1}
+
+test attractor-validate-start-exit-1.0 {start incoming and exit outgoing edges are rejected} -body {
+    set graph [::attractor::parse_dot {
+        digraph bad {
+            start [shape=start];
+            middle [handler=codergen];
+            exit [shape=doublecircle];
+            middle -> start;
+            exit -> middle;
+        }
+    }]
+    set diagnostics [::attractor::validate $graph]
+    set codes {}
+    foreach d $diagnostics {
+        lappend codes [dict get $d code]
+    }
+    list [expr {[lsearch -exact $codes start_incoming] >= 0}] [expr {[lsearch -exact $codes exit_outgoing] >= 0}]
+} -result {1 1}
+
+test attractor-condition-1.0 {condition evaluator supports equality and inequality} -body {
+    set context [dict create branch left]
+    list \
+      [::attractor::__condition_matches {branch == left} $context] \
+      [::attractor::__condition_matches {branch != right} $context] \
+      [::attractor::__condition_matches {branch == right} $context]
+} -result {1 1 0}
+
+test attractor-tool-handler-1.0 {tool handler runs command and fails when command missing} -body {
+    set success [::attractor::__execute_handler tool n1 [dict create tool_command {printf done}] {} ::attractor::default_codergen_backend ::attractor::default_interviewer [file join $root .scratch]]
+    set failed [::attractor::__execute_handler tool n2 {} {} ::attractor::default_codergen_backend ::attractor::default_interviewer [file join $root .scratch]]
+    list [dict get $success status] [dict get $failed failure_reason]
+} -result {success missing_tool_command}
+
+test attractor-handler-wait-human-1.0 {wait.human handler consults interviewer decision} -setup {
+    proc ::tests::attractor::reject_interviewer {request} {
+        return [dict create approved 0 response denied]
+    }
+} -body {
+    set outcome [::attractor::__execute_handler wait.human ask [dict create question "Proceed?"] {} ::attractor::default_codergen_backend ::tests::attractor::reject_interviewer [file join $root .scratch]]
+    list [dict get $outcome status] [dict get $outcome failure_reason]
+} -cleanup {
+    rename ::tests::attractor::reject_interviewer {}
+} -result {failed rejected}
+
+test attractor-parse-comments-subgraph-1.0 {parser strips comments and flattens subgraphs} -body {
+    set graph [::attractor::parse_dot {
+        digraph demo {
+            // comment
+            start [shape=start];
+            subgraph cluster_a { build [handler=codergen]; }
+            exit [shape=doublecircle];
+            start -> build; # inline comment
+            build -> exit;
+        }
+    }]
+    list [dict exists [dict get $graph nodes] build] [llength [dict get $graph edges]]
+} -result {1 2}

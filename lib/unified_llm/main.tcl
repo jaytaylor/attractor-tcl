@@ -3,15 +3,16 @@ namespace eval ::unified_llm {
     variable default_client ""
     variable client_seq 0
     variable clients {}
+    variable package_dir [file dirname [info script]]
 }
 
 package require Tcl 8.5
 package require json
 package require attractor_core
 
-source [file join [file dirname [info script]] adapters openai.tcl]
-source [file join [file dirname [info script]] adapters anthropic.tcl]
-source [file join [file dirname [info script]] adapters gemini.tcl]
+source [file join $::unified_llm::package_dir adapters openai.tcl]
+source [file join $::unified_llm::package_dir adapters anthropic.tcl]
+source [file join $::unified_llm::package_dir adapters gemini.tcl]
 
 proc ::unified_llm::set_default_client {client_cmd} {
     variable default_client
@@ -420,7 +421,8 @@ proc ::unified_llm::adapters::mock_complete {state request} {
 }
 
 proc ::unified_llm::__load_models {} {
-    set path [file join [file dirname [info script]] models.json]
+    variable package_dir
+    set path [file join $package_dir models.json]
     if {![file exists $path]} {
         return {}
     }

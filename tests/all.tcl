@@ -59,3 +59,8 @@ foreach f $files {
 }
 
 ::tcltest::cleanupTests
+
+if {$::tcltest::numTests(Failed) > 0} {
+    exit 1
+}
+exit 0

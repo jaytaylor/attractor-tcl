@@ -155,3 +155,96 @@ test unified_llm-generate-object-negative-1.0 {invalid object payload raises NO_
     rename ::tests::unified_llm::transport_bad_obj {}
     $client close
 } -result {{UNIFIED_LLM NO_OBJECT_GENERATED} 1}
+
+test unified_llm-middleware-order-1.0 {middleware request order and response reverse order} -setup {
+    set ::tests::unified_llm::mw_log {}
+    proc ::tests::unified_llm::mw1 {phase payload} {
+        if {$phase eq "request"} {
+            lappend ::tests::unified_llm::mw_log req1
+        } else {
+            lappend ::tests::unified_llm::mw_log resp1
+        }
+        return $payload
+    }
+    proc ::tests::unified_llm::mw2 {phase payload} {
+        if {$phase eq "request"} {
+            lappend ::tests::unified_llm::mw_log req2
+        } else {
+            lappend ::tests::unified_llm::mw_log resp2
+        }
+        return $payload
+    }
+    proc ::tests::unified_llm::transport_mw {req} {
+        set body [dict create output_text ok usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_mw -middlewares [list ::tests::unified_llm::mw1 ::tests::unified_llm::mw2]]
+} -body {
+    set _ [::unified_llm::generate -client $client -provider openai -prompt hi -model gpt-4.1]
+    set ::tests::unified_llm::mw_log
+} -cleanup {
+    rename ::tests::unified_llm::mw1 {}
+    rename ::tests::unified_llm::mw2 {}
+    rename ::tests::unified_llm::transport_mw {}
+    unset -nocomplain ::tests::unified_llm::mw_log
+    $client close
+} -result {req1 req2 resp2 resp1}
+
+test unified_llm-stream-events-1.0 {stream emits start delta and finish} -setup {
+    set client [::unified_llm::client_new -provider mock]
+    set ::tests::unified_llm::stream_events {}
+    proc ::tests::unified_llm::capture_event {event} {
+        lappend ::tests::unified_llm::stream_events [dict get $event type]
+    }
+} -body {
+    ::unified_llm::stream -client $client -provider mock -prompt hello -model mock-1 -on_event ::tests::unified_llm::capture_event
+    set ::tests::unified_llm::stream_events
+} -cleanup {
+    rename ::tests::unified_llm::capture_event {}
+    unset -nocomplain ::tests::unified_llm::stream_events
+    $client close
+} -result {STREAM_START TEXT_DELTA FINISH}
+
+test unified_llm-usage-add-1.0 {usage math adds optional fields} -body {
+    set a [dict create input_tokens 1 output_tokens 2]
+    set b [dict create output_tokens 5 reasoning_tokens 3 cache_read_tokens 4]
+    set merged [::unified_llm::usage_add $a $b]
+    list [dict get $merged input_tokens] [dict get $merged output_tokens] [dict get $merged reasoning_tokens] [dict get $merged cache_read_tokens]
+} -result {1 7 3 4}
+
+test unified_llm-anthropic-merge-1.0 {anthropic adapter merges adjacent same-role content} -body {
+    set request [dict create model claude messages [list \
+        [dict create role user content first] \
+        [dict create role user content second] \
+        [dict create role assistant content third]]]
+    set payload [::unified_llm::adapters::anthropic::translate_request $request]
+    set merged [dict get [lindex [dict get [lindex [dict get $payload messages] 0] content] 0] text]
+    list [llength [dict get $payload messages]] [dict get [lindex [dict get $payload messages] 0] role] [string first "first\nsecond" $merged]
+} -result {2 user 0}
+
+test unified_llm-gemini-synthetic-tool-id-1.0 {gemini adapter synthesizes missing tool call ids} -setup {
+    proc ::tests::unified_llm::transport_gemini_toolid {req} {
+        set body [dict create candidates [list [dict create content [dict create parts [list [dict create text ok]]]]] tool_calls [list [dict create name tool_x arguments [dict create x 1]]]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider gemini -transport ::tests::unified_llm::transport_gemini_toolid]
+} -body {
+    set response [::unified_llm::generate -client $client -provider gemini -prompt hi -model gemini-1.5-pro -max_tool_rounds 0]
+    dict get [lindex [dict get $response tool_calls] 0] id
+} -cleanup {
+    rename ::tests::unified_llm::transport_gemini_toolid {}
+    $client close
+} -result gemini-tool-1
+
+test unified_llm-prompt-messages-exclusive-1.0 {prompt and messages are mutually exclusive} -setup {
+    set client [::unified_llm::client_new -provider mock]
+} -body {
+    catch {::unified_llm::generate -client $client -prompt hi -messages [list [::unified_llm::message user hi]]} err opts
+    list [dict get $opts -errorcode] [string match "*either -prompt or -messages*" $err]
+} -cleanup {
+    $client close
+} -result {{UNIFIED_LLM INPUT} 1}
+
+test unified_llm-model-catalog-1.0 {model catalog lookup helpers} -body {
+    list [::unified_llm::get_latest_model openai] [expr {[llength [::unified_llm::list_models anthropic]] > 0}] [dict get [::unified_llm::get_model_info gemini gemini-1.5-pro] id]
+} -result {gpt-4.1 1 gemini-1.5-pro}

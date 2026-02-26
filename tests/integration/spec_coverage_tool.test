@@ -1,0 +1,87 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+set tool [file join $root tools spec_coverage.tcl]
+
+namespace eval ::tests::integration::spec_cov {
+    variable idx 0
+}
+
+proc ::tests::integration::spec_cov::tmpfile {body} {
+    variable idx
+    incr idx
+    set path [file join [pwd] .scratch verification SPRINT-001 integration spec-coverage-tool-$idx.md]
+    file mkdir [file dirname $path]
+    set fh [open $path w]
+    puts -nonewline $fh $body
+    close $fh
+    return $path
+}
+
+test integration-spec-coverage-tool-valid-1.0 {coverage tool passes valid traceability blocks} -setup {
+    set trace [::tests::integration::spec_cov::tmpfile [join [list \
+"id: ULLM-DOD-8.1-CoreClient" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match unified_llm-*`" \
+"---" \
+"id: CAL-DOD-9.5-TruncationOrder" \
+"spec: coding-agent-loop-spec.md#section-9" \
+"impl: lib/coding_agent_loop/tools/core.tcl" \
+"tests: tests/unit/coding_agent_loop.test" \
+"verify: `tclsh tests/all.tcl -match coding_agent_loop-*`" ] "\n"]]
+} -body {
+    set out [exec tclsh $tool $trace]
+    list [expr {[string first "requirements=2" $out] >= 0}] [expr {[string first "missing=0" $out] >= 0}] [expr {[string first "duplicates=0" $out] >= 0}]
+} -cleanup {
+    file delete -force $trace
+} -result {1 1 1}
+
+test integration-spec-coverage-tool-missing-field-1.0 {coverage tool fails missing mappings} -setup {
+    set trace [::tests::integration::spec_cov::tmpfile [join [list \
+"id: ULLM-DOD-8.1-CoreClient" \
+"spec: unified-llm-spec.md#section-8" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match unified_llm-*`" ] "\n"]]
+} -body {
+    catch {exec tclsh $tool $trace} out
+    list [expr {[string first "MISSING ULLM-DOD-8.1-CoreClient impl" $out] >= 0}] [expr {[string first "missing=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $trace
+} -result {1 1}
+
+test integration-spec-coverage-tool-duplicate-1.0 {coverage tool fails duplicate IDs} -setup {
+    set trace [::tests::integration::spec_cov::tmpfile [join [list \
+"id: ATR-DOD-11.2-DotParser" \
+"spec: attractor-spec.md#section-11" \
+"impl: lib/attractor/main.tcl" \
+"tests: tests/unit/attractor.test" \
+"verify: `tclsh tests/all.tcl -match attractor-*`" \
+"---" \
+"id: ATR-DOD-11.2-DotParser" \
+"spec: attractor-spec.md#section-11" \
+"impl: lib/attractor/main.tcl" \
+"tests: tests/unit/attractor.test" \
+"verify: `tclsh tests/all.tcl -match attractor-*`" ] "\n"]]
+} -body {
+    catch {exec tclsh $tool $trace} out
+    list [expr {[string first "DUPLICATE ATR-DOD-11.2-DotParser" $out] >= 0}] [expr {[string first "duplicates=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $trace
+} -result {1 1}
+
+test integration-spec-coverage-tool-bad-path-1.0 {coverage tool fails non-existent impl/test paths} -setup {
+    set trace [::tests::integration::spec_cov::tmpfile [join [list \
+"id: CAL-DOD-9.10-Events" \
+"spec: coding-agent-loop-spec.md#section-9" \
+"impl: lib/coding_agent_loop/missing.tcl" \
+"tests: tests/unit/missing.test" \
+"verify: `tclsh tests/all.tcl -match coding_agent_loop-*`" ] "\n"]]
+} -body {
+    catch {exec tclsh $tool $trace} out
+    list [expr {[string first "BAD_PATH CAL-DOD-9.10-Events impl lib/coding_agent_loop/missing.tcl" $out] >= 0}] [expr {[string first "BAD_PATH CAL-DOD-9.10-Events tests tests/unit/missing.test" $out] >= 0}] [expr {[string first "bad_paths=2" $out] >= 0}]
+} -cleanup {
+    file delete -force $trace
+} -result {1 1 1}

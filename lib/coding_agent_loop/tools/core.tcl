@@ -106,15 +106,30 @@ proc ::coding_agent_loop::tools::edit_file {args _toolCall} {
     set content [read $fh]
     close $fh
 
-    set matches [regexp -all -inline -- [regexp -quote $old] $content]
-    if {[llength $matches] == 0} {
+    set count 0
+    set firstPos -1
+    set cursor 0
+    set oldLen [string length $old]
+    while {1} {
+        set pos [string first $old $content $cursor]
+        if {$pos < 0} {
+            break
+        }
+        if {$firstPos < 0} {
+            set firstPos $pos
+        }
+        incr count
+        set cursor [expr {$pos + $oldLen}]
+    }
+
+    if {$count == 0} {
         return -code error "old_string not found"
     }
-    if {[llength $matches] > 1} {
+    if {$count > 1} {
         return -code error "old_string not unique"
     }
 
-    set updated [string map [list $old $new] $content]
+    set updated [string replace $content $firstPos [expr {$firstPos + $oldLen - 1}] $new]
     set out [open $path w]
     puts -nonewline $out $updated
     close $out
