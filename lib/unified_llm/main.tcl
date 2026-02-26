@@ -29,16 +29,33 @@ proc ::unified_llm::default_client {} {
 }
 
 proc ::unified_llm::from_env {} {
-    set provider mock
-    if {[info exists ::env(OPENAI_API_KEY)]} {
-        set provider openai
-    } elseif {[info exists ::env(ANTHROPIC_API_KEY)]} {
-        set provider anthropic
-    } elseif {[info exists ::env(GEMINI_API_KEY)]} {
-        set provider gemini
+    if {[info exists ::env(UNIFIED_LLM_PROVIDER)]} {
+        set provider [string tolower [string trim $::env(UNIFIED_LLM_PROVIDER)]]
+        if {$provider ni {openai anthropic gemini mock}} {
+            return -code error -errorcode [list UNIFIED_LLM PROVIDER UNKNOWN] "unsupported provider in UNIFIED_LLM_PROVIDER: $provider"
+        }
+        return [::unified_llm::client_new -provider $provider]
     }
 
-    return [::unified_llm::client_new -provider $provider]
+    set candidates {}
+    if {[info exists ::env(OPENAI_API_KEY)] && $::env(OPENAI_API_KEY) ne ""} {
+        lappend candidates openai
+    }
+    if {[info exists ::env(ANTHROPIC_API_KEY)] && $::env(ANTHROPIC_API_KEY) ne ""} {
+        lappend candidates anthropic
+    }
+    if {[info exists ::env(GEMINI_API_KEY)] && $::env(GEMINI_API_KEY) ne ""} {
+        lappend candidates gemini
+    }
+
+    if {[llength $candidates] > 1} {
+        return -code error -errorcode [list UNIFIED_LLM PROVIDER AMBIGUOUS] "multiple provider API keys present; set UNIFIED_LLM_PROVIDER explicitly"
+    }
+    if {[llength $candidates] == 1} {
+        return [::unified_llm::client_new -provider [lindex $candidates 0]]
+    }
+
+    return [::unified_llm::client_new -provider mock]
 }
 
 proc ::unified_llm::client_new {args} {

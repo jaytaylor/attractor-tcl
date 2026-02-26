@@ -8,7 +8,11 @@ proc ::unified_llm::adapters::gemini::translate_request {request} {
         lappend contents [dict create role [dict get $message role] parts [list [dict create text [dict get $message content]]]]
     }
 
-    return [dict create contents $contents]
+    set out [dict create contents $contents]
+    if {[dict exists $request provider_options]} {
+        dict set out provider_options [dict get $request provider_options]
+    }
+    return $out
 }
 
 proc ::unified_llm::adapters::gemini::complete {state request} {
@@ -53,6 +57,12 @@ proc ::unified_llm::adapters::gemini::complete {state request} {
     if {[dict exists $decoded usageMetadata thoughtsTokenCount]} {
         dict set usage reasoning_tokens [dict get $decoded usageMetadata thoughtsTokenCount]
     }
+    if {[dict exists $decoded usageMetadata cache_read_tokens]} {
+        dict set usage cache_read_tokens [dict get $decoded usageMetadata cache_read_tokens]
+    }
+    if {[dict exists $decoded usageMetadata cacheTokensDetails cachedContentTokenCount]} {
+        dict set usage cache_read_tokens [dict get $decoded usageMetadata cacheTokensDetails cachedContentTokenCount]
+    }
 
     set toolCalls {}
     if {[dict exists $decoded tool_calls]} {
@@ -70,12 +80,23 @@ proc ::unified_llm::adapters::gemini::complete {state request} {
         lappend normalized $current
     }
 
+    set metadata [dict create]
+    if {[dict exists $transport headers]} {
+        set h [dict get $transport headers]
+        foreach key {x-request-id x-ratelimit-limit-requests} {
+            if {[dict exists $h $key]} {
+                dict set metadata $key [dict get $h $key]
+            }
+        }
+    }
+
     return [dict create \
         provider gemini \
         response_id gemini-response-1 \
         text $text \
         tool_calls $normalized \
         usage $usage \
+        metadata $metadata \
         raw $decoded \
         request [dict create endpoint $endpoint payload $payload headers $headers]]
 }

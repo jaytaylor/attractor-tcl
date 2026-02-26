@@ -248,3 +248,64 @@ test unified_llm-prompt-messages-exclusive-1.0 {prompt and messages are mutually
 test unified_llm-model-catalog-1.0 {model catalog lookup helpers} -body {
     list [::unified_llm::get_latest_model openai] [expr {[llength [::unified_llm::list_models anthropic]] > 0}] [dict get [::unified_llm::get_model_info gemini gemini-1.5-pro] id]
 } -result {gpt-4.1 1 gemini-1.5-pro}
+
+test unified_llm-from-env-ambiguous-1.0 {from_env requires explicit provider when multiple keys are set} -setup {
+    set ::env(OPENAI_API_KEY) o
+    set ::env(ANTHROPIC_API_KEY) a
+    unset -nocomplain ::env(UNIFIED_LLM_PROVIDER)
+} -body {
+    catch {::unified_llm::from_env} err opts
+    list [dict get $opts -errorcode] [string match "*multiple provider API keys*" $err]
+} -cleanup {
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
+} -result {{UNIFIED_LLM PROVIDER AMBIGUOUS} 1}
+
+test unified_llm-from-env-explicit-provider-1.0 {from_env honors explicit provider override} -setup {
+    set ::env(OPENAI_API_KEY) o
+    set ::env(ANTHROPIC_API_KEY) a
+    set ::env(UNIFIED_LLM_PROVIDER) gemini
+} -body {
+    set client [::unified_llm::from_env]
+    set provider [dict get [$client config] provider]
+    $client close
+    set provider
+} -cleanup {
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
+} -result gemini
+
+test unified_llm-provider-metadata-usage-1.0 {adapters map metadata headers and usage fields} -setup {
+    proc ::tests::unified_llm::transport_metadata {req} {
+        set provider [dict get $req provider]
+        switch -- $provider {
+            openai {
+                set body [dict create output_text openai usage [dict create input_tokens 3 output_tokens 5 output_tokens_details [dict create reasoning_tokens 2] input_tokens_details [dict create cached_tokens 7]]]
+                set headers [dict create x-request-id req-openai openai-processing-ms 11]
+            }
+            anthropic {
+                set body [dict create content [list [dict create type text text anthropic]] usage [dict create input_tokens 2 output_tokens 4 cache_read_input_tokens 6]]
+                set headers [dict create request-id req-anthropic]
+            }
+            gemini {
+                set body [dict create candidates [list [dict create content [dict create parts [list [dict create text gemini]]]]] usageMetadata [dict create promptTokenCount 1 candidatesTokenCount 2 thoughtsTokenCount 3 cacheTokensDetails [dict create cachedContentTokenCount 9]]]
+                set headers [dict create x-request-id req-gemini]
+            }
+        }
+        return [dict create status_code 200 headers $headers body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_metadata]
+} -body {
+    set a [::unified_llm::generate -client $client -provider openai -prompt x -model gpt-4.1 -max_tool_rounds 0]
+    set b [::unified_llm::generate -client $client -provider anthropic -prompt x -model claude -max_tool_rounds 0]
+    set c [::unified_llm::generate -client $client -provider gemini -prompt x -model gemini-1.5-pro -max_tool_rounds 0]
+    list \
+      [dict get $a usage reasoning_tokens] \
+      [dict get $a usage cache_read_tokens] \
+      [dict get $b usage cache_read_tokens] \
+      [dict get $c usage cache_read_tokens] \
+      [dict get $a metadata x-request-id] \
+      [dict get $b metadata request-id] \
+      [dict get $c metadata x-request-id]
+} -cleanup {
+    rename ::tests::unified_llm::transport_metadata {}
+    $client close
+} -result {2 7 6 9 req-openai req-anthropic req-gemini}

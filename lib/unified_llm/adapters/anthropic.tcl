@@ -35,6 +35,9 @@ proc ::unified_llm::adapters::anthropic::translate_request {request} {
         }
         dict set out tools $toolsPayload
     }
+    if {[dict exists $request provider_options]} {
+        dict set out provider_options [dict get $request provider_options]
+    }
 
     return $out
 }
@@ -63,12 +66,37 @@ proc ::unified_llm::adapters::anthropic::complete {state request} {
 
     set usage [dict create input_tokens 0 output_tokens 0 reasoning_tokens 0 cache_read_tokens 0]
     if {[dict exists $decoded usage]} {
-        set usage [::unified_llm::usage_add $usage [dict get $decoded usage]]
+        set rawUsage [dict get $decoded usage]
+        if {[dict exists $rawUsage input_tokens]} {
+            dict set usage input_tokens [dict get $rawUsage input_tokens]
+        }
+        if {[dict exists $rawUsage output_tokens]} {
+            dict set usage output_tokens [dict get $rawUsage output_tokens]
+        }
+        if {[dict exists $rawUsage reasoning_tokens]} {
+            dict set usage reasoning_tokens [dict get $rawUsage reasoning_tokens]
+        }
+        if {[dict exists $rawUsage cache_read_tokens]} {
+            dict set usage cache_read_tokens [dict get $rawUsage cache_read_tokens]
+        }
+        if {[dict exists $rawUsage cache_read_input_tokens]} {
+            dict set usage cache_read_tokens [dict get $rawUsage cache_read_input_tokens]
+        }
     }
 
     set responseId anthropic-response-1
     if {[dict exists $decoded id]} {
         set responseId [dict get $decoded id]
+    }
+
+    set metadata [dict create]
+    if {[dict exists $transport headers]} {
+        set h [dict get $transport headers]
+        foreach key {request-id anthropic-ratelimit-remaining-requests anthropic-ratelimit-remaining-tokens} {
+            if {[dict exists $h $key]} {
+                dict set metadata $key [dict get $h $key]
+            }
+        }
     }
 
     return [dict create \
@@ -77,6 +105,7 @@ proc ::unified_llm::adapters::anthropic::complete {state request} {
         text $text \
         tool_calls [expr {[dict exists $decoded tool_calls] ? [dict get $decoded tool_calls] : {}}] \
         usage $usage \
+        metadata $metadata \
         raw $decoded \
         request [dict create endpoint $endpoint payload $payload headers $headers]]
 }

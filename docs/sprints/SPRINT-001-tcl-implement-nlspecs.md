@@ -169,75 +169,128 @@ Evidence:
 ```
 
 ## Phase 2 - Unified LLM Spec Closure
-- [ ] Close data model parity for messages/content parts/tool calls/tool results/usage metadata.
+- [X] Close data model parity for messages/content parts/tool calls/tool results/usage metadata.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Validate middleware onion ordering: request in registration order, response in reverse order.
+- [X] Validate middleware onion ordering: request in registration order, response in reverse order.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-middleware-order-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Complete adapter parity for OpenAI Responses API, Anthropic Messages API, and Gemini API.
+- [X] Complete adapter parity for OpenAI Responses API, Anthropic Messages API, and Gemini API.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-parity-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-integration.log`
 ```
-- [ ] Ensure structured output (`generate_object`/`stream_object`) schema validation is spec-complete.
+- [X] Ensure structured output (`generate_object`/`stream_object`) schema validation is spec-complete.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-generate-object-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Ensure tool loop semantics are spec-complete: parallel tool execution, single continuation request, stable ordering.
+- [X] Ensure tool loop semantics are spec-complete: parallel tool execution, single continuation request, stable ordering.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-tool-loop-batch-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Ensure prompt caching and provider metadata fields are surfaced consistently when available.
+- [X] Ensure prompt caching and provider metadata fields are surfaced consistently when available.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-metadata-usage-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Expand deterministic adapter fixtures and mock streaming coverage for each provider.
+- [X] Expand deterministic adapter fixtures and mock streaming coverage for each provider.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 
 ### Positive Test Cases - Phase 2
-- [ ] OpenAI tests assert Responses endpoint usage and reasoning/cache usage field extraction.
+- [X] OpenAI tests assert Responses endpoint usage and reasoning/cache usage field extraction.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-metadata-usage-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Anthropic tests assert strict alternation fixups and thinking signature round-trip.
+- [X] Anthropic tests assert strict alternation fixups and thinking signature round-trip.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-anthropic-merge-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Gemini tests assert synthetic tool-call IDs and functionResponse mapping.
+- [X] Gemini tests assert synthetic tool-call IDs and functionResponse mapping.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-gemini-synthetic-tool-id-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Parallel tool-call tests assert concurrent execution and batched continuation behavior.
+- [X] Parallel tool-call tests assert concurrent execution and batched continuation behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-tool-loop-batch-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 
 ### Negative Test Cases - Phase 2
-- [ ] `generate_object` fails with `NoObjectGeneratedError` when output is invalid for schema.
+- [X] `generate_object` fails with `NoObjectGeneratedError` when output is invalid for schema.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-generate-object-negative-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Unknown tool calls produce error ToolResult values instead of exceptions.
+- [X] Unknown tool calls produce error ToolResult values instead of exceptions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-unknown-tool-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
-- [ ] Provider adapter tests fail when endpoint shape drifts from native API contracts.
+- [X] Provider adapter tests fail when endpoint shape drifts from native API contracts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 
 ### Acceptance Criteria - Phase 2
-- [ ] Unified LLM DoD and MUST requirements are fully mapped and green in traceability.
+- [X] Unified LLM DoD and MUST requirements are fully mapped and green in traceability.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/spec-coverage.log`
 ```
-- [ ] Offline deterministic tests cover request translation, response translation, streaming, and tool loops across all providers.
+- [X] Offline deterministic tests cover request translation, response translation, streaming, and tool loops across all providers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verified with:
+- `timeout 180 tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-parity-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
+- `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-integration.log`
 ```
 
 ## Phase 3 - Coding Agent Loop Spec Closure
