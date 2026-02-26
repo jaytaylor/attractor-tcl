@@ -1,0 +1,67 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require attractor
+package require unified_llm
+package require coding_agent_loop
+package require attractor_core
+
+namespace eval ::tests::integration::attractor {}
+
+proc ::tests::integration::attractor::ullm_backend {request} {
+    set response [::unified_llm::generate -prompt [dict get $request prompt] -provider mock -max_tool_rounds 0]
+    return [dict create text [dict get $response text] usage [dict get $response usage] preferred_label success]
+}
+
+proc ::tests::integration::attractor::cal_backend {request} {
+    set client [::unified_llm::client_new -provider mock]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai]
+    set result [$session submit [dict get $request prompt]]
+    $session close
+    $client close
+    return [dict create text [dict get $result text] preferred_label success]
+}
+
+test integration-attractor-ullm-backend-1.0 {attractor codergen backend works with unified_llm generate} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-001 integration attractor-ullm-[pid]]
+    file delete -force $logsRoot
+    set graph [::attractor::parse_dot {
+        digraph demo {
+            start [shape=start];
+            build [handler=codergen, prompt="compile"]; 
+            exit [shape=doublecircle];
+            start -> build;
+            build -> exit [label=success, weight=1];
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::ullm_backend -logs_root $logsRoot]
+    list [dict get $result status] [file exists [file join $logsRoot build prompt.md]] [file exists [file join $logsRoot build response.md]]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1 1}
+
+test integration-attractor-cal-backend-1.0 {attractor codergen backend works with coding_agent_loop session} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-001 integration attractor-cal-[pid]]
+    file delete -force $logsRoot
+    set graph [::attractor::parse_dot {
+        digraph demo {
+            start [shape=start];
+            edit [handler=codergen, prompt="update file"]; 
+            exit [shape=doublecircle];
+            start -> edit;
+            edit -> exit [label=success, weight=1];
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::cal_backend -logs_root $logsRoot]
+    set fh [open [file join $logsRoot edit response.md] r]
+    set payload [read $fh]
+    close $fh
+    list [dict get $result status] [expr {[string match "mock:*" $payload] || [string match "offline-openai*" $payload]}]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1}

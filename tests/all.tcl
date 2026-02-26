@@ -58,9 +58,10 @@ foreach f $files {
     source $f
 }
 
+set failedCount $::tcltest::numTests(Failed)
 ::tcltest::cleanupTests
 
-if {$::tcltest::numTests(Failed) > 0} {
+if {$failedCount > 0} {
     exit 1
 }
 exit 0

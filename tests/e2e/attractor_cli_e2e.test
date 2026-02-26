@@ -40,3 +40,38 @@ test e2e-attractor-cli-resume-1.0 {CLI supports resume from checkpoint} -setup {
 } -cleanup {
     file delete -force $logsRoot
 } -result {1 1}
+
+test e2e-attractor-cli-validate-1.0 {CLI validates dot pipelines without execution} -body {
+    set cmd [list [file join $root bin attractor] validate [file join $root examples linear.dot]]
+    set out [exec {*}$cmd]
+    expr {[string first "\"status\":\"valid\"" $out] >= 0}
+} -result 1
+
+test e2e-attractor-cli-validate-negative-1.0 {CLI validate fails on malformed graph} -setup {
+    set bad [file join $root .scratch verification SPRINT-001 integration e2e-bad-[pid].dot]
+    set fh [open $bad w]
+    puts -nonewline $fh {digraph bad { start [shape=start]; node -> ; }}
+    close $fh
+} -body {
+    set cmd [list [file join $root bin attractor] validate $bad]
+    catch {exec {*}$cmd} out
+    string match "*validation_failed*" $out
+} -cleanup {
+    file delete -force $bad
+} -result 1
+
+test e2e-attractor-cli-resume-negative-1.0 {CLI resume fails on corrupted checkpoint} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-001 integration e2e-resume-bad-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+    set checkpoint [file join $logsRoot checkpoint.json]
+    set fh [open $checkpoint w]
+    puts -nonewline $fh "not-json"
+    close $fh
+} -body {
+    set cmd [list [file join $root bin attractor] run [file join $root examples linear.dot] --logs-root $logsRoot --resume]
+    set code [catch {exec {*}$cmd} out]
+    list $code [expr {[string length $out] > 0}]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {1 1}

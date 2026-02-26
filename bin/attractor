@@ -4,7 +4,7 @@ lappend auto_path $root
 package require attractor
 
 proc usage {} {
-    puts stderr "usage: bin/attractor run <pipeline.dot> ?--logs-root PATH? ?--resume?"
+    puts stderr "usage: bin/attractor <run|validate> <pipeline.dot> ?--logs-root PATH? ?--resume?"
     exit 2
 }
 
@@ -13,7 +13,7 @@ if {$argc < 2} {
 }
 
 set cmd [lindex $argv 0]
-if {$cmd ne "run"} {
+if {$cmd ni {run validate}} {
     usage
 }
 
@@ -63,6 +63,11 @@ if {$logsRoot ne ""} {
 }
 if {$resume} {
     lappend args -resume 1
+}
+
+if {$cmd eq "validate"} {
+    puts [::attractor_core::json_encode [dict create status valid diagnostics {}]]
+    exit 0
 }
 
 set result [::attractor::run $graph {*}$args]

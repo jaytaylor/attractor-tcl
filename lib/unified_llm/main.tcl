@@ -242,54 +242,81 @@ proc ::unified_llm::generate {args} {
     }
     array set opts $args
 
-    if {$opts(-client) eq ""} {
-        set client [::unified_llm::default_client]
-    } else {
-        set client $opts(-client)
-    }
-
     if {$opts(-prompt) ne "" && [llength $opts(-messages)] > 0} {
         return -code error -errorcode [list UNIFIED_LLM INPUT] "provide either -prompt or -messages"
     }
 
-    if {$opts(-prompt) ne ""} {
-        set messages [list [::unified_llm::message user $opts(-prompt)]]
+    set tempClient 0
+    if {$opts(-client) eq ""} {
+        variable default_client
+        if {$default_client ne "" && [llength [info commands $default_client]] > 0} {
+            set client $default_client
+        } elseif {$default_client ne ""} {
+            set default_client ""
+            if {$opts(-provider) ne ""} {
+                set client [::unified_llm::client_new -provider $opts(-provider)]
+                set tempClient 1
+            } else {
+                set client [::unified_llm::default_client]
+            }
+        } elseif {$opts(-provider) ne ""} {
+            set client [::unified_llm::client_new -provider $opts(-provider)]
+            set tempClient 1
+        } else {
+            set client [::unified_llm::default_client]
+        }
     } else {
-        set messages $opts(-messages)
+        set client $opts(-client)
     }
 
-    set request [dict create \
-        model $opts(-model) \
-        messages $messages \
-        tools $opts(-tools) \
-        provider_options $opts(-provider_options)]
-
-    if {$opts(-provider) ne ""} {
-        dict set request provider $opts(-provider)
-    }
-
-    set totalUsage [dict create input_tokens 0 output_tokens 0 reasoning_tokens 0 cache_read_tokens 0]
-
-    set response [$client complete $request]
-    set totalUsage [::unified_llm::usage_add $totalUsage [dict get $response usage]]
-
-    set round 0
-    while {$opts(-max_tool_rounds) != 0 && $round < $opts(-max_tool_rounds)} {
-        if {![dict exists $response tool_calls] || [llength [dict get $response tool_calls]] == 0} {
-            break
+    set code [catch {
+        if {$opts(-prompt) ne ""} {
+            set messages [list [::unified_llm::message user $opts(-prompt)]]
+        } else {
+            set messages $opts(-messages)
         }
 
-        set toolResults [::unified_llm::execute_tool_calls [dict get $response tool_calls] $opts(-tools)]
-        dict set request tool_results $toolResults
-        dict set request continuation_from [dict get $response response_id]
+        set request [dict create \
+            model $opts(-model) \
+            messages $messages \
+            tools $opts(-tools) \
+            provider_options $opts(-provider_options)]
+
+        if {$opts(-provider) ne ""} {
+            dict set request provider $opts(-provider)
+        }
+
+        set totalUsage [dict create input_tokens 0 output_tokens 0 reasoning_tokens 0 cache_read_tokens 0]
 
         set response [$client complete $request]
         set totalUsage [::unified_llm::usage_add $totalUsage [dict get $response usage]]
-        incr round
-    }
 
-    dict set response usage $totalUsage
-    return $response
+        set round 0
+        while {$opts(-max_tool_rounds) != 0 && $round < $opts(-max_tool_rounds)} {
+            if {![dict exists $response tool_calls] || [llength [dict get $response tool_calls]] == 0} {
+                break
+            }
+
+            set toolResults [::unified_llm::execute_tool_calls [dict get $response tool_calls] $opts(-tools)]
+            dict set request tool_results $toolResults
+            dict set request continuation_from [dict get $response response_id]
+
+            set response [$client complete $request]
+            set totalUsage [::unified_llm::usage_add $totalUsage [dict get $response usage]]
+            incr round
+        }
+
+        dict set response usage $totalUsage
+        set finalResponse $response
+    } err optsDict]
+
+    if {$tempClient} {
+        catch {$client close}
+    }
+    if {$code} {
+        return -options $optsDict $err
+    }
+    return $finalResponse
 }
 
 proc ::unified_llm::stream {args} {
