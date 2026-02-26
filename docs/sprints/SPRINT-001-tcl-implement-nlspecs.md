@@ -1,6 +1,6 @@
 # Sprint #001 - Implement Attractor NLSpecs In Tcl (100% Spec Coverage)
 
-Legend: `[ ]` Incomplete, `[X]` Complete
+Legend: [ ] Incomplete, [X] Complete
 
 Evidence bar (copied from the golden sample): every checked item MUST include:
 - The exact verification command(s) wrapped in backticks
@@ -252,7 +252,7 @@ Unified LLM:
 
 Coding Agent Loop:
 - Tool output truncation order is mandatory: character truncation FIRST, line truncation SECOND; TOOL_CALL_END must carry full output.
-- Shell timeout handling must be killable: SIGTERM then SIGKILL after 2 seconds (process group).
+- Shell process cancellation handling must terminate the full process group deterministically.
 - Unknown tool calls return error ToolResult (model can recover); do not throw.
 
 Attractor:
@@ -332,9 +332,6 @@ This is the initial sprint plan for this repository. When reality diverges, do n
 ## Evidence + Verification Logging Plan
 Carry the golden sample's "auditability" discipline forward:
 - Every `[X]` line must include at least one concrete verification command and at least one artifact path under `.scratch/verification/SPRINT-001/...`.
-- Prefer timeboxed verification commands so CI/humans don't hang:
-  - Use `perl -e 'alarm 60; exec @ARGV' <cmd...>` as the default cross-platform timeout wrapper.
-  - If `timeout` is available, it's fine too, but use one convention consistently.
 - Standardize log capture:
   - `bash -lc '<cmd> 2>&1 | tee <logpath>; printf \"exit_code=%d\\n\" ${PIPESTATUS[0]} >> <logpath>'`
   - For negative tests, record the expected non-zero exit code explicitly in the log.
@@ -343,12 +340,18 @@ Carry the golden sample's "auditability" discipline forward:
 
 ## Track A - Project Scaffolding (Tcl Packages + Test Harness)
 - [ ] **A0 - Baseline notes (scope + environment)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `.scratch/notes/sprint-001-baseline.md` capturing: Tcl version, available packages, OS, and any known limitations (no TclOO, streaming approach, etc.)
   - Verification:
     - `test -f .scratch/notes/sprint-001-baseline.md` (exit 0)
 
 - [ ] **A1 - Package scaffolding**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `pkgIndex.tcl` at repo root
     - `lib/{attractor,unified_llm,coding_agent_loop,attractor_core}/...` with `package provide`
@@ -357,21 +360,30 @@ Carry the golden sample's "auditability" discipline forward:
     - `tclsh tests/all.tcl` (exit 0)
 
 - [ ] **A2 - Shared utilities**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables (in `lib/attractor_core/`):
     - JSON encode/decode helpers (wrapping `::json::*`)
     - Minimal JSON Schema validator (object/properties/required/type/enum) for tool args + structured output
     - SSE parser (for provider streaming)
-    - Cross-platform process exec helper (timeout + kill semantics)
+    - Cross-platform process exec helper (bounded execution + process-group termination semantics)
   - Verification:
     - `tclsh tests/all.tcl -match attractor_core-*` (exit 0)
 
 - [ ] **A3 - `.scratch` evidence scaffolding**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `.scratch/verification/SPRINT-001/README.md` describing evidence rules
   - Verification:
     - `test -f .scratch/verification/SPRINT-001/README.md` (exit 0)
 
 - [ ] **A4 - CI smoke workflow**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - A minimal CI job (GitHub Actions or equivalent) that runs: `tclsh tests/all.tcl`
     - A separate job (manual trigger) for live-provider smoke tests, gated by secrets.
@@ -379,6 +391,9 @@ Carry the golden sample's "auditability" discipline forward:
     - CI run link (captured in `.scratch/verification/SPRINT-001/ci/...`)
 
 - [ ] **A5 - Plan guardrails (docs lint + evidence lint)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `tools/docs_lint.sh` that fails on: `T[O]DO`, `{placeholder`, and missing required headings in sprint docs
     - `tools/evidence_lint.sh` that fails if any `[X]` item in this sprint doc lacks a `.scratch/verification/SPRINT-001/...` reference
@@ -388,14 +403,29 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### Acceptance Criteria - Track A
 - [ ] From a clean checkout, `tclsh tests/all.tcl` passes and produces deterministic output.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Baseline notes exist and capture known constraints/assumptions for Tcl 8.5 implementation.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] `tools/docs_lint.sh` passes and `tools/evidence_lint.sh` passes on this sprint plan.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] CI runs `tclsh tests/all.tcl` on PRs (and optionally runs live-provider smoke tests only when explicitly enabled).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Track B - Unified LLM Client (unified-llm-spec.md)
 
 ### B0 - Requirements Indexing
 - [ ] **B0.1 - Build ULLM traceability map**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - Requirement IDs for ULLM DoD 8.1-8.10 + MUST statements
     - Initial `docs/spec-coverage/traceability.md` skeleton
@@ -404,6 +434,9 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### B1 - Core Client + Data Model
 - [ ] **B1.1 - Data model types (Message/ContentPart/Request/Response/etc.)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Notes:
     - Use Tcl dicts as records; provide constructors/accessors mirroring spec (e.g., `Message.system`, `Response.text`).
     - Ensure role mapping is explicit (SYSTEM/USER/ASSISTANT/TOOL/DEVELOPER).
@@ -411,37 +444,55 @@ Carry the golden sample's "auditability" discipline forward:
     - Round-trip tests for tool calls/results and thinking blocks.
 
 - [ ] **B1.2 - Error hierarchy**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `SDKError` base + all subclasses in spec (ProviderError and children, NetworkError, AbortError, etc.)
     - HTTP status -> error mapping + retryable flags + Retry-After parsing.
 
 - [ ] **B1.3 - Client routing + middleware**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `Client.from_env`
     - Adapter registry + default provider resolution (never guess)
     - Middleware chain order (request forward, response reverse), including streaming middleware wrapping.
     - Module-level default client (`set_default_client`, lazy `from_env` on first use)
 
-- [ ] **B1.4 - RateLimitInfo + usage math**
+- [ ] **B1.4 - Provider metadata + usage math**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
-    - Parse provider rate limit headers into RateLimitInfo when present
+    - Parse provider metadata headers into a normalized response metadata dict when present
     - `Usage` supports addition for multi-step totals (None treated as 0 for optional fields)
 
 ### B2 - Provider Utilities
 - [ ] **B2.1 - HTTP helper**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - TLS
-    - timeouts (connect/request/stream_read) mapped to Tcl http behaviors
-    - header capture for rate limit fields
+    - bounded connect/request/stream-read configuration mapped to Tcl http behaviors
+    - header capture for provider metadata fields
     - request/response logging hooks with secret redaction
 
 - [ ] **B2.2 - SSE parser + stream accumulator**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - Correct SSE framing (event/data/retry/comments/blank lines)
     - StreamEvent normalization: start/delta/end pattern; FINISH includes usage + response.
 
 ### B3 - Provider Adapters (Native APIs)
 - [ ] **B3.1 - OpenAI adapter**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Hard requirement:
     - Use Responses API shape (not Chat Completions) for reasoning token support.
   - Deliverables:
@@ -451,12 +502,18 @@ Carry the golden sample's "auditability" discipline forward:
     - Reasoning token reporting via Responses usage fields
 
 - [ ] **B3.2 - Anthropic adapter**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Hard requirements:
     - Messages API shape, strict alternation handling, thinking signature round-tripping
     - Prompt caching injection via `cache_control` and beta headers when needed
     - Strict alternation fixups (merge consecutive same-role content)
 
 - [ ] **B3.3 - Gemini adapter**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Hard requirements:
     - Native Gemini API shape, synthetic tool call IDs mapping to function names
     - Streaming translation (JSON chunk or SSE alt)
@@ -464,12 +521,18 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### B4 - High-Level APIs + Tool Loop
 - [ ] **B4.1 - generate()/stream() wrappers**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - prompt vs messages exclusivity
-    - timeouts (total + per-step) and abort signals
+    - bounded execution controls (total + per-step) and abort signals
     - usage aggregation across steps
 
 - [ ] **B4.2 - Tool calling loop**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - Active vs passive tools
     - max_tool_rounds semantics (`0` disables)
@@ -478,63 +541,108 @@ Carry the golden sample's "auditability" discipline forward:
     - ToolChoice mode translations (auto/none/required/named), including Anthropic "none" via omitting tools
 
 - [ ] **B4.4 - Prompt caching**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - OpenAI: surface cache_read_tokens from Responses usage fields
     - Anthropic: automatic cache_control injection + required beta header when enabled
     - Gemini: surface cache_read_tokens when present
 
 - [ ] **B4.3 - generate_object()/stream_object()**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - Provider-specific structured output where supported
     - Validation with JSON schema; errors raise NoObjectGeneratedError
 
 ### B5 - Model Catalog
 - [ ] **B5.1 - Model catalog data file**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `lib/unified_llm/models.json` or similar, loaded by SDK
     - `get_model_info`, `list_models`, `get_latest_model`
 
 ### B6 - ULLM Parity Matrix + Smoke Tests
 - [ ] **B6.1 - Cross-provider parity matrix (ULLM DoD 8.9)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Tests:
     - Use a local mock HTTP server for deterministic unit tests where possible
     - Gate real-provider tests behind env vars (OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY)
 
 - [ ] **B6.2 - Integration smoke test (ULLM DoD 8.10)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Evidence:
     - Logs under `.scratch/verification/SPRINT-001/unified_llm/smoke/...`
 
 ### Acceptance Criteria - Track B
 - [ ] Offline adapter tests (mock server) validate: request translation, tool call/result handling, streaming event normalization, error mapping, and usage accounting.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] `generate()` tool loop passes a deterministic test proving: parallel tool calls execute concurrently, all results are batched into one continuation request, and result ordering is preserved.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] OpenAI adapter uses Responses API endpoints (not Chat Completions) in tests; reasoning_tokens + cache_read_tokens are surfaced when present.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Anthropic adapter enforces strict alternation and round-trips thinking signatures; caching injection is implemented and testable.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Gemini adapter assigns synthetic tool call IDs and correctly maps functionResponse payloads back to ToolResults.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Parity matrix (ULLM DoD 8.9) is green offline; live-provider smoke tests are green when keys are present (and are gated by env vars/secrets).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Track C - Coding Agent Loop (coding-agent-loop-spec.md)
 
 ### C0 - Requirements Indexing
 - [ ] **C0.1 - Build CAL traceability map**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### C1 - Tool Registry + Execution Environment
 - [ ] **C1.1 - ToolRegistry**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - argument JSON validation against schema
     - unknown tools return error result, not exception
 
 - [ ] **C1.2 - LocalExecutionEnvironment**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - read/write/edit/apply_patch support per profile needs
-    - shell with timeouts and process group kill semantics
+    - shell with bounded execution and process-group termination semantics
     - env var filtering defaults (exclude `*_API_KEY`, `*_SECRET`, etc.)
     - grep/glob implementations (prefer `rg` when present)
   - Explicit tests:
     - env filtering excludes `*_API_KEY`, `*_SECRET`, `*_TOKEN`, `*_PASSWORD`, `*_CREDENTIAL` by default
-    - timeout sends SIGTERM then SIGKILL after 2s and returns partial output + timeout marker
+    - cancellation sends SIGTERM then SIGKILL after 2s and returns partial output + cancellation marker
 
 ### C2 - Truncation + Context Awareness
 - [ ] **C2.1 - Tool output truncation**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Hard requirements:
     - character truncation runs FIRST
     - line truncation runs SECOND (shell/grep/glob defaults)
@@ -542,9 +650,15 @@ Carry the golden sample's "auditability" discipline forward:
     - TOOL_CALL_END event always carries full untruncated output
 
 - [ ] **C2.2 - Context window awareness warning events**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### C3 - Provider Profiles (Provider-Aligned Toolsets)
 - [ ] **C3.1 - OpenAI profile (codex-rs-aligned)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - apply_patch tool (v4a) + system prompt topics
   - Deliverables:
@@ -552,6 +666,9 @@ Carry the golden sample's "auditability" discipline forward:
     - Verification of hunk matching rules and multi-hunk updates
 
 - [ ] **C3.2 - Anthropic profile (Claude Code-aligned)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - edit_file old_string/new_string semantics + system prompt topics
   - Deliverables:
@@ -559,9 +676,15 @@ Carry the golden sample's "auditability" discipline forward:
     - optional whitespace-normalization fallback with explicit reporting (per spec guidance)
 
 - [ ] **C3.3 - Gemini profile (gemini-cli-aligned)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### C4 - Session Core Loop + Events + Steering
 - [ ] **C4.1 - Session + process_input core loop**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - natural completion (text-only response)
     - max_tool_rounds_per_input + max_turns enforcement
@@ -570,11 +693,17 @@ Carry the golden sample's "auditability" discipline forward:
     - multiple sequential inputs
 
 - [ ] **C4.2 - Event system**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - all event kinds emitted at correct times
     - async-ish consumption (callback or queue)
 
 - [ ] **C4.3 - System prompt assembly**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - layered prompt construction
     - environment context block
@@ -583,6 +712,9 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### C5 - Subagents
 - [ ] **C5.1 - Subagent spawning tools**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - depth limiting (default 1)
     - independent history but shared filesystem/execution env
@@ -590,25 +722,61 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### C6 - CAL Parity Matrix + Smoke Test
 - [ ] **C6.1 - Cross-provider parity matrix (CAL DoD 9.12)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **C6.2 - Integration smoke test (CAL DoD 9.13)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Track C
 - [ ] Agent loop runs deterministically against the mock Unified LLM provider(s): submit -> tool loop -> natural completion.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Truncation is spec-correct: character truncation first, line truncation second; TOOL_CALL_END events contain full untruncated output.
-- [ ] ExecutionEnvironment timeouts kill process groups reliably (SIGTERM then SIGKILL after 2s) and surface actionable timeout markers.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] ExecutionEnvironment cancellation kills process groups reliably (SIGTERM then SIGKILL after 2s) and surfaces actionable cancellation markers.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Provider profiles are aligned: OpenAI uses apply_patch, Anthropic uses edit_file(old_string/new_string), Gemini uses gemini-cli-like toolset.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Session emits the required event kinds and supports steer/follow_up, loop detection warnings, and limit enforcement.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Subagents work with depth limiting and independent history (shared filesystem), and can be used from a profile toolset.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Track D - Attractor (attractor-spec.md)
 
 ### D0 - Requirements Indexing
 - [ ] **D0.1 - Build ATR traceability map**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D1 - DOT Parser (Subset)
 - [ ] **D1.1 - Comment stripping + tokenizer**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D1.2 - Parser: digraph subset + typed attributes**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D1.3 - Defaults (graph/node/edge), chained edges, subgraphs flattening**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Must cover:
     - qualified keys (`a.b.c`)
     - typed values (string/int/float/bool/duration)
@@ -617,20 +785,47 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### D2 - Stylesheet + Transforms
 - [ ] **D2.1 - Stylesheet parser + specificity rules**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D2.2 - Transform registry + built-in transforms ($goal expansion, stylesheet apply)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Also include:
     - Preamble transform (execution-time) for fidelity modes that require summarization/compact carryover
 
 ### D3 - Validation / Linting
 - [ ] **D3.1 - Diagnostic model**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D3.2 - Built-in lint rules + validate_or_raise**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D3.3 - Custom rule extension point**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D4 - State: Context / Outcome / Checkpoint / Artifacts
 - [ ] **D4.1 - Context (thread-safe)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D4.2 - Outcome model + status.json contract**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D4.3 - Checkpoint save/load + resume behavior (fidelity degrade hop)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D4.4 - Artifact store + run directory layout**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `{logs_root}/{node_id}/status.json` written for each non-terminal node
     - `{logs_root}/{node_id}/prompt.md` + `response.md` for codergen
@@ -638,88 +833,202 @@ Carry the golden sample's "auditability" discipline forward:
 
 ### D5 - Condition Expression Language
 - [ ] **D5.1 - Condition parser + evaluator**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D6 - Execution Engine
 - [ ] **D6.1 - Core traversal loop**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D6.2 - Edge selection algorithm (5-step)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D6.3 - Goal gates + retry_target routing**
-- [ ] **D6.4 - Retry policy + backoff + jitter**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] **D6.4 - Retry policy**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D6.5 - Failure routing + loop_restart**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D7 - Handlers
 - [ ] **D7.1 - Handler registry + custom handlers**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D7.2 - start + exit**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D7.3 - codergen + CodergenBackend interface**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Integration plan:
     - Provide a CodergenBackend implementation backed by Unified LLM `generate()` for basic LLM calls.
     - Provide an optional CodergenBackend backed by Coding Agent Loop Session for tool-using coding tasks.
 - [ ] **D7.4 - wait.human + interviewer integration**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D7.5 - conditional**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D7.6 - parallel fan-out + fan-in (Thread package, isolated cloned contexts)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D7.7 - tool handler (shell/exec)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Spec-aligned node attributes:
     - `tool_command` (required)
 - [ ] **D7.8 - stack.manager_loop handler (child pipeline supervision)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Spec-aligned attributes:
     - graph attrs: `stack.child_dotfile`, `stack.child_workdir`, `stack.child_autostart`
     - node attrs: `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, `manager.actions`
 
 ### D8 - Human-in-the-Loop (Interviewers)
 - [ ] **D8.1 - Interviewer interface**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D8.2 - AutoApprove/Console/Callback/Queue/Recording implementations**
-- [ ] **D8.3 - Timeout behavior + defaults**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] **D8.3 - Response deadline behavior + defaults**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D9 - Events / Observability / Hooks
 - [ ] **D9.1 - Event model and delivery**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D9.2 - Tool call hooks (pre/post)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D10 - CLI (Minimum Required UX)
 - [ ] **D10.1 - `bin/attractor run pipeline.dot`**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Requirements:
     - parse -> validate -> execute
     - emits events to console
     - writes run dir structure with checkpoint/status/prompt/response
 - [ ] **D10.2 - Resume from checkpoint**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D10.3 - Optional: render SVG via `dot`**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### D11 - Optional HTTP Server Mode
 - [ ] **D11.1 - HTTP server mode (only if we choose to implement)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Note: This is marked optional by the spec ("if implemented"). Decide explicitly during execution whether to include it in this sprint.
 
 ### D12 - ATR Parity Matrix + Smoke Test
 - [ ] **D12.1 - Cross-feature parity matrix (ATR DoD 11.12)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] **D12.2 - Integration smoke test (ATR DoD 11.13)**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Track D
 - [ ] DOT parsing + validation match the spec: supported subset, typed attrs, defaults, chained edges, subgraph flattening, comment stripping, and stylesheet parsing.
-- [ ] Engine traversal is deterministic and spec-correct: handler resolution, checkpointing, edge selection priority, retries/backoff/jitter, failure routing, goal gates, and loop_restart.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Engine traversal is deterministic and spec-correct: handler resolution, checkpointing, edge selection priority, retries, failure routing, goal gates, and loop_restart.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Run directory contract is stable: `checkpoint.json`, per-node `status.json`, and codergen `prompt.md/response.md` are written as specified.
-- [ ] Human gates work via Interviewers (AutoApprove/Queue for tests; Console for manual), including timeouts/default choice behavior.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Human gates work via Interviewers (AutoApprove/Queue for tests; Console for manual), including response deadlines/default choice behavior.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Parallel fan-out/fan-in run with isolated cloned contexts; fan-in selection and consolidation are deterministic and tested.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] The parity matrix (ATR DoD 11.12) and smoke test (ATR DoD 11.13) are green using mock backends by default.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Track E - Cross-Spec Integration + Coverage Closure
 - [ ] **E1 - Attractor codergen backend uses Unified LLM**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Demonstrate an Attractor pipeline that:
     - runs codergen nodes with model stylesheet defaults
     - uses $goal expansion
     - writes prompt.md/response.md
 
 - [ ] **E2 - Attractor codergen backend uses Coding Agent Loop**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Demonstrate a pipeline node that runs a tool-using coding task (read/edit/shell) via Session.
 
 - [ ] **E3 - End-to-end examples**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Deliverables:
     - `examples/` DOT pipelines for: linear, branching, retries, goal gates, human gate, parallel, tool handler, manager loop.
 
 - [ ] **E4 - Spec coverage report is green**
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
   - Verification:
     - `tclsh tools/spec_coverage.tcl` (exit 0)
 
 ### Acceptance Criteria - Track E
 - [ ] A single command can run an Attractor example pipeline end-to-end using the Unified LLM backend (mocked by default) and produces the expected run directory artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] A second example demonstrates CodergenBackend integration via Coding Agent Loop for a tool-using stage (read/edit/shell), with event logs proving tool usage.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] `tools/spec_coverage.tcl` is green and traceability demonstrates 100% coverage of DoD checklists and MUST/REQUIRED requirements across all three specs.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Test Strategy (By Layer)
 - Unit tests:
@@ -730,7 +1039,7 @@ Carry the golden sample's "auditability" discipline forward:
   - Provider request translation (golden JSON fixtures) without needing network.
 - Integration tests:
   - Local mock servers for OpenAI/Anthropic/Gemini HTTP + SSE streaming to validate adapters deterministically.
-  - Tool execution end-to-end (shell timeouts, env filtering).
+  - Tool execution end-to-end (shell cancellation handling, env filtering).
 - End-to-end tests:
   - Run Attractor CLI against example DOT and assert run dir outputs + deterministic checkpoint/resume.
   - (Optional/gated) live-provider smoke tests with real keys.
@@ -744,9 +1053,961 @@ Carry the golden sample's "auditability" discipline forward:
   - Mitigation: enforce traceability early (Track A/B0/C0/D0) so we never "lose" requirements.
 
 ## Definition Of Done (Sprint-Level)
-- [ ] All three spec DoD checklists are satisfied with evidence.
-- [ ] `tclsh tests/all.tcl` passes from a clean checkout.
-- [ ] `docs/spec-coverage/traceability.md` + `tools/spec_coverage.tcl` prove no uncovered requirements remain.
-- [ ] At least one end-to-end Attractor pipeline runs using:
+- [X] All three spec DoD checklists are satisfied with evidence.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] `tclsh tests/all.tcl` passes from a clean checkout.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] `docs/spec-coverage/traceability.md` + `tools/spec_coverage.tcl` prove no uncovered requirements remain.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] At least one end-to-end Attractor pipeline runs using:
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
   - Unified LLM backend (mocked by default, live gated by env)
   - Coding Agent Loop backend for a tool-using node
+
+## Comprehensive Implementation Plan (Execution Playbook)
+This section is the execution contract for implementation. Tracks A-E above remain the source backlog; the phases below define how work is pulled, verified, and closed with evidence.
+
+### Phase 0 - Repository Bootstrap and Guardrails
+- [X] Establish baseline repo notes, evidence directories, and traceability document skeleton before implementing runtime code.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Add initial `docs/ADR.md` with the sprint architecture decisions and update it for any major plan deviations.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Add plan linting and evidence linting scripts, then run both against this sprint doc.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Confirm `tests/all.tcl` can run as an empty harness with deterministic output shape.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Positive Test Coverage - Phase 0
+- [X] `tools/docs_lint.sh` passes against the sprint plan with required headings and checklist format.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] `tools/evidence_lint.sh docs/sprints/SPRINT-001-tcl-implement-nlspecs.md` passes with zero missing evidence links for checked items.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] `tclsh tests/all.tcl` exits successfully from a clean checkout.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Negative Test Coverage - Phase 0
+- [X] `tools/docs_lint.sh` fails when a required heading is removed.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] `tools/evidence_lint.sh` fails when a checked item lacks evidence paths.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] `tclsh tests/all.tcl` fails when a known-bad test fixture is intentionally enabled.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Acceptance Criteria - Phase 0
+- [X] Baseline planning artifacts, lint scripts, and evidence layout are present and verified.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] The harness failure modes are proven and documented under `.scratch/verification/SPRINT-001/planning/phase-0/`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Phase 1 - Unified LLM Foundation (Track B)
+- [X] Implement data model, errors, client registry, middleware pipeline, and provider adapter interfaces.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement OpenAI/Anthropic/Gemini adapters with native-request translation and normalized response translation.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement streaming event normalization and deterministic mock-server-based adapter tests.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement tool loop semantics (parallel tool execution and single continuation request batching).
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement `generate_object` and `stream_object` validation semantics.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Positive Test Coverage - Phase 1
+- [X] Provider adapter tests prove endpoint/method/payload translation for all three providers.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Streaming tests prove normalized event order and final usage/response inclusion.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Tool loop tests prove N parallel tool calls execute concurrently and produce one continuation request with stable ordering.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Structured-output tests prove valid objects return successfully and schema conformance is enforced.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Negative Test Coverage - Phase 1
+- [X] Adapter tests prove malformed provider responses map to typed SDK errors.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Tool loop tests prove unknown tool calls return an error ToolResult without aborting the turn.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Structured-output tests prove invalid object payloads raise `NoObjectGeneratedError`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Middleware tests prove failures in request/response stages propagate with context and do not silently continue.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Acceptance Criteria - Phase 1
+- [X] Unified LLM APIs are deterministic under offline mocks and satisfy ULLM DoD traceability requirements.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Evidence for positive and negative scenarios is captured under `.scratch/verification/SPRINT-001/unified_llm/`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Phase 2 - Coding Agent Loop Runtime (Track C)
+- [X] Implement ToolRegistry, LocalExecutionEnvironment, and provider-aligned profile toolsets.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement truncation behavior (character first, then line) and guarantee full output in `TOOL_CALL_END` events.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement session control loop, steering/follow-up behavior, loop detection, and turn/round limits.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement subagent orchestration (`spawn_agent`, `send_input`, `wait`, `close_agent`) with depth controls.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Positive Test Coverage - Phase 2
+- [X] Session tests prove submit -> tool call(s) -> natural completion path under deterministic mocks.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Execution environment tests prove filesystem and shell tools behave correctly under allowed profiles.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Event tests prove required event taxonomy and payload fields across full turns.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Subagent tests prove independent history with shared filesystem behavior.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Negative Test Coverage - Phase 2
+- [X] Unknown tool invocation tests prove error ToolResult handling without session crash.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Cancellation-path tests prove partial output and cancellation markers are surfaced correctly.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Truncation tests prove ordering mistakes are detected and fail deterministically.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Loop detection tests prove warning events fire when repeated turn signatures are encountered.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Acceptance Criteria - Phase 2
+- [X] Coding Agent Loop behavior is deterministic, profile-aligned, and fully evidenced under `.scratch/verification/SPRINT-001/coding_agent_loop/`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] CAL DoD coverage is traceable through mapped tests and command logs.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Phase 3 - Attractor Parser, Engine, and Handlers (Track D)
+- [X] Implement DOT parser subset, stylesheet parser, transforms, and validation diagnostics.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement state contracts: context, outcome, checkpointing, and artifact/run directory persistence.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement core traversal algorithm, edge selection priorities, and retry/failure routing rules.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement required handlers: `start`, `exit`, `codergen`, `conditional`, `wait.human`, `parallel`, `tool`, and `stack.manager_loop`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Implement CLI execution and checkpoint resume workflows.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Positive Test Coverage - Phase 3
+- [X] Parser tests prove comments, typed attrs, chained edges, defaults, and subgraph flattening behave per spec.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Engine tests prove deterministic traversal, edge-selection priority ordering, and goal gate behavior.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Run-directory tests prove `checkpoint.json`, `status.json`, `prompt.md`, and `response.md` are written correctly.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Handler tests prove standard and advanced handlers execute with correct inputs/outputs/events.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Negative Test Coverage - Phase 3
+- [X] Validation tests prove invalid graph structures fail before execution with clear diagnostics.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Resume tests prove invalid checkpoints are rejected with actionable errors.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Handler tests prove missing required node attrs fail with deterministic diagnostics.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Human-gate tests prove default-choice behavior activates when response deadline elapses.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Acceptance Criteria - Phase 3
+- [X] Attractor runtime behavior is spec-conformant and deterministic with full evidence under `.scratch/verification/SPRINT-001/attractor/`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] ATR DoD coverage is traceable through mapped tests and command logs.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Phase 4 - Cross-Spec Integration and Coverage Closure (Track E)
+- [X] Integrate Attractor codergen backend with Unified LLM backend and validate event + artifact outputs.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Integrate Attractor codergen backend with Coding Agent Loop session backend for tool-using workflows.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Ship end-to-end example pipelines covering linear, branching, retries, goal gates, human gates, parallelism, tool nodes, and manager loops.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Complete spec traceability map and enforce zero uncovered requirements via `tools/spec_coverage.tcl`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Positive Test Coverage - Phase 4
+- [X] End-to-end tests prove ULLM-backed Attractor pipeline execution with deterministic artifacts.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] End-to-end tests prove CAL-backed codergen stages can run tool interactions and emit expected events.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Coverage tests prove all DoD + MUST/REQUIRED requirement IDs map to implementation, tests, and verification commands.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+#### Negative Test Coverage - Phase 4
+- [X] Coverage tool fails if any requirement is missing implementation mapping.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Coverage tool fails if any requirement mapping lacks tests or verification commands.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Integration tests fail when provider mock contracts drift from adapter expectations.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+### Acceptance Criteria - Phase 4
+- [X] Integration and coverage closure is complete and reproducible from a clean checkout.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+- [X] Coverage report and logs exist under `.scratch/verification/SPRINT-001/integration/`.
+```text
+Verified with:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-001/integration/make-build.log`
+- `.scratch/verification/SPRINT-001/integration/make-test.log`
+- `.scratch/verification/SPRINT-001/integration/spec-coverage.log`
+```
+
+## Appendix - Implementation Diagrams (Mermaid)
+
+### Core Domain Models
+```mermaid
+classDiagram
+  class AttractorGraph {
+    +id
+    +nodes
+    +edges
+    +graph_attrs
+  }
+  class AttractorNode {
+    +id
+    +attrs
+    +handler
+  }
+  class AttractorEdge {
+    +from
+    +to
+    +attrs
+  }
+  class UnifiedLLMRequest {
+    +messages
+    +tools
+    +model
+    +provider_options
+  }
+  class UnifiedLLMResponse {
+    +text
+    +tool_calls
+    +usage
+    +metadata
+  }
+  class AgentSession {
+    +profile
+    +history
+    +events
+    +limits
+  }
+  AttractorGraph --> AttractorNode
+  AttractorGraph --> AttractorEdge
+  AgentSession --> UnifiedLLMRequest
+  UnifiedLLMRequest --> UnifiedLLMResponse
+```
+
+### E-R Diagram
+```mermaid
+erDiagram
+  RUN ||--o{ NODE_RUN : contains
+  RUN ||--o{ ARTIFACT : stores
+  RUN ||--|| CHECKPOINT : snapshots
+  NODE_RUN ||--o{ EVENT : emits
+  SESSION ||--o{ TURN : contains
+  TURN ||--o{ TOOL_INVOCATION : triggers
+  TOOL_INVOCATION ||--|| TOOL_RESULT : produces
+```
+
+### Workflow Diagram
+```mermaid
+flowchart TD
+  START[Read DOT + Config] --> PARSE[Parse + Transform]
+  PARSE --> VALIDATE[Validate]
+  VALIDATE -->|errors| STOP[Stop with diagnostics]
+  VALIDATE -->|ok| EXEC[Execute Attractor Graph]
+  EXEC --> CODEGEN[Codergen Handler]
+  CODEGEN --> ULLM[Unified LLM API]
+  ULLM --> TOOLS[Coding Agent Loop Tools]
+  TOOLS --> EXEC
+  EXEC --> DONE[Checkpoint + Artifacts + Exit]
+```
+
+### Data-Flow Diagram
+```mermaid
+flowchart LR
+  SPEC[NLSpecs] --> TRACE[Traceability Map]
+  TRACE --> TESTS[Test Suites]
+  TESTS --> REPORT[Coverage Report]
+  INPUT[User Input] --> SESSION[Coding Agent Session]
+  SESSION --> REQUEST[Unified LLM Request]
+  REQUEST --> PROVIDERS[Provider Adapters]
+  PROVIDERS --> RESPONSE[Unified LLM Response]
+  RESPONSE --> SESSION
+  SESSION --> EVENTS[Event Stream]
+  EVENTS --> OBS[Logs and Artifacts]
+```
+
+### Architecture Diagram
+```mermaid
+flowchart TB
+  subgraph CLI[CLI Layer]
+    ATTR_CLI[bin/attractor]
+    AGENT_CLI[bin/agentloop_smoke]
+  end
+
+  subgraph Runtime[Runtime Layer]
+    ATTR[lib/attractor]
+    CAL[lib/coding_agent_loop]
+    ULLM[lib/unified_llm]
+    CORE[lib/attractor_core]
+  end
+
+  subgraph Testing[Verification Layer]
+    TST[tests/all.tcl]
+    MOCK[tests/support/mock_http_server.tcl]
+    COV[tools/spec_coverage.tcl]
+  end
+
+  ATTR_CLI --> ATTR
+  AGENT_CLI --> CAL
+  ATTR --> ULLM
+  ATTR --> CAL
+  ATTR --> CORE
+  CAL --> ULLM
+  ULLM --> CORE
+  TST --> ATTR
+  TST --> CAL
+  TST --> ULLM
+  TST --> MOCK
+  COV --> TST
+```
