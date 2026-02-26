@@ -16,8 +16,24 @@ Success is declared only when:
 ## Context & Problem
 The current Tcl implementation is a functional baseline with deterministic tests, but it intentionally compresses many spec behaviors into coarse “coverage IDs” and simplified runtime semantics. This sprint closes the gap by implementing the missing behavior and expanding tests so “green” means “spec-complete”.
 
+## Evidence + Verification Logging Plan
+- Store all phase evidence under `.scratch/verification/SPRINT-003/<phase>/...` (unit logs, integration logs, e2e logs, fixture inputs, rendered diagrams).
+- Each phase directory should include a short `README.md` index listing:
+  - the verification commands that were executed
+  - the captured exit codes
+  - the paths to the relevant artifacts
+- Keep offline deterministic tests as the default; “live API key smoke tests” (if any) must be clearly separated and never required for `make -j10 test`.
+
 ## Prerequisites
 - Sprint #002 must land first, so we have a spec-derived requirement catalog and completeness enforcement.
+
+## Execution Order
+1. Phase 0: ADR alignment + harness
+2. Phase 1: Unified LLM parity
+3. Phase 2: Coding Agent Loop parity
+4. Phase 3: Attractor parity
+5. Phase 4: Cross-spec integration + e2e closure
+6. Phase 5: Documentation + closeout
 
 ## Current State Snapshot (Verified 2026-02-26)
 - [ ] Baseline tests pass.
@@ -66,6 +82,10 @@ Out of scope:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+- [ ] Implement multimodal content parts (image URL, image base64, local image path) with per-provider translation or deterministic “unsupported” errors.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Implement real provider adapters that speak native APIs via HTTP (OpenAI Responses, Anthropic Messages, Gemini generateContent) while keeping deterministic offline tests via a local mock server.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -75,6 +95,14 @@ Details to cover:
 - Anthropic: `/v1/messages`
 - Gemini: `/v1beta/models/*:generateContent`
 - [ ] Implement streaming as a first-class API producing start/delta/end style events (and ensure middleware can observe streaming).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Implement reasoning/thinking token reporting and reasoning effort pass-through for each provider where supported.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Implement prompt caching usage fields and provider-specific caching hooks as specified (ensuring deterministic offline coverage for usage field extraction).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
@@ -90,6 +118,10 @@ Details to cover:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+- [ ] Implement provider-specific escape hatches (`provider_options`) and required headers (e.g., Anthropic beta headers) without leaking provider details into the unified surface.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Implement error typing and translation (configuration errors, auth errors, retryable errors) so callers can make correct decisions.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -101,17 +133,22 @@ Positive cases to cover:
 - Generate with `messages`
 - Reject when both prompt + messages are provided
 - Streaming emits STREAM_START, one-or-more deltas, and FINISH; concatenated deltas equal blocking output
+- Image input (URL)
+- Image input (base64)
+- Image input (local file path)
 - Tool loop:
   - single tool call
   - multiple tool calls in one response
   - continuation request includes all tool results in one payload
 - Structured output success (valid JSON matching schema)
+- Provider-specific options pass through and are visible to the adapter layer
 
 Negative cases to cover:
 - Unknown tool call produces error tool result (not an exception)
 - Tool execute handler throws -> error tool result
 - Structured output invalid JSON -> deterministic error type
 - Structured output schema mismatch -> deterministic error type
+- Provider header/options validation fails fast for malformed provider_options
 
 ### Acceptance Criteria - Phase 1
 - [ ] The parity matrix tests for OpenAI/Anthropic/Gemini pass using deterministic provider mocks and confirm native endpoint usage.
@@ -121,6 +158,14 @@ Negative cases to cover:
 
 ### Phase 2 - Coding Agent Loop Parity
 - [ ] Implement an explicit `ExecutionEnvironment` interface and `LocalExecutionEnvironment` reference implementation that provides file and process operations.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Align tool output truncation defaults and markers to the spec, and allow overrides via `SessionConfig`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Align command execution max-duration defaults and per-call overrides to the spec, including deterministic cancellation semantics.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
@@ -157,7 +202,7 @@ Details to cover:
 #### Test Matrix - Phase 2 (Explicit)
 Positive cases to cover:
 - Simple file create task across profiles using mocked Unified LLM
-- Shell timeout produces deterministic cancellation marker and event sequence
+- Shell max-duration produces deterministic cancellation marker and event sequence
 - Tool output truncation marker appears and full output preserved in TOOL_CALL_END
 - Steering injected after a tool round changes the next model request
 - Subagent lifecycle: spawn -> send_input -> wait -> close
