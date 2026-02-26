@@ -18,6 +18,11 @@ Today, `tools/spec_coverage.tcl` can report green coverage even when large porti
 
 This sprint removes that gap by making the requirement catalog a first-class, spec-derived artifact and gating the build on completeness.
 
+## Evidence + Verification Logging Plan
+- Store all command outputs and generated artifacts referenced by checklist items under `.scratch/verification/SPRINT-002/<phase>/...`.
+- Prefer one subdirectory per phase (`baseline/`, `catalog/`, `coverage/`, `docs/`) and include a short `README.md` index with links to the artifacts.
+- Treat `docs/spec-coverage/requirements.json` and `docs/spec-coverage/requirements.md` as auditable outputs (reviewable diffs), even if they are generated.
+
 ## Current State Snapshot (Verified 2026-02-26)
 - [ ] `make -j10 test` passes on a clean checkout.
 ```text
@@ -31,6 +36,11 @@ This sprint removes that gap by making the requirement catalog a first-class, sp
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+
+Baseline metrics (2026-02-26):
+- DoD checkboxes: ULLM=70, CAL=59, ATR=76 (total=205)
+- Normative statements matching MUST/MUST NOT/REQUIRED: 8
+- Traceability blocks (IDs): 49
 
 ## Scope
 In scope:
@@ -70,6 +80,10 @@ Out of scope:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+- [ ] Update the three spec docs to include explicit requirement IDs for every DoD checkbox and every normative MUST/MUST NOT/REQUIRED statement (so the catalog is stable and reviewable).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 - [ ] Implement a deterministic catalog generator: `tools/requirements_catalog.tcl`.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -105,6 +119,10 @@ Negative cases to cover (must be represented in tests):
 
 ### Acceptance Criteria - Phase 1
 - [ ] The catalog generator produces deterministic output (no ordering churn) and fails with actionable errors when spec parsing fails.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] The derived catalog count is at least the DoD checkbox total and cannot silently shrink without an intentional spec edit.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
