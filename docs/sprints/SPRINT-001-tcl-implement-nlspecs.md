@@ -13,18 +13,26 @@ Success is declared only when:
 - Each requirement has implementation references, tests, and executable verification commands.
 - `tclsh tests/all.tcl` and `tclsh tools/spec_coverage.tcl` both pass from a clean checkout.
 
+## Sprint Status Revision (2026-02-26)
+This sprint document captured an evidence-backed baseline implementation and a *traceability v1* checker, but later review found that “traceability green” is not a sufficient proof of spec parity because the catalog is not derived from the spec documents.
+
+- [ ] Full spec parity is proven by a spec-derived requirement catalog and completeness enforcement (see Sprint #002 + Sprint #003).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
 ## Current Baseline (Verified 2026-02-26)
 - [X] Baseline test suite currently passes.
 ```text
 Verified with:
-- `timeout 135 make -j10 test` (exit code 0)
+- `make -j10 test` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/planning/2026-02-26-refresh/make-test.log`
 ```
 - [X] Current traceability checker currently passes.
 ```text
 Verified with:
-- `timeout 135 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/planning/2026-02-26-refresh/spec-coverage.log`
 ```
@@ -56,6 +64,7 @@ Out of scope:
 
 ## Critical Gaps Found During Review
 - Traceability currently covers only a small subset of the required spec surface.
+- DoD checkboxes across the three specs substantially exceed the traceability requirement ID count (e.g., 205 DoD checkboxes vs 49 traceability IDs as of 2026-02-26), so “green coverage” can still omit required behaviors.
 - Existing sprint status marks many deliverables complete without requirement-level evidence granularity.
 - Current tests are solid for baseline behavior but do not yet demonstrate full spec closure matrices.
 
@@ -77,21 +86,21 @@ Out of scope:
 - [X] Enumerate every DoD checkbox from all three specs into stable requirement IDs.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log` (49 requirement IDs indexed across ULLM/CAL/ATR)
 ```
 - [X] Enumerate every MUST/MUST NOT/REQUIRED statement into stable requirement IDs.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log` (REQ-family IDs included in totals)
 ```
 - [X] Expand `docs/spec-coverage/traceability.md` to include complete mapping blocks for all IDs.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log`
 - `docs/spec-coverage/traceability.md`
@@ -99,7 +108,7 @@ Evidence:
 - [X] Extend `tools/spec_coverage.tcl` to validate required fields, duplicate IDs, and empty mappings.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage-tool-tests.log`
 - `tools/spec_coverage.tcl`
@@ -108,7 +117,7 @@ Evidence:
 - [X] Add a generated coverage summary artifact under `.scratch/verification/SPRINT-001/coverage/`.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log`
 ```
@@ -117,14 +126,14 @@ Evidence:
 - [X] Coverage checker passes with full requirement catalog populated.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log`
 ```
 - [X] Coverage checker reports expected requirement totals per spec family (`ULLM`, `CAL`, `ATR`).
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log` (`family_ULLM=16`, `family_CAL=17`, `family_ATR=16`)
 ```
@@ -133,21 +142,21 @@ Evidence:
 - [X] Coverage checker fails when a requirement block is missing `impl`.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-missing-field-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-missing-field-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage-tool-tests.log`
 ```
 - [X] Coverage checker fails when a requirement block is missing `tests`.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-missing-field-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-missing-field-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage-tool-tests.log`
 ```
 - [X] Coverage checker fails when duplicate requirement IDs are present.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-duplicate-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-duplicate-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage-tool-tests.log`
 ```
@@ -156,14 +165,14 @@ Evidence:
 - [X] No uncovered requirements remain in `docs/spec-coverage/traceability.md`.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage.log`
 ```
 - [X] `tools/spec_coverage.tcl` rejects malformed or incomplete mappings.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/spec-coverage-tool-tests.log`
 ```
@@ -172,22 +181,22 @@ Evidence:
 - [X] Close data model parity for messages/content parts/tool calls/tool results/usage metadata.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Validate middleware onion ordering: request in registration order, response in reverse order.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-middleware-order-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-middleware-order-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Complete adapter parity for OpenAI Responses API, Anthropic Messages API, and Gemini API.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-parity-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-parity-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-integration.log`
@@ -195,28 +204,28 @@ Evidence:
 - [X] Ensure structured output (`generate_object`/`stream_object`) schema validation is spec-complete.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-generate-object-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-generate-object-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Ensure tool loop semantics are spec-complete: parallel tool execution, single continuation request, stable ordering.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-tool-loop-batch-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-tool-loop-batch-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Ensure prompt caching and provider metadata fields are surfaced consistently when available.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-metadata-usage-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-provider-metadata-usage-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Expand deterministic adapter fixtures and mock streaming coverage for each provider.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
@@ -225,29 +234,29 @@ Evidence:
 - [X] OpenAI tests assert Responses endpoint usage and reasoning/cache usage field extraction.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-metadata-usage-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-provider-metadata-usage-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Anthropic tests assert strict alternation fixups and thinking signature round-trip.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-anthropic-merge-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-anthropic-merge-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Gemini tests assert synthetic tool-call IDs and functionResponse mapping.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-gemini-synthetic-tool-id-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-gemini-synthetic-tool-id-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Parallel tool-call tests assert concurrent execution and batched continuation behavior.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-tool-loop-batch-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-tool-loop-batch-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
@@ -256,21 +265,21 @@ Evidence:
 - [X] `generate_object` fails with `NoObjectGeneratedError` when output is invalid for schema.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-generate-object-negative-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-generate-object-negative-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Unknown tool calls produce error ToolResult values instead of exceptions.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-unknown-tool-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-unknown-tool-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
 - [X] Provider adapter tests fail when endpoint shape drifts from native API contracts.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-provider-endpoints-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 ```
@@ -279,15 +288,15 @@ Evidence:
 - [X] Unified LLM DoD and MUST requirements are fully mapped and green in traceability.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/spec-coverage.log`
 ```
 - [X] Offline deterministic tests cover request translation, response translation, streaming, and tool loops across all providers.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-parity-*` (exit code 0)
+- `tclsh tests/all.tcl -match unified_llm-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-parity-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-unit.log`
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/unified-llm-integration.log`
@@ -297,61 +306,61 @@ Evidence:
 - [X] Close ToolRegistry behavior for schema validation and unknown-tool error results.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-tool-registry-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-unknown-tool-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-tool-registry-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-unknown-tool-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Close LocalExecutionEnvironment behavior for shell/read/write/edit/apply_patch/grep/glob operations.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-apply-patch-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-edit-file-errors-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-shell-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-apply-patch-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-edit-file-errors-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-shell-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Close truncation behavior with strict order: character truncation first, line truncation second.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-truncate-order-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-truncate-order-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Ensure `TOOL_CALL_END` event includes full untruncated output.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-tool-call-full-output-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-tool-call-full-output-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Close process-group cancellation behavior (terminate then force kill) with deterministic assertions.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-shell-cancel-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-shell-cancel-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Close provider profile parity: OpenAI `apply_patch` workflow, Anthropic `edit_file` workflow, Gemini profile behavior.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-profile-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-profile-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Close session lifecycle/events/steering/loop-detection/limit-enforcement semantics.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-session-events-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-steer-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-turn-limit-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-session-events-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-steer-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-turn-limit-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Close subagent depth control and independent-history behavior.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-subagent-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-subagent-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
@@ -360,15 +369,15 @@ Evidence:
 - [X] Submit flow test proves deterministic loop: user input -> tool calls -> final assistant text.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-integration.log`
 ```
 - [X] Event tests prove required event taxonomy and ordering.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-session-events-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-session-events-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-integration.log`
@@ -376,7 +385,7 @@ Evidence:
 - [X] Subagent tests prove depth limiting and command routing correctness.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-subagent-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-subagent-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
@@ -385,21 +394,21 @@ Evidence:
 - [X] Cancellation tests prove partial output + explicit cancellation marker on interrupted shell commands.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-shell-cancel-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-shell-cancel-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] Environment filtering tests prove secrets are excluded by default from tool-visible env vars.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-env-filter-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-env-filter-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
 - [X] `edit_file` tests prove deterministic `not found` and `not unique` error paths.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-edit-file-errors-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-edit-file-errors-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 ```
@@ -408,15 +417,15 @@ Evidence:
 - [X] Coding Agent Loop DoD and MUST requirements are fully mapped and green in traceability.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/spec-coverage.log`
 ```
 - [X] Deterministic tests cover tool execution, truncation order, event semantics, cancellation, and profile-specific workflows.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match coding_agent_loop-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
+- `tclsh tests/all.tcl -match coding_agent_loop-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-coding-agent-loop-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-unit.log`
 - `.scratch/verification/SPRINT-001/coding_agent_loop/phase-3-2026-02-26/coding-agent-loop-integration.log`
@@ -426,36 +435,36 @@ Evidence:
 - [X] Close DOT parser support for required subset: comments, typed attrs, defaults, chained edges, subgraph flattening.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-parse-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-parse-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-parse.log`
 ```
 - [X] Close stylesheet parsing and transform application order.
 ```text
 Verified with:
-- `timeout 180 make test` (exit code 0)
+- `make test` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/make-test.log`
 ```
 - [X] Close linting diagnostics and custom rule extension points.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-validate-start-exit-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-validate-start-exit-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-validate.log`
 ```
 - [X] Close context/outcome/checkpoint/artifact contracts including required on-disk run layout.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-run-artifacts-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-run-artifacts-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-artifacts.log`
 ```
 - [X] Close edge-selection priority and handler execution semantics.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-edge-selection-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match attractor-tool-handler-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-edge-selection-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-tool-handler-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-edge.log`
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-tool-handler.log`
@@ -463,28 +472,28 @@ Evidence:
 - [X] Close retry and failure routing behavior, including loop restart and retry target rules.
 ```text
 Verified with:
-- `timeout 180 make test` (exit code 0)
+- `make test` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/make-test.log`
 ```
 - [X] Close parallel fan-out/fan-in behavior with isolated context clones and deterministic merge behavior.
 ```text
 Verified with:
-- `timeout 180 make test` (exit code 0)
+- `make test` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/make-test.log`
 ```
 - [X] Close human-in-the-loop interviewer implementations and response deadline/default handling.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-handler-wait-human-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-handler-wait-human-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-human.log`
 ```
 - [X] Close required CLI commands for validate/run/resume workflows and artifact output.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-e2e.log`
 ```
@@ -493,15 +502,15 @@ Evidence:
 - [X] Parser matrix tests cover valid DOT syntax variants and attribute typing.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-parse-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-parse-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-parse.log`
 ```
 - [X] Engine matrix tests cover deterministic traversal and edge-selection precedence.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-edge-selection-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match attractor-resume-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-edge-selection-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-resume-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-edge.log`
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-resume.log`
@@ -509,14 +518,14 @@ Evidence:
 - [X] Artifact matrix tests cover `checkpoint.json`, per-node `status.json`, and codergen prompt/response files.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-run-artifacts-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-run-artifacts-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-artifacts.log`
 ```
 - [X] Interviewer matrix tests cover auto-approve, queue/callback, and console behavior.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-handler-wait-human-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-handler-wait-human-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-human.log`
 ```
@@ -525,21 +534,21 @@ Evidence:
 - [X] Validation fails when start/exit graph invariants are violated.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-validate-start-exit-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-validate-start-exit-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-validate.log`
 ```
 - [X] Execution fails deterministically when handler required attributes are missing.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-tool-handler-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-tool-handler-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-tool-handler.log`
 ```
 - [X] Resume tests prove one-hop fidelity degrade behavior for full-fidelity checkpoint boundaries.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match attractor-resume-*` (exit code 0)
+- `tclsh tests/all.tcl -match attractor-resume-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-resume.log`
 ```
@@ -548,15 +557,15 @@ Evidence:
 - [X] Attractor DoD and MUST requirements are fully mapped and green in traceability.
 ```text
 Verified with:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/spec-coverage.log`
 ```
 - [X] Deterministic tests cover parser, transforms, validation, execution engine, handlers, events, and run-directory contracts.
 ```text
 Verified with:
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
+- `make test` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/make-test.log`
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/attractor-e2e.log`
@@ -566,7 +575,7 @@ Evidence:
 - [X] Close Attractor CodergenBackend integration with Unified LLM backend.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-attractor-ullm-backend-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-attractor-ullm-backend-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/attractor-integration.log`
 - `tests/integration/attractor_integration.test`
@@ -574,7 +583,7 @@ Evidence:
 - [X] Close Attractor CodergenBackend integration with Coding Agent Loop backend for tool-using stages.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-attractor-cal-backend-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-attractor-cal-backend-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/attractor-integration.log`
 - `tests/integration/attractor_integration.test`
@@ -582,7 +591,7 @@ Evidence:
 - [X] Expand example pipelines to cover linear, branching, retry, goal-gate, human-gate, parallel, tool, and manager-loop scenarios.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/e2e-cli.log`
 - `examples/linear.dot`
@@ -597,7 +606,7 @@ Evidence:
 - [X] Close e2e command matrix for parse/validate/run/resume on example pipelines.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/e2e-cli.log`
 - `tests/e2e/attractor_cli_e2e.test`
@@ -607,14 +616,14 @@ Evidence:
 - [X] E2E test proves Unified LLM-backed pipeline run creates expected event and artifact outputs.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-attractor-ullm-backend-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-attractor-ullm-backend-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/attractor-integration.log`
 ```
 - [X] E2E test proves Coding Agent Loop-backed codergen stage executes tool interactions and persists outputs.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-attractor-cal-backend-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-attractor-cal-backend-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/attractor-integration.log`
 ```
@@ -623,14 +632,14 @@ Evidence:
 - [X] E2E test fails with explicit diagnostics when example pipeline is intentionally malformed.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-validate-negative-*` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-validate-negative-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/e2e-cli.log`
 ```
 - [X] E2E resume test fails with explicit diagnostics when checkpoint is intentionally corrupted.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-resume-negative-*` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-resume-negative-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/e2e-cli.log`
 ```
@@ -639,8 +648,8 @@ Evidence:
 - [X] Integration tests prove cohesive operation across Attractor, Unified LLM, and Coding Agent Loop.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match integration-attractor-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-*-parity-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-attractor-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-*-parity-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/attractor-integration.log`
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/parity-integration.log`
@@ -648,7 +657,7 @@ Evidence:
 - [X] E2E tests are deterministic by default with offline mocks.
 ```text
 Verified with:
-- `timeout 180 tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
+- `tclsh tests/all.tcl -match e2e-attractor-cli-*` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/integration/phase-5-2026-02-26/e2e-cli.log`
 ```
@@ -657,9 +666,9 @@ Evidence:
 - [X] Re-run full test suite and coverage checker from clean checkout.
 ```text
 Verified with:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/make-build.log`
 - `.scratch/verification/SPRINT-001/attractor/phase-4-2026-02-26/make-test.log`
@@ -692,9 +701,9 @@ Evidence:
 - [X] Full verification bundle includes command logs, exit codes, and referenced artifacts for all completed items.
 ```text
 Verified with:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-001/coverage/phase-1-2026-02-26/`
 - `.scratch/verification/SPRINT-001/unified_llm/phase-2-2026-02-26/`
@@ -716,9 +725,9 @@ Evidence:
 - [X] Sprint document status, traceability, tests, and evidence are internally consistent and reproducible.
 ```text
 Verified with:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 - `bash tools/docs_lint.sh` (exit code 0)
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-001-tcl-implement-nlspecs.md` (exit code 0)
 Evidence:
