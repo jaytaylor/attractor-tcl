@@ -32,3 +32,29 @@ Tradeoffs:
 
 ### Follow-up
 Any future change to package boundaries, runtime data model shape, or streaming/event contract must add a new ADR entry before implementation.
+
+## ADR-002: Deterministic Verification and CLI Validation Contract
+- Date: 2026-02-26
+- Status: Accepted
+
+### Context
+Sprint closeout required strict evidence-backed completion, deterministic CLI verification coverage, and reduced runtime coupling to ambient environment variable ambiguity.
+
+### Decision
+- Strengthen traceability validation with duplicate-ID checks, required path checks, and family summaries in `tools/spec_coverage.tcl`.
+- Add explicit Attractor CLI `validate` command so parse/validate workflows are first-class and testable independently of execution.
+- Harden Unified LLM runtime behavior:
+  - Explicit provider override support via `UNIFIED_LLM_PROVIDER`.
+  - Ambiguous multi-key environments fail fast in `from_env`.
+  - `generate` uses provider-scoped ephemeral clients when needed and safely handles stale default client handles.
+- Enforce non-zero harness exit behavior for failed tests in `tests/all.tcl`.
+
+### Consequences
+Positive:
+- Verification output is auditable and consistent across local and CI runs.
+- CLI behavior now aligns with validate/run/resume matrix requirements.
+- Provider-selection behavior is safer in mixed-secret environments.
+
+Tradeoffs:
+- Stricter environment handling surfaces errors earlier and may require explicit configuration in multi-provider setups.
+- Additional integration tests and evidence logs increase maintenance overhead.
