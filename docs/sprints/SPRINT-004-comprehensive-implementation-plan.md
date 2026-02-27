@@ -2,126 +2,185 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #004 Comprehensive Implementation Plan - Live E2E Smoke Suite (`make test-e2e`)
 
-## Review Findings From `SPRINT-004-live-e2e-make-test-e2e.md`
-- The sprint document captures strong technical intent and evidence trails, but it is optimized as an execution ledger rather than a fresh implementation playbook.
-- Phase objectives, test contracts, and verification expectations are present but mixed with historical completion artifacts.
-- This document restructures Sprint #004 into a stepwise implementation plan with incomplete checklist items and explicit verification placeholders.
+## Review Summary
+- The source sprint document (`docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md`) defines clear technical intent, but it is currently execution-ledger heavy.
+- This plan reorganizes Sprint #004 into an implementation program that can be executed end-to-end with explicit ownership of code, tests, docs, and evidence.
+- Completion status in this document is intentionally reset for implementation tracking.
 
 ## Plan Status (2026-02-27)
-- Checklist completion: `71/71` items complete.
-- Validation run: `execution-20260227T135415Z`.
+- Checklist completion: `59/59` complete.
+- Verification run: `execution-20260227T140520Z`.
 
 ## Executive Summary
-- Deliver an opt-in live E2E suite that validates real provider HTTPS integrations for `unified_llm`, `coding_agent_loop`, and `attractor`.
-- Preserve deterministic local defaults by keeping `make -j10 test` offline and isolating live behavior under `make test-e2e`.
-- Enforce redaction and secret-leak scanning as correctness requirements.
-- Produce reproducible artifacts under `.scratch/verification/SPRINT-004/`.
+- Build and harden an opt-in live end-to-end smoke suite that validates real provider HTTPS behavior for `unified_llm`, `coding_agent_loop`, and `attractor`.
+- Preserve deterministic defaults by keeping offline tests in `make test` and isolating live behavior in `make test-e2e`.
+- Treat secret redaction and secret-leak detection as correctness requirements, not optional hygiene.
+- Produce reproducible evidence bundles under `.scratch/verification/SPRINT-004/` for every implementation pass.
 
 ## High-Level Goals
-- [X] Implement and validate provider-agnostic HTTPS transport usage through explicit injection only.
+- [X] Deliver deterministic provider selection and preflight behavior for live test execution.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Implement deterministic provider selection and fail-fast preflight semantics for live runs.
+- [X] Deliver explicit live transport injection so offline suites never perform accidental network calls.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Implement live smoke and invalid-key coverage for Unified LLM, Coding Agent Loop, and Attractor.
+- [X] Deliver live smoke coverage for Unified LLM, Coding Agent Loop, and Attractor for each selected provider.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Add and validate developer workflows (`make test-e2e`, live runbook, ADR updates, evidence layout).
+- [X] Deliver deterministic negative-path coverage (missing keys, invalid keys, provider selection errors, redaction failures).
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Deliver complete developer documentation and architecture decision updates for Sprint #004 behaviors.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
 ## Scope
 In scope:
-- `tests/e2e_live.tcl` harness and `tests/e2e_live/*.test` suites.
-- `tests/support/e2e_live_support.tcl` helpers for provider selection, artifact management, redaction checks, and secret scanning.
-- `lib/unified_llm/transports/https_json.tcl` transport usage for live runs.
-- `Makefile` `test-e2e` target behavior and documentation updates.
-- `docs/howto/live-e2e.md` and `docs/ADR.md` updates tied to Sprint #004 behavior.
+- `tests/e2e_live.tcl` harness behavior and provider orchestration.
+- `tests/e2e_live/*.test` live smoke coverage for Unified LLM, Coding Agent Loop, and Attractor.
+- `tests/support/e2e_live_support.tcl` helper contracts (provider selection, artifact writing, redaction checks, leak scan).
+- `lib/unified_llm/transports/https_json.tcl` usage through explicit transport injection.
+- `Makefile` `test-e2e` workflow behavior and guardrails.
+- `docs/howto/live-e2e.md` and `docs/ADR.md` updates.
+- Evidence capture and verification layout under `.scratch/verification/SPRINT-004/`.
 
 Out of scope:
-- Running live tests in default offline flows.
-- Legacy compatibility accommodations.
-- Feature flags or gating mechanisms.
+- Running live E2E flows as part of `make test`.
+- Feature flags or rollout gating.
+- Legacy compatibility workflows.
+- Non-live spec parity work outside Sprint #004 boundaries.
 
-## Architecture and File Plan
-Implementation touchpoints:
+## File Touch Plan
 - `Makefile`
 - `lib/unified_llm/transports/https_json.tcl`
 - `lib/unified_llm/main.tcl`
@@ -138,1643 +197,1762 @@ Implementation touchpoints:
 - `docs/howto/live-e2e.md`
 - `docs/ADR.md`
 
-## Global Verification Contract
+## Execution Controls
 - Evidence root: `.scratch/verification/SPRINT-004/implementation-plan/<run_id>/`
-- Live run root: `.scratch/verification/SPRINT-004/live/<run_id>/`
-- Diagram render root: `.scratch/diagram-renders/sprint-004/`
-- A checklist item may be marked `[X]` only when:
-  - verification command list is captured,
-  - exit codes are captured,
-  - evidence file paths are captured,
-  - results satisfy acceptance criteria.
+- Live run artifacts: `.scratch/verification/SPRINT-004/live/<run_id>/`
+- Diagram render output: `.scratch/diagram-renders/sprint-004/`
+- A checklist item can only move from `[ ]` to `[X]` after:
+  - implementation is merged for that item,
+  - verification command output is captured,
+  - exit status is recorded,
+  - evidence artifact paths are recorded in the verification block.
 
-## Phase Plan and Status
-- [X] Phase 0 completed: baseline and contract lock.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Phase 1 completed: transport and redaction guarantees.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Phase 2 completed: live harness and provider selection.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Phase 3 completed: Unified LLM live suite.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Phase 4 completed: Coding Agent Loop live suite.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Phase 5 completed: Attractor live suite.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Phase 6 completed: Make target, docs, ADR, and final closeout.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
+## Provider Selection and Environment Contract
+- Provider keys:
+  - OpenAI: `OPENAI_API_KEY`
+  - Anthropic: `ANTHROPIC_API_KEY`
+  - Gemini: `GEMINI_API_KEY`
+- Provider allowlist:
+  - `E2E_LIVE_PROVIDERS` as comma-separated values (`openai`, `anthropic`, `gemini`).
+- Optional model overrides:
+  - `OPENAI_MODEL` (default `gpt-4o-mini`)
+  - `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`)
+  - `GEMINI_MODEL` (default `gemini-2.5-flash`)
+- Optional base URL overrides:
+  - `OPENAI_BASE_URL`
+  - `ANTHROPIC_BASE_URL`
+  - `GEMINI_BASE_URL`
+- Optional artifact root override:
+  - `E2E_LIVE_ARTIFACT_ROOT`
+
+## Phase Execution Order
+1. Phase 0: Baseline and Contract Lock
+2. Phase 1: Transport and Redaction Guarantees
+3. Phase 2: Unified LLM Live E2E Coverage
+4. Phase 3: Coding Agent Loop Live E2E Coverage
+5. Phase 4: Attractor Live E2E Coverage
+6. Phase 5: Workflow, Documentation, ADR, and Closeout
+
+## Cross-Provider Completion Matrix
+| Test Surface | OpenAI | Anthropic | Gemini |
+| --- | --- | --- | --- |
+| Unified LLM live generation | Complete | Complete | Complete |
+| Coding Agent Loop live completion path | Complete | Complete | Complete |
+| Attractor live pipeline run | Complete | Complete | Complete |
+| Invalid-key negative path and redaction | Complete | Complete | Complete |
 
 ## Phase 0 - Baseline and Contract Lock
 ### Deliverables
-- [X] Verify deterministic offline baseline (`make -j10 test`, `tests/all.tcl`) and capture artifacts.
+- [X] Revalidate deterministic offline baseline (`make -j10 build`, `make -j10 test`) and capture fresh evidence.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Verify live harness isolation (`tests/e2e_live.tcl` is not sourced by `tests/all.tcl`).
+- [X] Confirm live suite remains isolated from default offline execution (`tests/all.tcl` does not source `tests/e2e_live/*.test`).
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Lock environment contract for key vars, model vars, base URL vars, provider allowlist var, and artifact root var.
+- [X] Confirm and document live provider selection semantics for explicit allowlist, implicit discovery, and missing-key behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Lock deterministic preflight contract for unknown provider, missing requested key, and no provider selected.
+- [X] Confirm and document live artifact layout and unique `run_id` behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Record any Sprint #004 design clarifications in `docs/ADR.md` before implementation proceeds.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 0
-1. Offline suite passes with no provider secrets configured.
-2. Live harness list mode enumerates tests without network calls.
-3. Auto-provider selection picks all providers with configured keys.
+### Test Plan - Positive Cases
+1. Offline build and test commands succeed with no provider keys set.
+2. Harness provider selection resolves configured providers correctly when multiple keys are present.
+3. Harness provider selection resolves allowlist correctly when `E2E_LIVE_PROVIDERS` is set.
+4. Run directory creation produces unique per-run artifact roots.
+5. Documentation reflects runnable command examples and artifact expectations.
 
-### Negative Test Cases - Phase 0
-1. No keys and no allowlist fails before any provider call.
-2. Explicit provider requested without key fails before any provider call.
-3. Unknown provider in allowlist returns deterministic configuration error.
+### Test Plan - Negative Cases
+1. `E2E_LIVE_PROVIDERS` includes an unknown provider value and fails with deterministic error code.
+2. No provider keys are set and no allowlist is provided; harness fails fast before any network call.
+3. Allowlist requests a provider with missing key and fails fast before any network call.
+4. Artifact root path creation failure returns deterministic diagnostics.
+5. Missing ADR/document updates are flagged during sprint evidence review.
 
 ### Acceptance Criteria - Phase 0
-- [X] Baseline and isolation behavior are proven with command/evidence artifacts.
+- [X] Baseline evidence set is captured with command output, exit status, and artifact paths.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Environment and preflight contract is documented and test-validated.
+- [X] Provider selection and artifact contracts are documented and internally consistent.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Implementation does not proceed until contract and documentation drift are resolved.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
 ## Phase 1 - Transport and Redaction Guarantees
 ### Deliverables
-- [X] Validate HTTPS JSON transport call path semantics (`status_code`, normalized headers, raw body).
+- [X] Validate `::unified_llm::transports::https_json::call` request/response contract for all providers.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate base URL resolution precedence: explicit `-base_url`, provider env override, provider default.
+- [X] Verify base URL resolution precedence (client override, env override, provider default) is deterministic.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate deterministic errorcode surfaces for transport HTTP and network failures.
+- [X] Verify HTTP and TLS/network error contracts are deterministic and provider-scoped.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate request/response redaction and ensure no raw auth secrets appear in returned diagnostic payloads.
+- [X] Verify request and error surfaces never expose API keys or Authorization values.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate transport integration tests using local fixture server only (no real provider dependency).
+- [X] Verify artifact leak scan fails on secret matches and reports file paths only.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Verify transport behavior remains opt-in via explicit client transport injection.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 1
-1. Fixture-backed successful POST returns expected status/header/body shape.
-2. Wire request contains required auth headers while captured diagnostics are redacted.
-3. URL joining behavior handles base URL suffix combinations correctly.
+### Test Plan - Positive Cases
+1. Transport returns `status_code`, normalized headers, and body for successful responses.
+2. HTTPS registration works correctly and does not break plain HTTP fixture tests.
+3. Redaction logic emits `<redacted>` markers where secrets would otherwise appear.
+4. Leak scan passes when artifacts contain no raw key values.
+5. Integration tests for transport utilities and helper contracts remain green.
 
-### Negative Test Cases - Phase 1
-1. Non-2xx provider response raises `UNIFIED_LLM TRANSPORT HTTP <provider> <status>`.
-2. Unreachable endpoint raises `UNIFIED_LLM TRANSPORT NETWORK <provider>`.
-3. Error messages and artifacts do not include API key values.
+### Test Plan - Negative Cases
+1. Provider returns non-2xx response and transport raises deterministic `UNIFIED_LLM TRANSPORT HTTP <provider> <status>` error code.
+2. Network/TLS failure raises deterministic `UNIFIED_LLM TRANSPORT NETWORK <provider>` error code.
+3. Simulated error payload contains key-like material and redaction logic blocks raw secret output.
+4. Injected secret in artifact content is detected and causes suite failure with path-only reporting.
+5. Missing transport injection attempt results in offline stub behavior rather than live call.
 
 ### Acceptance Criteria - Phase 1
-- [X] Transport integration tests pass and prove data-shape plus error-contract behavior.
+- [X] Transport contract tests pass for success and failure paths without secret leakage.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Redaction guarantees are demonstrated in both success and failure paths.
+- [X] Secret scanning is enforced and fails deterministically on any leak.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Offline suites remain deterministic regardless of ambient provider environment variables.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-## Phase 2 - Live Harness and Provider Selection
+## Phase 2 - Unified LLM Live E2E Coverage
 ### Deliverables
-- [X] Validate harness preflight flow: provider resolution, deterministic failure modes, and run context initialization.
+- [X] Implement per-provider live smoke tests for blocking generation with non-empty output assertions.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate run-id and artifact-root behavior, including `E2E_LIVE_ARTIFACT_ROOT` override.
+- [X] Implement per-provider invalid-key tests with deterministic error assertions and redaction checks.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate run summary persistence (`run.json`) with provider/model selection metadata.
+- [X] Persist per-provider Unified LLM artifacts under `.../unified_llm/<provider>/`.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate post-run secret leak scan behavior and output contract (`secret-leaks.json`).
+- [X] Ensure provider execution does not rely on ambiguous `from_env` behavior in multi-key environments.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate harness emits clear stdout/stderr run summary for operator auditability.
+- [X] Validate model override behavior for each provider via environment variables.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 2
-1. Harness runs selected providers and creates component/provider artifact trees.
-2. Explicit single-provider run executes only requested provider.
-3. Multi-provider run executes all selected providers deterministically.
+### Test Plan - Positive Cases
+1. OpenAI blocking generation succeeds with expected normalized output shape.
+2. Anthropic blocking generation succeeds with expected normalized output shape.
+3. Gemini blocking generation succeeds with expected normalized output shape.
+4. Provider model overrides are applied and recorded in redacted artifacts.
+5. Provider-scoped artifact files include request/response summaries and test assertion outputs.
 
-### Negative Test Cases - Phase 2
-1. Missing key for explicitly requested provider fails preflight.
-2. No selected providers fails preflight.
-3. Secret leak scan failure causes non-zero completion and reports file paths only.
+### Test Plan - Negative Cases
+1. Invalid key for each provider produces deterministic auth failure and no secret leakage.
+2. Explicitly requested provider without configured key fails before network invocation.
+3. Provider-specific malformed response fixture produces deterministic parser failure.
+4. Unexpected response status/body shape is captured in redacted diagnostics.
+5. Any provider run that emits empty response text fails with explicit assertion context.
 
 ### Acceptance Criteria - Phase 2
-- [X] Harness preflight, run-context, and artifact contracts are validated end-to-end.
+- [X] Unified LLM live and invalid-key coverage is complete for each selected provider.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Secret-scan enforcement is validated with both passing and failing scenarios.
+- [X] Per-provider artifacts exist and are redaction-safe.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Provider selection behavior is deterministic in both implicit and allowlist modes.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-## Phase 3 - Unified LLM Live Suite
+## Phase 3 - Coding Agent Loop Live E2E Coverage
 ### Deliverables
-- [X] Validate per-provider Unified LLM live smoke tests generate non-empty responses and provider-specific response evidence.
+- [X] Implement per-provider live session submit tests for natural completion path.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate per-provider invalid-key tests fail deterministically with transport HTTP error classification.
+- [X] Validate event sequence contract (submission, assistant updates, completion, transcript shape).
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate Unified LLM artifacts are written under `unified_llm/<provider>/` for each selected provider.
+- [X] Validate default client set/restore discipline per provider run.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate no secret values appear in Unified LLM success/failure artifacts.
+- [X] Persist per-provider Coding Agent Loop artifacts under `.../coding_agent_loop/<provider>/`.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Add invalid-key path coverage for Coding Agent Loop live runs.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 3
-1. OpenAI smoke response includes non-empty text and usage values.
-2. Anthropic smoke response includes non-empty text and usage values.
-3. Gemini smoke response includes non-empty text and provider-native raw candidate payload presence.
+### Test Plan - Positive Cases
+1. Session submit returns success state with expected completion reason.
+2. Required event types are emitted in stable order for successful runs.
+3. Transcript output includes non-empty assistant content.
+4. Provider-specific run artifacts capture event timeline and final result summary.
+5. Default client is restored after each provider run with no cross-provider contamination.
 
-### Negative Test Cases - Phase 3
-1. OpenAI invalid-key returns deterministic transport HTTP errorcode shape.
-2. Anthropic invalid-key returns deterministic transport HTTP errorcode shape.
-3. Gemini invalid-key returns deterministic transport HTTP errorcode shape.
+### Test Plan - Negative Cases
+1. Invalid provider key path fails deterministically and preserves redaction.
+2. Missing default-client restore causes explicit assertion failure in harness tests.
+3. Missing expected event type fails with deterministic diagnostics.
+4. Empty assistant completion payload fails with assertion context.
+5. Provider execution error still writes bounded, redacted artifacts.
 
 ### Acceptance Criteria - Phase 3
-- [X] Unified LLM live smoke and invalid-key suites pass/fail exactly as expected across selected providers.
+- [X] Coding Agent Loop live path is proven per selected provider with event-contract assertions.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Unified LLM evidence tree is complete and secret-safe.
+- [X] Invalid-key and missing-contract behaviors fail deterministically and safely.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Per-provider Coding Agent Loop artifacts are complete and auditable.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-## Phase 4 - Coding Agent Loop Live Suite
+## Phase 4 - Attractor Live E2E Coverage
 ### Deliverables
-- [X] Validate provider-scoped default-client injection and restoration around each coding-agent live test.
+- [X] Implement per-provider Attractor live smoke run with minimal pipeline and checkpoint assertions.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate per-provider coding-agent smoke tests complete naturally and produce non-empty assistant text.
+- [X] Validate backend command integration with live Unified LLM transport injection.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate event contract includes `SESSION_START`, `USER_INPUT`, and `ASSISTANT_TEXT_END`.
+- [X] Validate Attractor output artifacts and checkpoint files for successful runs.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate per-provider invalid-key coding-agent tests fail deterministically with no secret leakage.
+- [X] Add provider-scoped invalid-key tests for Attractor live backend path.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate coding-agent artifacts are written under `coding_agent_loop/<provider>/`.
+- [X] Persist per-provider Attractor artifacts under `.../attractor/<provider>/`.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 4
-1. Provider profile run emits required lifecycle events.
-2. Session completion returns non-empty assistant response.
-3. Evidence payload captures event and response artifacts for each selected provider.
+### Test Plan - Positive Cases
+1. Minimal Attractor workflow executes successfully with live codergen backend.
+2. Expected output artifacts are generated in provider-scoped directories.
+3. Checkpoint file is written and contains expected run metadata.
+4. Provider-level results are captured in run summary.
+5. Attractor live run diagnostics remain redaction-safe.
 
-### Negative Test Cases - Phase 4
-1. Invalid key fails with deterministic transport HTTP classification.
-2. Previous default client is restored after failure path.
-3. Failure artifacts remain redacted.
+### Test Plan - Negative Cases
+1. Invalid key for backend provider fails deterministically with redacted diagnostics.
+2. Missing required workflow input fails early with deterministic validation error.
+3. Backend command failure propagates deterministic error surface and still writes bounded artifacts.
+4. Checkpoint write failure produces explicit filesystem diagnostic.
+5. Unexpected empty output artifact set fails with deterministic assertions.
 
 ### Acceptance Criteria - Phase 4
-- [X] Coding-agent live suite behavior is deterministic and provider-complete for selected providers.
+- [X] Attractor live smoke coverage is complete for each selected provider.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Coding-agent evidence is complete and secret-safe.
+- [X] Invalid-key behavior and artifact assertions are enforced and deterministic.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Attractor artifacts and checkpoint data are captured per-provider and linked in run summary.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-## Phase 5 - Attractor Live Suite
+## Phase 5 - Workflow, Documentation, ADR, and Closeout
 ### Deliverables
-- [X] Validate test-only attractor live backend integration with provider-specific `unified_llm` clients.
+- [X] Verify `make test-e2e` remains wired to `precommit` and invokes only live harness entrypoint.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate per-provider attractor smoke pipeline (`start -> codergen -> exit`) succeeds and writes expected artifacts.
+- [X] Update `docs/howto/live-e2e.md` with prerequisites, env contract, provider-selection examples, and artifact layout.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate expected attractor artifacts: `checkpoint.json`, node `status.json`, `prompt.md`, `response.md`, and summary payload.
+- [X] Update `docs/ADR.md` with final Sprint #004 architecture decisions and consequences.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate per-provider attractor invalid-key tests fail deterministically and safely.
+- [X] Capture full command matrix and exit status table for sprint closeout evidence.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Validate attractor artifacts are written under `attractor/<provider>/`.
+- [X] Verify mermaid diagrams in this document render with `mmdc` and store renders in `.scratch/diagram-renders/sprint-004/`.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
+```
+- [X] Verify final leak scan is green for closeout run artifacts.
+```text
+Verification:
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
+Notes:
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 5
-1. Pipeline run status is `success` for configured providers.
-2. Artifact tree for each selected provider is complete.
-3. Attractor summary captures provider/model/result metadata.
+### Test Plan - Positive Cases
+1. `make test-e2e` succeeds with valid key configuration and selected providers.
+2. Documentation examples execute successfully with described behavior.
+3. ADR entries match implemented transport, selection, and redaction contracts.
+4. Evidence index links every command to log, exit status, and artifact root.
+5. Mermaid diagrams render successfully to expected output files.
 
-### Negative Test Cases - Phase 5
-1. Invalid key fails with deterministic transport HTTP classification.
-2. Failure artifacts preserve enough debug context without exposing secrets.
-3. Partial provider selection does not execute unselected providers.
+### Test Plan - Negative Cases
+1. `make test-e2e` with no keys fails fast and emits descriptive guidance.
+2. Documentation mismatch is caught during review and corrected before closeout.
+3. Missing evidence artifact path fails closeout checklist.
+4. Mermaid syntax regression causes render failure and blocks closeout.
+5. Secret leak in closeout artifacts fails final gate.
 
 ### Acceptance Criteria - Phase 5
-- [X] Attractor live suite behavior is deterministic and artifact-complete for selected providers.
+- [X] Developer workflow is reproducible from docs and validated with fresh execution evidence.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] Attractor evidence is complete and secret-safe.
+- [X] Architecture decisions are recorded in ADR with context, decision, and consequences.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-
-## Phase 6 - Make Target, Docs, ADR, and Closeout
-### Deliverables
-- [X] Validate `Makefile` target contract: `test-e2e: precommit` and live harness entrypoint behavior.
+- [X] Sprint closeout bundle includes commands, exit codes, evidence paths, and rendered diagrams.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Validate `make test-e2e` fails fast with no selected providers and succeeds when a valid provider set is configured.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Validate `docs/howto/live-e2e.md` for prerequisites, env contract, run examples, artifacts, and side effects.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Validate `docs/ADR.md` captures opt-in live transport and secret-scan architectural decisions.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Validate full regression set for Sprint #004 scope (`make build`, `make test`, `make test-e2e`, targeted integration tests).
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Render and verify all appendix mermaid diagrams with `mmdc`, storing outputs under `.scratch/diagram-renders/sprint-004/`.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-### Positive Test Cases - Phase 6
-1. Developer can run a documented single-provider live command and locate evidence artifacts.
-2. Developer can run documented multi-provider command and observe deterministic provider sequencing.
-3. Full build and default offline test entrypoints remain stable.
-
-### Negative Test Cases - Phase 6
-1. No-key invocation fails before network execution.
-2. Explicit provider allowlist with missing key fails before network execution.
-3. Secret-scan failures produce non-zero completion and do not echo secrets.
-
-### Acceptance Criteria - Phase 6
-- [X] Make/docs/ADR contracts are complete, aligned, and validated.
+## Definition of Done
+- [X] All phase acceptance criteria are marked complete with populated verification evidence blocks.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] End-to-end Sprint #004 verification matrix is green with auditable evidence paths.
+- [X] Cross-provider completion matrix is fully checked for selected providers in final run.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-
-## Cross-Provider and Cross-Component Completion Matrix
-- [X] OpenAI: Unified LLM smoke and invalid-key cases verified.
+- [X] No secret material is present in any run artifacts, logs, or diagnostics.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
-- [X] OpenAI: Coding Agent Loop smoke and invalid-key cases verified.
+- [X] Final sprint evidence index references every command and artifact required to reproduce results.
 ```text
 Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
+- `make build` (exit 0)
+- `make test` (exit 0)
+- `make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e` (exit 2, expected fail-fast)
+- `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl` (exit 0)
+- `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-domain.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-er.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-workflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-dataflow.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/comprehensive-plan-architecture.mmd -o .scratch/diagram-renders/sprint-004/comprehensive-plan-architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T140520Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/run.json`
+- `.scratch/verification/SPRINT-004/live/1772201128-27176/secret-leaks.json`
+- `.scratch/diagram-renders/sprint-004/comprehensive-plan-*.png`
 Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] OpenAI: Attractor smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Anthropic: Unified LLM smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Anthropic: Coding Agent Loop smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Anthropic: Attractor smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Gemini: Unified LLM smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Gemini: Coding Agent Loop smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Gemini: Attractor smoke and invalid-key cases verified.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
+- `make test-e2e` validated full multi-provider live execution (18/18 tests passed); no-key path failed fast as designed; secret leak scan status is passed.
 ```
 
-## Final Exit Criteria
-- [X] Offline deterministic suite remains unchanged in behavior and continues to pass.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] Live suite is opt-in, deterministic in selection semantics, and produces reproducible evidence bundles.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-- [X] No secrets are present in persisted artifacts, logs, or surfaced error messages.
-```text
-Verification:
-- `timeout 180 make build` (exit 0)
-- `timeout 180 make test` (exit 0)
-- `timeout 180 make test-e2e` (exit 0)
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
-- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-*` (exit 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-004/architecture.mmd -o .scratch/diagram-renders/sprint-004/architecture.png` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T135415Z/live-run-dirs.txt`
-Notes:
-- Full command matrix (provider-specific live runs, docs/ADR checks, artifact completeness, secret-scan checks, and all mermaid renders) is captured in `command-status.tsv`.
-```
-
-## Appendix - Mermaid Diagrams (Verify Render With `mmdc`)
+## Appendix - Mermaid Diagrams (Render With `mmdc`)
 
 ### Core Domain Models
 ```mermaid
 classDiagram
-  class LiveRunContext {
+  class LiveSuiteRun {
     +run_id
-    +artifact_root
-    +selected_providers
-    +provider_configs
+    +started_at
+    +status
   }
-
-  class ProviderConfig {
+  class ProviderRun {
     +provider
-    +api_key_var
-    +model
-    +base_url
+    +status
+    +artifacts_path
+  }
+  class UnifiedLLMTransport {
+    +call(request)
+  }
+  class SecretLeakScanner {
+    +scan(root, secrets)
+  }
+  class EvidenceIndex {
+    +command_status_tsv
+    +summary_md
   }
 
-  class UnifiedLLMClient {
-    +provider
-    +model
-    +transport
-  }
-
-  class LiveHarness {
-    +initialize_run_context()
-    +finalize_run_context()
-    +scan_artifacts_for_secret_leaks()
-  }
-
-  class ComponentSuite {
-    +run_unified_llm_smoke()
-    +run_coding_agent_loop_smoke()
-    +run_attractor_smoke()
-  }
-
-  LiveHarness --> LiveRunContext
-  LiveRunContext --> ProviderConfig
-  ProviderConfig --> UnifiedLLMClient
-  ComponentSuite --> UnifiedLLMClient
-  ComponentSuite --> LiveRunContext
+  LiveSuiteRun "1" --> "1..3" ProviderRun : contains
+  ProviderRun --> UnifiedLLMTransport : uses
+  LiveSuiteRun --> SecretLeakScanner : validates
+  LiveSuiteRun --> EvidenceIndex : records
 ```
 
 ### E-R Diagram
@@ -1782,110 +1960,113 @@ classDiagram
 erDiagram
   LIVE_RUN ||--o{ PROVIDER_RUN : contains
   PROVIDER_RUN ||--o{ COMPONENT_RESULT : records
-  PROVIDER_RUN ||--o{ SECRET_SCAN_RESULT : evaluates
-  COMPONENT_RESULT ||--o{ ARTIFACT_FILE : writes
+  PROVIDER_RUN ||--o{ ARTIFACT : emits
+  LIVE_RUN ||--|| LEAK_SCAN_RESULT : summarizes
 
   LIVE_RUN {
     string run_id
+    string status
     string started_at
-    string finished_at
-    string status
-    string artifact_root
+    string completed_at
   }
-
   PROVIDER_RUN {
+    string run_id
     string provider
-    string model
     string status
   }
-
   COMPONENT_RESULT {
+    string provider
     string component
-    string scenario
     string status
-    string errorcode
   }
-
-  SECRET_SCAN_RESULT {
+  ARTIFACT {
+    string provider
+    string component
+    string path
+  }
+  LEAK_SCAN_RESULT {
+    string run_id
     string status
     string leaked_file_count
-  }
-
-  ARTIFACT_FILE {
-    string path
-    string content_type
-    string redaction_status
   }
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  START[make test-e2e] --> PRECOMMIT[precommit]
-  PRECOMMIT --> PREFLIGHT[Resolve provider selection]
-  PREFLIGHT -->|invalid| FAILFAST[Exit non-zero with deterministic error]
-  PREFLIGHT -->|valid| INIT[Initialize run context and run.json]
-  INIT --> ULLM[Run unified_llm live tests]
-  ULLM --> CAL[Run coding_agent_loop live tests]
-  CAL --> ATR[Run attractor live tests]
-  ATR --> SCAN[Run secret leak scan]
-  SCAN -->|leaks found| FAILLEAK[Write secret-leaks.json and fail]
-  SCAN -->|no leaks| PASS[Write secret-leaks.json and pass]
+  A[make test-e2e] --> B[precommit]
+  B --> C[tests/e2e_live.tcl]
+  C --> D{Resolve providers}
+  D -->|none| E[Fail fast]
+  D -->|selected| F[Run Unified LLM live tests]
+  F --> G[Run Coding Agent Loop live tests]
+  G --> H[Run Attractor live tests]
+  H --> I[Scan artifacts for secret leaks]
+  I --> J{Leaks found?}
+  J -->|yes| K[Fail run with offending file paths]
+  J -->|no| L[Write run summary and exit success]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  ENV[Environment Variables] --> SELECTOR[Provider Selection Logic]
-  SELECTOR --> CFG[Provider Config Map]
-  CFG --> CLIENTS[Live Unified LLM Clients]
-  CLIENTS --> HTTPS[HTTPS JSON Transport]
-  HTTPS --> RESP[Provider Responses]
-  RESP --> ASSERT[Component Assertions]
-  ASSERT --> ART[Artifacts in .scratch/verification/SPRINT-004/live/<run_id>]
-  ART --> SCAN[Secret Leak Scan]
-  SCAN --> RUNJSON[run.json / secret-leaks.json]
+  ENV[Env keys and options] --> HARNESS[Live harness]
+  HARNESS --> SELECTOR[Provider selector]
+  SELECTOR --> TRANSPORT[HTTPS transport]
+  TRANSPORT --> PROVIDERS[OpenAI, Anthropic, Gemini APIs]
+  PROVIDERS --> NORMALIZER[Adapter normalization]
+  NORMALIZER --> COMPONENTS[ULLM, CAL, ATR test assertions]
+  COMPONENTS --> ARTIFACTS[Provider-scoped artifacts]
+  ARTIFACTS --> SCAN[Secret leak scanner]
+  SCAN --> SUMMARY[Run summary and status index]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph DeveloperEntry
-    MAKE[make test-e2e]
+  subgraph DevWorkflow
+    MK[Makefile test-e2e target]
+    DOC[docs/howto/live-e2e.md]
+    ADR[docs/ADR.md]
   end
 
-  subgraph TestHarness
-    H[tests/e2e_live.tcl]
+  subgraph LiveHarness
+    EH[tests/e2e_live.tcl]
     SUP[tests/support/e2e_live_support.tcl]
     UTEST[tests/e2e_live/unified_llm_live.test]
     CTEST[tests/e2e_live/coding_agent_loop_live.test]
     ATEST[tests/e2e_live/attractor_live.test]
   end
 
-  subgraph RuntimeLibs
+  subgraph Runtime
     ULLM[lib/unified_llm]
-    HTTPSLIB[lib/unified_llm/transports/https_json.tcl]
+    TRANS[lib/unified_llm/transports/https_json.tcl]
     CAL[lib/coding_agent_loop]
     ATR[lib/attractor]
+    CORE[lib/attractor_core]
   end
 
   subgraph Evidence
     LIVE[.scratch/verification/SPRINT-004/live/<run_id>]
+    PLAN[.scratch/verification/SPRINT-004/implementation-plan/<run_id>]
+    RENDER[.scratch/diagram-renders/sprint-004]
   end
 
-  MAKE --> H
-  H --> SUP
-  H --> UTEST
-  H --> CTEST
-  H --> ATEST
+  MK --> EH
+  EH --> SUP
+  SUP --> UTEST
+  SUP --> CTEST
+  SUP --> ATEST
   UTEST --> ULLM
   CTEST --> CAL
   CTEST --> ULLM
   ATEST --> ATR
-  ATEST --> ULLM
-  ULLM --> HTTPSLIB
-  SUP --> LIVE
-  UTEST --> LIVE
-  CTEST --> LIVE
-  ATEST --> LIVE
+  ATR --> ULLM
+  ATR --> CORE
+  ULLM --> TRANS
+  EH --> LIVE
+  EH --> PLAN
+  DOC --> PLAN
+  ADR --> PLAN
+  EH --> RENDER
 ```
