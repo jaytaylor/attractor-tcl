@@ -29,44 +29,45 @@ Out of scope:
 - [X] Catalog generation, coverage equality, and precommit enforcement are active and green.
 ```text
 Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 135 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `timeout 135 tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/01-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/02-make-test.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/04-req-summary.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/16-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/17-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/03-req-summary.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/10-spec-coverage.log`
 Notes:
 - Current counts: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
 - Family counts: ATR=88, CAL=66, ULLM=109.
+- Coverage counters: missing=0, unknown_catalog=0, missing_catalog=0, duplicates=0, malformed_blocks=0.
 ```
 - [X] Deterministic catalog output is proven with repeat-run byte equality checks.
 ```text
 Verification:
-- `tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
-- `tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
-- `cmp -s requirements.run1.json requirements.run2.json` (exit code 0)
-- `cmp -s requirements.run1.md requirements.run2.md` (exit code 0)
+- `timeout 135 tclsh tools/requirements_catalog.tcl --out-json .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run1.json --out-md .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run1.md` (exit code 0)
+- `timeout 135 tclsh tools/requirements_catalog.tcl --out-json .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run2.json --out-md .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run2.md` (exit code 0)
+- `timeout 135 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run1.json .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run2.json` (exit code 0)
+- `timeout 135 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run1.md .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/requirements.run2.md` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/05-req-generate-1.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/06-req-generate-2.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/07-cmp-json-runs.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/08-cmp-md-runs.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/04-req-generate-1.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/05-req-generate-2.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/06-cmp-json-runs.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/07-cmp-md-runs.log`
 Notes:
 - Baseline-vs-current comparisons also remained byte-identical.
 ```
 - [X] Sprint verification evidence is indexed and auditable.
 ```text
 Verification:
-- `cat .scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv` (exit code 0)
-- `test -f .scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md` (exit code 0)
+- `cat .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/command-status.tsv` (exit code 0)
+- `test -f .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/README.md` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/README.md`
 Notes:
-- Implementation Pass #8 includes 24 tracked commands with all exit codes `0`.
+- Implementation Pass #11 includes 22 tracked commands with all exit codes `0`.
 ```
 
 ## Implementation Plan (Comprehensive)
@@ -461,17 +462,80 @@ Notes:
 - [X] Final lint + build + test gates passed after the latest sprint-document update.
 ```text
 Verification:
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `make build` (exit code 0)
-- `make test` (exit code 0)
+- `timeout 135 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/01-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/02-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/03-make-test.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/command-status.tsv`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/README.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-13-final/01-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-13-final/02-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-13-final/03-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-13-final/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-13-final/README.md`
 Notes:
-- Final suite status: Total=73, Passed=73, Skipped=0, Failed=0.
+- Final suite status: Total=75, Passed=75, Skipped=0, Failed=0.
+```
+
+## Implementation Refresh Snapshot (Verified 2026-02-27, Pass #11)
+- [X] `spec_coverage` now fails malformed non-empty traceability blocks that omit `id`.
+```text
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+- `timeout 135 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/12-tests-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/10-spec-coverage.log`
+Notes:
+- New output counter: `malformed_blocks=0` in green path.
+```
+- [X] Requirement shrink/churn guardrail now includes a default-summary stability test.
+```text
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
+- `timeout 135 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/11-tests-reqcat.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/03-req-summary.log`
+Notes:
+- Expected baseline remains: requirements=263, ATR=88, CAL=66, ULLM=109, DOD=205, NORMATIVE=58.
+```
+- [X] Full required build/test gates were rerun with the requested timeout contract and remained green.
+```text
+Verification:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/16-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/17-make-test.log`
+Notes:
+- Suite status after guardrail additions: Total=75, Passed=75, Skipped=0, Failed=0.
+```
+- [X] Appendix mermaid diagrams were rerendered and validated with `mmdc` in this refresh pass.
+```text
+Verification:
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/18-mmdc-domain.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/19-mmdc-er.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/20-mmdc-workflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/21-mmdc-dataflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/22-mmdc-arch.log`
+Notes:
+- Diagram render outputs were refreshed under `.scratch/diagram-renders/sprint-002/`.
+```
+- [X] Implementation pass evidence index is current and authoritative for this refresh.
+```text
+Verification:
+- `cat .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/command-status.tsv` (exit code 0)
+- `test -f .scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/README.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/README.md`
+Notes:
+- All 22 commands exited `0`.
 ```
 
 ## Appendix - Mermaid Diagrams (Verify Render With mmdc)
@@ -489,13 +553,13 @@ Verification:
 - `test -f .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
 - `test -f .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/18-mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/19-mmdc-er.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/20-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/21-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/22-mmdc-arch.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/18-mmdc-domain.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/19-mmdc-er.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/20-mmdc-workflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/21-mmdc-dataflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-11/22-mmdc-arch.log`
 Notes:
-- Diagram renders were regenerated successfully in Pass #8.
+- Diagram renders were regenerated successfully in Pass #11.
 ```
 
 ### Core Domain Models

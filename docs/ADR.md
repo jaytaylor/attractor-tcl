@@ -145,3 +145,23 @@ Positive:
 Tradeoffs:
 - `make build` and `make test` now run additional validation and take slightly longer.
 - Contributors working only on non-spec areas still pay this validation cost.
+
+## ADR-006: Fail Fast on Malformed Traceability Mapping Blocks and Pin Baseline Catalog Counts
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+`tools/spec_coverage.tcl` previously ignored non-empty traceability blocks that lacked `id`, which could hide accidental malformed mappings. We also wanted a deterministic guardrail that surfaces unexpected requirement-catalog shrink/churn immediately in CI.
+
+### Decision
+- Update `tools/spec_coverage.tcl` so non-empty mapping blocks missing `id` are reported as `MALFORMED_BLOCK` and fail validation.
+- Add a stable baseline summary test in `tests/unit/requirements_catalog.test` that asserts default catalog totals/family/kind counts.
+
+### Consequences
+Positive:
+- Malformed traceability edits can no longer pass silently.
+- Catalog regressions now fail fast and require explicit test/document updates.
+
+Tradeoffs:
+- Intentional spec changes that alter catalog counts require synchronized test updates.
+- Traceability parser behavior is stricter and may fail where prior versions were permissive.
