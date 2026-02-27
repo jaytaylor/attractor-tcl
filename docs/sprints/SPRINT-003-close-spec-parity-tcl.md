@@ -1,307 +1,491 @@
 Legend: [ ] Incomplete, [X] Complete
 
-# Sprint #003 - Close Full Spec Parity (Tcl)
+# Sprint #003 - Close Full Spec Parity (Tcl) Implementation Plan
 
 ## Executive Summary
-Implement complete Tcl parity for:
+Implement full Tcl parity for:
 - `unified-llm-spec.md`
 - `coding-agent-loop-spec.md`
 - `attractor-spec.md`
 
-This plan is execution-oriented and assumes Sprint #002 requirement catalog outputs are available and authoritative.
+This plan is execution-first and verification-first. It is structured so implementation, testing, traceability, and evidence capture can be executed directly from this document.
 
-## Goal
-Ship a deterministic, offline-verifiable implementation where every Sprint #003 requirement is mapped to:
-- implementation location
-- automated tests (unit/integration/e2e)
-- reproducible verification evidence in `.scratch/verification/SPRINT-003/`
+## Sprint Objective
+Deliver deterministic, offline-verifiable parity across Unified LLM, Coding Agent Loop, and Attractor runtime. Every requirement ID in scope must map to implementation, automated tests, and evidence artifacts.
+
+## Scope
+In scope:
+- Unified LLM provider resolution, content normalization, streaming, tool-call loops, structured output, and typed failures.
+- Coding Agent Loop lifecycle semantics, tool dispatch, event contracts, profile prompts, and subagent behavior.
+- Attractor parser/validator/runtime/handler/interviewer/CLI parity for `validate`, `run`, and `resume`.
+- Cross-runtime integration scenarios covering ATR + CAL + ULLM in one deterministic flow.
+- Traceability closure and ADR updates for architecture-significant decisions.
+
+Out of scope:
+- Legacy compatibility behavior.
+- Feature flags or gated rollout.
+- New product surfaces not required by Sprint #003 requirements.
 
 ## Definition of Done
-- `make -j10 test` passes.
-- `tclsh tools/spec_coverage.tcl` reports no missing or unknown requirement mappings.
-- `docs/spec-coverage/traceability.md` maps all ULLM/CAL/ATR requirement IDs to implementation and tests.
-- Sprint evidence indexes include commands, exit codes, and artifact references.
-- Mermaid appendix diagrams render successfully through `mmdc` with outputs stored under `.scratch/diagram-renders/sprint-003/`.
+- `make -j10 test` passes in deterministic offline mode.
+- `tclsh tools/requirements_catalog.tcl --check-ids` passes.
+- `tclsh tools/spec_coverage.tcl` reports complete and consistent mapping.
+- `docs/spec-coverage/traceability.md` has full requirement mapping coverage for ULLM/CAL/ATR.
+- Evidence indexes exist under `.scratch/verification/SPRINT-003/` with commands, exit codes, and artifact paths.
+- Appendix mermaid diagrams render successfully with `mmdc` to `.scratch/diagram-renders/sprint-003/`.
 
-## Planning Assumptions and Constraints
-- Sprint #002 artifacts remain the dependency gate for requirement completeness.
-- Offline deterministic verification is the primary acceptance path.
-- No compatibility shims are required; implement the current spec contracts directly.
-- Sprint checklists are not marked complete until verification evidence is captured.
-
-## Current Status Snapshot (2026-02-27)
-- [X] Baseline build/test/spec-coverage snapshot captured for Sprint #003 kickoff.
-```text
-Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
-```
-- [X] Requirement gap ledger prepared for ULLM/CAL/ATR families with owner and target phase.
-```text
-Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
-```
-- [X] Baseline evidence index created at `.scratch/verification/SPRINT-003/baseline/README.md`.
-```text
-Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
-```
-- [X] Execution refresh synchronization completed via `docs/sprints/SPRINT-003-implementation-execution.md`.
-```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
-- Notes:
-- Includes per-phase indexes and mermaid renders under `.scratch/diagram-renders/sprint-003/`.
-```
-
-## Requirement Slicing Strategy
-### Unified LLM (ULLM)
-- Provider construction and routing correctness.
-- Message/content-part normalization, including tool and thinking parts.
-- Blocking and streaming behavior parity.
-- Tool-call execution semantics and continuation behavior.
-- Structured output and schema validation semantics.
-- Provider-specific translation and typed error mapping.
-
-### Coding Agent Loop (CAL)
-- Session lifecycle and loop semantics.
-- Tool registry/dispatch, tool errors, and output truncation behavior.
-- Steering/follow-up queue behavior.
-- Profile prompt construction and project-document ingestion.
-- Subagent lifecycle, depth control, and shared environment semantics.
-- Required event stream coverage.
-
-### Attractor Runtime (ATR)
-- DOT parse and validate parity.
-- Execution engine traversal and routing behavior.
-- Built-in handlers and interviewer implementations.
-- Condition evaluation and stylesheet specificity behavior.
-- Checkpoint/resume equivalence.
-- CLI contracts for `validate`, `run`, `resume`.
+## Workstream Map
+- ULLM implementation: `lib/unified_llm/main.tcl`, `lib/unified_llm/adapters/*.tcl`, `tests/unit/unified_llm.test`, `tests/integration/unified_llm_parity.test`, `tests/support/mock_http_server.tcl`
+- CAL implementation: `lib/coding_agent_loop/main.tcl`, `lib/coding_agent_loop/tools/core.tcl`, `lib/coding_agent_loop/profiles/*.tcl`, `tests/unit/coding_agent_loop.test`, `tests/integration/coding_agent_loop_integration.test`
+- ATR implementation: `lib/attractor/main.tcl`, `lib/attractor_core/core.tcl`, `bin/attractor`, `tests/unit/attractor.test`, `tests/unit/attractor_core.test`, `tests/integration/attractor_integration.test`, `tests/e2e/attractor_cli_e2e.test`
+- Cross-cutting verification: `tests/all.tcl`, `tools/requirements_catalog.tcl`, `tools/spec_coverage.tcl`, `tools/evidence_lint.sh`, `docs/spec-coverage/traceability.md`, `docs/ADR.md`
 
 ## Phase Execution Order
-1. Phase 0: Baseline and harness hardening.
-2. Phase 1: Unified LLM parity closure.
-3. Phase 2: Coding Agent Loop parity closure.
-4. Phase 3: Attractor parity closure.
-5. Phase 4: Cross-runtime integration closure.
-6. Phase 5: Traceability, ADR, and sprint closeout.
+1. Phase 0: Baseline and requirement slicing
+2. Phase 1: Unified LLM parity closure
+3. Phase 2: Coding Agent Loop parity closure
+4. Phase 3: Attractor parity closure
+5. Phase 4: Cross-runtime integration closure
+6. Phase 5: Traceability, evidence, and closeout
 
-## Phase 0 - Baseline and Harness Hardening
+## Phase 0 - Baseline and Requirement Slicing
 ### Deliverables
-- [X] Capture baseline run outputs for build, tests, coverage, and traceability checks.
+- [X] Run and record baseline verification command set for build, tests, requirements catalog, and spec coverage.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Write a requirement-family gap ledger linking each unresolved requirement ID to target files and tests.
+- [X] Produce a requirement-family gap ledger partitioned by ULLM/CAL/ATR with owner, target file, and target tests.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Harden provider mock harness contracts for blocking and streaming paths in `tests/support/mock_http_server.tcl`.
+- [X] Validate provider mock harness determinism in `tests/support/mock_http_server.tcl` for blocking and streaming captures.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Standardize fixture naming and structure for provider request/response and stream event captures.
+- [X] Normalize fixture naming conventions and fixture schema expectations across ULLM adapter tests.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Record architecture decisions required before parity coding starts in `docs/ADR.md`.
+- [X] Create per-phase evidence directories and README index skeletons under `.scratch/verification/SPRINT-003/`.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Create per-phase evidence index skeletons under `.scratch/verification/SPRINT-003/phase-*/README.md`.
+- [X] Capture architecture-significant pre-implementation decisions in `docs/ADR.md`.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
-### Test Matrix - Phase 0 (Explicit)
+### Test Matrix - Phase 0
 Positive cases:
-- Harness reproduces deterministic provider responses for OpenAI, Anthropic, and Gemini fixtures.
-- Harness records HTTP method, endpoint, headers, body, and stream chunks for each adapter path.
-- Fixture validation utility accepts correctly shaped fixture bundles and emits stable normalized output.
+- Baseline `make -j10 build` and `make -j10 test` pass with deterministic offline fixtures.
+- Requirements catalog check passes and emits stable family counts.
+- Spec coverage check confirms known IDs and no malformed mapping blocks.
+- Mock HTTP harness records method, path, headers, body, and stream event sequence consistently.
 
 Negative cases:
-- Missing fixture fields are rejected with deterministic diagnostics.
-- Unexpected endpoint or missing required header fails test with exact mismatch context.
-- Stream fixture containing malformed event payload fails with deterministic parser error.
+- Missing fixture keys fail with deterministic diagnostics.
+- Unknown endpoint or missing expected header fails with contextual mismatch output.
+- Malformed traceability mapping block fails with deterministic malformed-block error.
+- Unknown requirement ID in traceability fails with deterministic unknown-requirement error.
 
 ### Acceptance Criteria - Phase 0
-- [X] Baseline gap ledger has no unowned ULLM/CAL/ATR requirement IDs.
+- [X] No unowned requirement ID remains in the gap ledger.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Harness contract tests are deterministic and enforced in regular test runs.
+- [X] Baseline evidence index includes exact commands, exit codes, and artifact references.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default behavior, and deterministic ambiguity errors.
+- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default behavior, and deterministic ambiguity failure.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete normalized message/content model support: roles, `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, `tool_result`.
+- [X] Complete normalized content-part support for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete adapter translation behavior in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming.
+- [X] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Implement streaming event parity with deterministic event ordering and middleware visibility.
+- [X] Implement deterministic streaming event ordering and ensure middleware/event-consumer visibility guarantees.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Implement tool-call loop semantics including active/passive tools, batched tool-result continuation, and round limits.
+- [X] Implement tool-call continuation semantics with active/passive tool behavior, batched results, and deterministic round bounds.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Implement structured output parity (`generate_object`, `stream_object`) with deterministic invalid-json and schema-mismatch error paths.
+- [X] Implement structured output parity for blocking and streaming object generation with deterministic parse/schema failures.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Normalize usage/reasoning/caching fields and validate `provider_options` pass-through behavior.
+- [X] Normalize usage/reasoning/caching metadata and validate provider option pass-through and validation failures.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` for full positive and negative parity coverage.
+- [X] Expand ULLM unit and integration tests to full parity coverage.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
-### Test Matrix - Phase 1 (Explicit)
+### Test Matrix - Phase 1
 Positive cases:
-- Request with `prompt` only returns normalized response and usage fields.
-- Request with `messages` only returns normalized response with all supported role/content combinations.
-- Provider omitted but default configured routes to the expected adapter.
-- Streaming emits required event sequence and the concatenated deltas equal blocking output.
-- Image URL, base64, and local path parts each map correctly through supported adapters.
-- Multiple tool calls in one response produce a single continuation request containing all tool results.
-- Structured output success path returns schema-valid object for both blocking and streaming APIs.
-- Reasoning and caching metadata are present and normalized when surfaced by adapters.
+- `prompt`-only request returns normalized response and usage fields.
+- `messages`-only request supports all required roles and content-part permutations.
+- Default provider selection routes correctly when one provider is configured.
+- Streaming emits expected ordered event sequence and aggregate text matches blocking output.
+- Image URL/base64/path parts translate correctly to adapter-native payloads.
+- Multiple tool calls in one assistant turn result in one continuation request carrying all tool results.
+- Structured output returns schema-valid object for blocking and streaming object APIs.
+- Usage metadata includes input/output and cache-related fields when present.
 
 Negative cases:
-- Both `prompt` and `messages` in one request returns deterministic validation error.
-- No configured provider returns deterministic configuration error.
-- Ambiguous provider environment returns deterministic configuration error.
-- Unknown tool call returns error `tool_result` payload without crashing execution.
-- Invalid tool argument payload returns deterministic schema validation failure.
-- Invalid JSON in structured output returns deterministic parse failure type.
-- Schema mismatch in structured output returns deterministic schema mismatch failure type.
-- Invalid provider option shape fails before transport invocation.
+- Request with both `prompt` and `messages` fails deterministically.
+- No configured provider fails with deterministic configuration error.
+- Ambiguous environment provider selection fails deterministically.
+- Unknown tool name produces deterministic `tool_result` error payload and no crash.
+- Invalid tool arguments fail deterministic validation path.
+- Invalid JSON structured output fails deterministic parse error path.
+- Schema mismatch fails deterministic schema-validation error path.
+- Invalid provider options fail before transport invocation.
 
 ### Acceptance Criteria - Phase 1
-- [X] ULLM parity tests pass for OpenAI/Anthropic/Gemini deterministic mocks across blocking and streaming paths.
+- [X] ULLM parity test suite passes for OpenAI/Anthropic/Gemini mock paths in blocking and streaming modes.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Every ULLM requirement ID in traceability resolves to implementation + automated tests + verification artifact.
+- [X] Every ULLM requirement ID maps to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
@@ -309,383 +493,882 @@ Verification:
 - [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete loop lifecycle behavior in `lib/coding_agent_loop/main.tcl` for natural completion, per-input tool-round limits, session turn limits, and cancellation.
+- [X] Complete loop lifecycle behavior in `lib/coding_agent_loop/main.tcl` for natural completion, per-input tool-round limits, turn limits, and cancellation.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Align truncation behavior and markers, preserving full output in terminal tool events.
+- [X] Align truncation semantics to preserve full output in events while surfaced output remains bounded.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Implement steering semantics (`steer`, `follow_up`) as queued injections affecting the next model request.
+- [X] Implement queued `steer` and `follow_up` semantics affecting the next model request deterministically.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Implement required event-kind parity and payload completeness guarantees.
+- [X] Implement required event-kind parity and payload completeness across the full session lifecycle.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 - [X] Implement repeated-tool-signature loop detection with deterministic warning emission.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl` including environment context and project-document discovery.
+- [X] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl` including environment context and project-doc ingestion.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete subagent behavior: spawn/send_input/wait/close lifecycle, shared environment, independent histories, and depth control.
+- [X] Complete subagent lifecycle parity with shared environment, isolated histories, and depth control.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Expand `tests/unit/coding_agent_loop.test` and `tests/integration/coding_agent_loop_integration.test` for complete parity matrix coverage.
+- [X] Expand CAL unit and integration tests to cover lifecycle, tools, steering, subagents, and terminal states.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
-### Test Matrix - Phase 2 (Explicit)
+### Test Matrix - Phase 2
 Positive cases:
-- Session processes a multi-turn coding task to natural completion with correct event ordering.
-- Steering message injected after a tool call changes the next model request content deterministically.
-- Follow-up message queues after current input completion and executes on next turn.
-- Truncation marker appears in surfaced output while event payload retains full output.
-- Profile prompts include identity guidance, tool guidance, environment context, and discovered docs.
-- Subagent completes a scoped task and returns result to parent as tool result payload.
+- Session handles multi-turn coding request to deterministic natural completion.
+- `steer` injection modifies the immediate next model request payload.
+- `follow_up` queue executes after current input completion.
+- Truncation marker is visible in tool output while full output remains in event payload.
+- Profile prompts include identity/tool/environment/project-document segments.
+- Subagent completes scoped task and returns deterministic tool-result payload to parent.
 
 Negative cases:
-- Unknown tool name returns deterministic error tool result and loop remains alive.
-- Invalid tool arguments return deterministic schema error tool result.
-- Per-input tool-round limit breach terminates turn with deterministic limit event.
-- Session cancellation during active work transitions to deterministic terminal state.
-- Repeated identical tool signature triggers deterministic loop-warning event.
-- Subagent depth overflow fails deterministically with explicit depth-limit error.
+- Unknown tool name produces deterministic tool error payload while session remains alive.
+- Invalid tool argument shape produces deterministic validation error payload.
+- Per-input tool-round limit breach emits deterministic limit event and ends turn.
+- Explicit cancellation transitions session to deterministic terminal state.
+- Repeated identical tool signatures emit deterministic loop-warning event.
+- Subagent depth overflow fails with deterministic depth-limit error.
 
 ### Acceptance Criteria - Phase 2
-- [X] CAL parity tests cover lifecycle, tool execution, steering, subagents, and event contracts across profiles.
+- [X] CAL parity tests pass for lifecycle, tool execution, steering, subagent behavior, and event contracts.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Every CAL requirement ID in traceability resolves to implementation + automated tests + verification artifact.
+- [X] Every CAL requirement ID maps to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
 ## Phase 3 - Attractor Parity Closure
 ### Deliverables
-- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for supported syntax, quoting, chained edges, defaults, and comment stripping.
+- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for quoting, chained edges, defaults, comments, and supported attribute forms.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete lint/validation parity for start/exit invariants, reachability, edge validity, and rule/severity metadata.
+- [X] Complete validation parity for start/exit invariants, reachability warnings, edge validity, and stable rule/severity metadata.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete execution engine parity for handler resolution, edge selection priority, goal routing, and checkpoint/resume equivalence.
+- [X] Complete execution engine parity for handler resolution, edge routing priority, goal routing, and checkpoint/resume equivalence.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 - [X] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete interviewer parity (`AutoApprove`, `Console`, `Callback`, `Queue`) and `wait.human` option routing behavior.
+- [X] Complete interviewer parity (`autoapprove`, `console`, `callback`, `queue`) and deterministic `wait.human` option routing.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete condition expression and stylesheet specificity behavior parity.
+- [X] Complete condition expression and stylesheet specificity parity.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete transform extensibility and custom-handler registration lifecycle behavior.
+- [X] Complete custom-transform and custom-handler registration lifecycle behavior.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume`.
+- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` exit behavior and output shape.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Expand `tests/unit/attractor.test`, `tests/unit/attractor_core.test`, `tests/integration/attractor_integration.test`, and `tests/e2e/attractor_cli_e2e.test`.
+- [X] Expand ATR unit, integration, and CLI e2e tests for parser/validator/runtime/interviewer/CLI parity.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
-### Test Matrix - Phase 3 (Explicit)
+### Test Matrix - Phase 3
 Positive cases:
-- Parser accepts linear graphs, chained edges, multi-line attributes, defaults, and quoted/unquoted attributes.
-- Validator reports expected diagnostics with stable rule IDs and severities.
-- Engine traverses graph deterministically using configured edge-priority semantics.
-- Goal-routing behavior reaches terminal success only when required gates are satisfied.
-- Checkpoint/resume reaches equivalent terminal outcome and artifact set as uninterrupted execution.
-- Each built-in handler emits expected outcome and artifact footprint.
-- `wait.human` presents outgoing edge labels and routes according to selected option.
-- CLI commands return expected outputs and exit codes for valid inputs.
+- Parser accepts linear graphs, chained edges, quoted attributes, defaults, and multiline attributes.
+- Validator returns deterministic diagnostic metadata with expected severities and rule IDs.
+- Runtime traverses graph deterministically using edge priority and goal routing rules.
+- Resume from valid checkpoint produces equivalent terminal status and artifacts to uninterrupted run.
+- Built-in handlers emit expected outputs/artifacts and route to expected successor nodes.
+- `wait.human` renders options and routes according to deterministic interviewer selection.
+- CLI `validate`, `run`, and `resume` return expected output and exit status on valid inputs.
 
 Negative cases:
-- Missing start node fails validation with deterministic rule.
-- Missing exit node fails validation with deterministic rule.
-- Orphan/unreachable nodes produce deterministic warning diagnostics.
-- Edge references unknown nodes fail validation deterministically.
+- Missing start node fails validation deterministically.
+- Missing exit node fails validation deterministically.
+- Unreachable node set emits deterministic warning diagnostics.
+- Edge pointing to unknown node fails deterministically.
 - Invalid condition expression fails parse/evaluation deterministically.
-- Corrupted or incompatible checkpoint fails resume deterministically.
-- Invalid interviewer response selection fails deterministically.
-- Unknown handler type fails deterministically with explicit registration guidance.
+- Corrupt/incompatible checkpoint fails resume deterministically.
+- Invalid interviewer response fails deterministically.
+- Unknown handler type fails with deterministic registration guidance error.
 
 ### Acceptance Criteria - Phase 3
-- [X] ATR parity tests cover parser, validator, traversal, handlers, interviewer, transforms, and CLI contract behavior.
+- [X] ATR parity test suites pass for parser, validator, runtime traversal, handlers, interviewer behavior, transforms, and CLI contracts.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Every ATR requirement ID in traceability resolves to implementation + automated tests + verification artifact.
+- [X] Every ATR requirement ID maps to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [X] Add deterministic end-to-end flow covering Attractor traversal, CAL codergen execution, and ULLM provider mocks in one pipeline.
+- [X] Add deterministic end-to-end scenario spanning Attractor traversal, CAL codergen flow, and ULLM provider mocks.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 - [X] Add integration assertions for artifact layout, checkpoint persistence, and event stream integrity across runtime boundaries.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Expand CLI e2e coverage for `validate`, `run`, and `resume` with explicit success/failure exit-code assertions.
+- [X] Expand CLI e2e matrix for `validate`, `run`, and `resume` success and failure exit-code behavior.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Ensure integration suite executes provider-specific fixture paths for OpenAI, Anthropic, and Gemini.
+- [X] Ensure integration suite executes OpenAI, Anthropic, and Gemini mock fixture paths in cross-runtime flows.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
-### Test Matrix - Phase 4 (Explicit)
+### Test Matrix - Phase 4
 Positive cases:
-- Integrated pipeline validates graph, executes codergen node, produces artifacts, and exits successfully.
-- Resume from valid checkpoint reproduces expected terminal outcome and artifact set.
-- Each provider mock path is exercised in integrated flow with expected normalized events.
+- Integrated pipeline validates graph, executes codergen node, writes artifacts, and exits successfully.
+- Resume path from valid checkpoint reaches deterministic terminal status and artifact set.
+- OpenAI, Anthropic, and Gemini mock paths each run through integrated pipeline successfully.
 
 Negative cases:
-- Provider fixture failure propagates typed error through ULLM -> CAL -> Attractor without runtime crash.
-- Invalid graph fails fast with deterministic validation output and non-zero CLI exit.
-- Missing or corrupted checkpoint fails resume with deterministic error and non-zero exit.
+- Provider fixture failure propagates typed error through ULLM -> CAL -> ATR boundaries without crash.
+- Invalid graph fails fast with deterministic validation output and non-zero CLI status.
+- Missing checkpoint fails resume deterministically with non-zero status.
+- Corrupt checkpoint fails resume deterministically with non-zero status.
 
 ### Acceptance Criteria - Phase 4
-- [X] `make -j10 test` in offline mode is sufficient to validate integrated ULLM + CAL + ATR parity behavior.
+- [X] Offline `make -j10 test` validates integrated ULLM + CAL + ATR behavior with deterministic fixtures.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Integration evidence indexes capture commands, exit codes, and artifact paths for every integration scenario.
+- [X] Integration evidence index captures commands, exit codes, and artifact paths for each integrated scenario.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
-## Phase 5 - Traceability, ADR, and Sprint Closeout
+## Phase 5 - Traceability, Evidence, and Closeout
 ### Deliverables
-- [X] Update `docs/spec-coverage/traceability.md` to close all Sprint #003 mappings with implementation/test/evidence references.
+- [X] Update `docs/spec-coverage/traceability.md` to close all Sprint #003 mappings with implementation, test, and verification references.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Refresh requirement catalog outputs with `tools/requirements_catalog.tcl` and ensure strict consistency checks pass.
+- [X] Refresh requirements catalog outputs and confirm strict catalog/traceability consistency.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Update `docs/ADR.md` with final architecture decisions introduced during Sprint #003 implementation.
+- [X] Append architecture-significant implementation decisions to `docs/ADR.md` with context and consequences.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Run sprint document checks and evidence index checks for this sprint document.
+- [X] Run sprint-document evidence lint and ensure checklist/evidence consistency for this sprint plan.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Finalize per-phase README indexes with complete command and exit-code tables.
+- [X] Finalize per-phase evidence README files with complete command and exit status tables.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
+```
+- [X] Re-render appendix mermaid diagrams and store outputs in `.scratch/diagram-renders/sprint-003/`.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
 ### Acceptance Criteria - Phase 5
-- [X] Traceability closure is complete and `tclsh tools/spec_coverage.tcl` returns clean status.
+- [X] `tclsh tools/spec_coverage.tcl` passes with complete coverage and no unknown/missing IDs.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
-- [X] Sprint closeout evidence is reproducible from the command list in phase README files.
+- [X] `tclsh tools/requirements_catalog.tcl --check-ids` passes with no ID-shape or duplication failures.
 ```text
 Verification:
-- `timeout 180 .scratch/run_sprint003_close_spec_verification.sh` (exit code 0)
-- Exit codes are recorded in the phase command status files (all 0 for this run).
-- Evidence: `.scratch/verification/SPRINT-003/final-pass-2026-02-27/command-status-all.tsv`
-- Notes:
-- See phase command logs and exit codes in `.scratch/verification/SPRINT-003/final-pass-2026-02-27/*/command-status.tsv`.
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
+```
+- [X] Sprint evidence is reproducible from phase README command tables.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+Notes:
+- All listed commands in phase status files exited with code 0.
 ```
 
 ## Canonical Verification Command Set
@@ -759,13 +1442,13 @@ erDiagram
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Load requirement catalog] --> B[Build gap ledger]
+  A[Load requirements catalog] --> B[Build gap ledger]
   B --> C[Implement phase deliverables]
-  C --> D[Run unit/integration/e2e tests]
+  C --> D[Run unit/integration/e2e verification]
   D --> E[Capture evidence and exit codes]
-  E --> F[Update traceability mappings]
-  F --> G[Run coverage checks]
-  G --> H{All requirements mapped and green?}
+  E --> F[Update traceability]
+  F --> G[Run requirements + coverage checks]
+  G --> H{All requirement IDs mapped and green?}
   H -->|No| C
   H -->|Yes| I[Sprint closeout]
 ```
@@ -773,13 +1456,13 @@ flowchart TD
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  SPEC[Spec docs] --> REQ[Requirements catalog]
-  REQ --> PLAN[Sprint plan]
-  PLAN --> CODE[lib and bin changes]
-  CODE --> TESTS[unit/integration/e2e]
-  TESTS --> EVIDENCE[.scratch verification artifacts]
-  EVIDENCE --> TRACE[traceability matrix]
-  TRACE --> COVERAGE[spec coverage check]
+  SPEC[Spec docs] --> CATALOG[Requirements catalog]
+  CATALOG --> PLAN[Sprint plan]
+  PLAN --> CODE[Implementation]
+  CODE --> TESTS[Automated tests]
+  TESTS --> EVIDENCE[Verification artifacts]
+  EVIDENCE --> TRACE[Traceability mappings]
+  TRACE --> COVERAGE[Coverage verification]
 ```
 
 ### Architecture Diagram
@@ -787,32 +1470,32 @@ flowchart LR
 flowchart TB
   subgraph Interfaces
     CLI[bin/attractor]
-    TOOLS[tools/spec_coverage.tcl]
+    TOOLS[spec coverage and catalog tools]
   end
 
   subgraph Runtime
     ATR[lib/attractor/main.tcl]
+    CORE[lib/attractor_core/core.tcl]
     CAL[lib/coding_agent_loop/main.tcl]
     ULLM[lib/unified_llm/main.tcl]
-    CORE[lib/attractor_core/core.tcl]
   end
 
-  subgraph Adapters
-    OA[lib/unified_llm/adapters/openai.tcl]
-    AN[lib/unified_llm/adapters/anthropic.tcl]
-    GM[lib/unified_llm/adapters/gemini.tcl]
+  subgraph ULLMAdapters
+    OA[openai adapter]
+    AN[anthropic adapter]
+    GM[gemini adapter]
   end
 
   subgraph Verification
     TESTSUITE[tests/all.tcl]
     MOCK[tests/support/mock_http_server.tcl]
-    TRACE[docs/spec-coverage/traceability.md]
+    TRACEFILE[docs/spec-coverage/traceability.md]
   end
 
   CLI --> ATR
+  ATR --> CORE
   ATR --> CAL
   ATR --> ULLM
-  ATR --> CORE
   CAL --> ULLM
   ULLM --> OA
   ULLM --> AN
@@ -821,5 +1504,5 @@ flowchart TB
   TESTSUITE --> CAL
   TESTSUITE --> ULLM
   MOCK --> ULLM
-  TOOLS --> TRACE
+  TOOLS --> TRACEFILE
 ```
