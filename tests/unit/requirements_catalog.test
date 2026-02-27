@@ -131,3 +131,14 @@ test requirements_catalog-deterministic-output-1.0 {generator output is determin
 } -cleanup {
     file delete -force $dir
 } -result {1 1}
+
+test requirements_catalog-default-summary-stable-1.0 {default spec summary remains stable until explicitly updated} -body {
+    set out [exec tclsh $tool --summary]
+    list \
+        [expr {[string first "requirements=263" $out] >= 0}] \
+        [expr {[string first "family_ATR=88" $out] >= 0}] \
+        [expr {[string first "family_CAL=66" $out] >= 0}] \
+        [expr {[string first "family_ULLM=109" $out] >= 0}] \
+        [expr {[string first "kind_DOD=205" $out] >= 0}] \
+        [expr {[string first "kind_NORMATIVE=58" $out] >= 0}]
+} -result {1 1 1 1 1 1}
