@@ -1,31 +1,11 @@
 #!/usr/bin/env tclsh
 package require Tcl 8.5
 
-if {$argc > 0} {
-    set path [lindex $argv 0]
-} else {
-    set path [file join [pwd] docs spec-coverage traceability.md]
+proc usage {} {
+    puts stderr "usage: tclsh tools/spec_coverage.tcl ?traceability_path? ?--trace <path>? ?--requirements <path>? ?--skip-verify-sanity?"
 }
 
-if {![file exists $path]} {
-    puts stderr "traceability file not found: $path"
-    exit 2
-}
-
-set fh [open $path r]
-set text [read $fh]
-close $fh
-
-set blocks [split [string map [list "\n---\n" "\u001f"] $text] "\u001f"]
-set total 0
-set missing 0
-set duplicates 0
-set badPaths 0
-set badVerify 0
-array set seen {}
-array set familyCount {}
-
-proc __split_paths {value} {
+proc split_paths {value} {
     set tokens {}
     foreach part [split [string map [list "\t" " "] $value] ","] {
         set item [string trim $part]
@@ -36,9 +16,9 @@ proc __split_paths {value} {
     return $tokens
 }
 
-proc __require_paths {reqId key value} {
+proc require_paths {reqId key value} {
     upvar 1 badPaths badPaths
-    set paths [__split_paths $value]
+    set paths [split_paths $value]
     if {[llength $paths] == 0} {
         puts "MISSING_PATHS $reqId $key"
         incr badPaths
@@ -52,22 +32,152 @@ proc __require_paths {reqId key value} {
     }
 }
 
-foreach block $blocks {
-    set block [string trim $block]
-    if {$block eq ""} {
-        continue
+proc parse_traceability {path} {
+    if {![file exists $path]} {
+        puts stderr "traceability file not found: $path"
+        exit 2
     }
-    array unset fields
-    foreach line [split $block "\n"] {
-        if {[regexp {^([a-z_]+):\s*(.*)$} [string trim $line] -> key value]} {
-            set fields($key) [string trim $value]
+
+    set fh [open $path r]
+    set text [read $fh]
+    close $fh
+
+    set blocks [split [string map [list "\n---\n" "\u001f"] $text] "\u001f"]
+    set parsed {}
+    foreach block $blocks {
+        set block [string trim $block]
+        if {$block eq ""} {
+            continue
+        }
+        array unset fields
+        foreach line [split $block "\n"] {
+            if {[regexp {^([a-z_]+):\s*(.*)$} [string trim $line] -> key value]} {
+                set fields($key) [string trim $value]
+            }
+        }
+        if {![info exists fields(id)] || $fields(id) eq ""} {
+            continue
+        }
+        set one [dict create id $fields(id)]
+        foreach k {spec impl tests verify} {
+            if {[info exists fields($k)]} {
+                dict set one $k $fields($k)
+            }
+        }
+        lappend parsed $one
+    }
+    return $parsed
+}
+
+proc parse_catalog_ids {path} {
+    if {![file exists $path]} {
+        puts stderr "requirements catalog not found: $path"
+        exit 2
+    }
+
+    set fh [open $path r]
+    set text [read $fh]
+    close $fh
+
+    set ids {}
+    foreach {_full id} [regexp -all -inline {"id"\s*:\s*"([A-Z0-9._-]+)"} $text] {
+        lappend ids $id
+    }
+
+    if {[llength $ids] == 0} {
+        puts stderr "requirements catalog has no ids: $path"
+        exit 2
+    }
+
+    return $ids
+}
+
+proc collect_test_names {} {
+    set root [pwd]
+    set files {}
+    foreach dir {unit integration e2e} {
+        foreach f [glob -nocomplain -directory [file join $root tests $dir] *.test] {
+            lappend files $f
         }
     }
 
-    if {![info exists fields(id)] || $fields(id) eq ""} {
-        continue
+    set names {}
+    foreach f [lsort $files] {
+        set fh [open $f r]
+        set lines [split [read $fh] "\n"]
+        close $fh
+        foreach line $lines {
+            if {[regexp {^\s*test\s+([^\s]+)} $line -> name]} {
+                lappend names $name
+            }
+        }
     }
-    set reqId $fields(id)
+    return $names
+}
+
+proc verify_pattern_matches_any_test {pattern testNames} {
+    foreach name $testNames {
+        if {[string match $pattern $name]} {
+            return 1
+        }
+    }
+    return 0
+}
+
+set tracePath [file join [pwd] docs spec-coverage traceability.md]
+set requirementsPath [file join [pwd] docs spec-coverage requirements.json]
+set verifySanity 1
+
+set idx 0
+while {$idx < $argc} {
+    set arg [lindex $argv $idx]
+    switch -- $arg {
+        --trace {
+            incr idx
+            if {$idx >= $argc} { usage; exit 2 }
+            set tracePath [lindex $argv $idx]
+        }
+        --requirements {
+            incr idx
+            if {$idx >= $argc} { usage; exit 2 }
+            set requirementsPath [lindex $argv $idx]
+        }
+        --skip-verify-sanity {
+            set verifySanity 0
+        }
+        default {
+            if {[string match --* $arg]} {
+                usage
+                puts stderr "unknown arg: $arg"
+                exit 2
+            }
+            set tracePath $arg
+        }
+    }
+    incr idx
+}
+
+set mappings [parse_traceability $tracePath]
+set catalogIds [parse_catalog_ids $requirementsPath]
+
+set total 0
+set missing 0
+set duplicates 0
+set badPaths 0
+set badVerify 0
+set missingCatalog 0
+set unknownCatalog 0
+array set seen {}
+array set familyCount {}
+
+set testNames {}
+if {$verifySanity} {
+    set testNames [collect_test_names]
+}
+
+foreach mapping $mappings {
+    set reqId [dict get $mapping id]
+
     if {[info exists seen($reqId)]} {
         puts "DUPLICATE $reqId"
         incr duplicates
@@ -84,41 +194,80 @@ foreach block $blocks {
     }
 
     foreach key {spec impl tests verify} {
-        if {![info exists fields($key)]} {
+        if {![dict exists $mapping $key]} {
             puts "MISSING $reqId $key"
             incr missing
-        } elseif {$fields($key) eq ""} {
+        } elseif {[string trim [dict get $mapping $key]] eq ""} {
             puts "MISSING $reqId $key"
             incr missing
         }
     }
 
-    if {[info exists fields(impl)] && $fields(impl) ne ""} {
-        __require_paths $reqId impl $fields(impl)
+    if {[dict exists $mapping impl] && [string trim [dict get $mapping impl]] ne ""} {
+        require_paths $reqId impl [dict get $mapping impl]
     }
-    if {[info exists fields(tests)] && $fields(tests) ne ""} {
-        __require_paths $reqId tests $fields(tests)
+    if {[dict exists $mapping tests] && [string trim [dict get $mapping tests]] ne ""} {
+        require_paths $reqId tests [dict get $mapping tests]
     }
-    if {[info exists fields(verify)] && $fields(verify) ne ""} {
-        set verify $fields(verify)
+
+    if {[dict exists $mapping verify] && [string trim [dict get $mapping verify]] ne ""} {
+        set verify [dict get $mapping verify]
         if {[string first "`" $verify] < 0} {
             puts "BAD_VERIFY $reqId verify must contain command in backticks"
             incr badVerify
+        } elseif {$verifySanity} {
+            if {![regexp {`([^`]+)`} $verify -> command]} {
+                puts "BAD_VERIFY $reqId verify command extraction failed"
+                incr badVerify
+            } else {
+                if {![regexp {tests/all\.tcl\s+-match\s+([^\s]+)} $command -> pattern]} {
+                    puts "BAD_VERIFY $reqId verify must include tests/all.tcl -match <pattern>"
+                    incr badVerify
+                } else {
+                    set pattern [string trim $pattern "\"'"]
+                    if {![verify_pattern_matches_any_test $pattern $testNames]} {
+                        puts "BAD_VERIFY_PATTERN $reqId $pattern"
+                        incr badVerify
+                    }
+                }
+            }
         }
     }
 }
 
+array set catalogSet {}
+foreach id $catalogIds {
+    set catalogSet($id) 1
+}
+
+foreach id [array names catalogSet] {
+    if {![info exists seen($id)]} {
+        puts "MISSING_REQUIREMENT $id"
+        incr missingCatalog
+    }
+}
+
+foreach id [array names seen] {
+    if {![info exists catalogSet($id)]} {
+        puts "UNKNOWN_REQUIREMENT $id"
+        incr unknownCatalog
+    }
+}
+
 puts "requirements=$total"
+puts "catalog_requirements=[llength $catalogIds]"
 puts "missing=$missing"
 puts "duplicates=$duplicates"
 puts "bad_paths=$badPaths"
 puts "bad_verify=$badVerify"
+puts "missing_catalog=$missingCatalog"
+puts "unknown_catalog=$unknownCatalog"
 
 foreach family [lsort [array names familyCount]] {
     puts "family_${family}=$familyCount($family)"
 }
 
-if {$missing > 0 || $duplicates > 0 || $badPaths > 0 || $badVerify > 0 || $total == 0} {
+if {$missing > 0 || $duplicates > 0 || $badPaths > 0 || $badVerify > 0 || $missingCatalog > 0 || $unknownCatalog > 0 || $total == 0} {
     exit 1
 }
 exit 0

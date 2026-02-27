@@ -8,80 +8,178 @@ namespace eval ::tests::integration::spec_cov {
     variable idx 0
 }
 
-proc ::tests::integration::spec_cov::tmpfile {body} {
+proc ::tests::integration::spec_cov::tmpdir {} {
     variable idx
     incr idx
-    set path [file join [pwd] .scratch verification SPRINT-001 integration spec-coverage-tool-$idx.md]
+    set dir [file join [pwd] .scratch verification SPRINT-002 coverage spec-coverage-tool-$idx]
+    file delete -force $dir
+    file mkdir $dir
+    return $dir
+}
+
+proc ::tests::integration::spec_cov::write_file {path body} {
     file mkdir [file dirname $path]
     set fh [open $path w]
     puts -nonewline $fh $body
     close $fh
-    return $path
 }
 
-test integration-spec-coverage-tool-valid-1.0 {coverage tool passes valid traceability blocks} -setup {
-    set trace [::tests::integration::spec_cov::tmpfile [join [list \
-"id: ULLM-DOD-8.1-CoreClient" \
+proc ::tests::integration::spec_cov::requirements_json {ids} {
+    set entries {}
+    foreach id $ids {
+        lappend entries "{\"id\":\"$id\"}"
+    }
+    set body {"requirements":[}
+    append body [join $entries ,]
+    append body {]}
+    return $body
+}
+
+test integration-spec-coverage-tool-valid-2.0 {passes when traceability and catalog sets are equal} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list \
+        ULLM-DOD-8.1-CORE-CLIENT \
+        CAL-DOD-9.1-TOOL-REGISTRY]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: CAL-DOD-9.1-TOOL-REGISTRY" \
+"spec: coding-agent-loop-spec.md#section-9" \
+"impl: lib/coding_agent_loop/main.tcl" \
+"tests: tests/unit/coding_agent_loop.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+"---" \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
 "spec: unified-llm-spec.md#section-8" \
 "impl: lib/unified_llm/main.tcl" \
 "tests: tests/unit/unified_llm.test" \
-"verify: `tclsh tests/all.tcl -match unified_llm-*`" \
-"---" \
-"id: CAL-DOD-9.5-TruncationOrder" \
-"spec: coding-agent-loop-spec.md#section-9" \
-"impl: lib/coding_agent_loop/tools/core.tcl" \
-"tests: tests/unit/coding_agent_loop.test" \
-"verify: `tclsh tests/all.tcl -match coding_agent_loop-*`" ] "\n"]]
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
 } -body {
-    set out [exec tclsh $tool $trace]
-    list [expr {[string first "requirements=2" $out] >= 0}] [expr {[string first "missing=0" $out] >= 0}] [expr {[string first "duplicates=0" $out] >= 0}]
+    set out [exec tclsh $tool --trace $tracePath --requirements $reqPath]
+    list \
+        [expr {[string first "requirements=2" $out] >= 0}] \
+        [expr {[string first "missing_catalog=0" $out] >= 0}] \
+        [expr {[string first "unknown_catalog=0" $out] >= 0}]
 } -cleanup {
-    file delete -force $trace
+    file delete -force $dir
 } -result {1 1 1}
 
-test integration-spec-coverage-tool-missing-field-1.0 {coverage tool fails missing mappings} -setup {
-    set trace [::tests::integration::spec_cov::tmpfile [join [list \
-"id: ULLM-DOD-8.1-CoreClient" \
+test integration-spec-coverage-tool-missing-field-2.0 {fails when required keys are missing} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list ULLM-DOD-8.1-CORE-CLIENT]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
 "spec: unified-llm-spec.md#section-8" \
 "tests: tests/unit/unified_llm.test" \
-"verify: `tclsh tests/all.tcl -match unified_llm-*`" ] "\n"]]
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
 } -body {
-    catch {exec tclsh $tool $trace} out
-    list [expr {[string first "MISSING ULLM-DOD-8.1-CoreClient impl" $out] >= 0}] [expr {[string first "missing=1" $out] >= 0}]
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "MISSING ULLM-DOD-8.1-CORE-CLIENT impl" $out] >= 0}] \
+        [expr {[string first "missing=1" $out] >= 0}]
 } -cleanup {
-    file delete -force $trace
+    file delete -force $dir
 } -result {1 1}
 
-test integration-spec-coverage-tool-duplicate-1.0 {coverage tool fails duplicate IDs} -setup {
-    set trace [::tests::integration::spec_cov::tmpfile [join [list \
-"id: ATR-DOD-11.2-DotParser" \
+test integration-spec-coverage-tool-duplicate-2.0 {fails duplicate IDs in traceability} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list ATR-DOD-11.1-CORE-TYPES]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ATR-DOD-11.1-CORE-TYPES" \
 "spec: attractor-spec.md#section-11" \
 "impl: lib/attractor/main.tcl" \
 "tests: tests/unit/attractor.test" \
-"verify: `tclsh tests/all.tcl -match attractor-*`" \
+"verify: `tclsh tests/all.tcl -match *`" \
 "---" \
-"id: ATR-DOD-11.2-DotParser" \
+"id: ATR-DOD-11.1-CORE-TYPES" \
 "spec: attractor-spec.md#section-11" \
 "impl: lib/attractor/main.tcl" \
 "tests: tests/unit/attractor.test" \
-"verify: `tclsh tests/all.tcl -match attractor-*`" ] "\n"]]
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
 } -body {
-    catch {exec tclsh $tool $trace} out
-    list [expr {[string first "DUPLICATE ATR-DOD-11.2-DotParser" $out] >= 0}] [expr {[string first "duplicates=1" $out] >= 0}]
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "DUPLICATE ATR-DOD-11.1-CORE-TYPES" $out] >= 0}] \
+        [expr {[string first "duplicates=1" $out] >= 0}]
 } -cleanup {
-    file delete -force $trace
+    file delete -force $dir
 } -result {1 1}
 
-test integration-spec-coverage-tool-bad-path-1.0 {coverage tool fails non-existent impl/test paths} -setup {
-    set trace [::tests::integration::spec_cov::tmpfile [join [list \
-"id: CAL-DOD-9.10-Events" \
+test integration-spec-coverage-tool-bad-path-2.0 {fails non-existent impl/tests paths} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list CAL-DOD-9.10-EVENTS]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: CAL-DOD-9.10-EVENTS" \
 "spec: coding-agent-loop-spec.md#section-9" \
 "impl: lib/coding_agent_loop/missing.tcl" \
 "tests: tests/unit/missing.test" \
-"verify: `tclsh tests/all.tcl -match coding_agent_loop-*`" ] "\n"]]
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
 } -body {
-    catch {exec tclsh $tool $trace} out
-    list [expr {[string first "BAD_PATH CAL-DOD-9.10-Events impl lib/coding_agent_loop/missing.tcl" $out] >= 0}] [expr {[string first "BAD_PATH CAL-DOD-9.10-Events tests tests/unit/missing.test" $out] >= 0}] [expr {[string first "bad_paths=2" $out] >= 0}]
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "BAD_PATH CAL-DOD-9.10-EVENTS impl lib/coding_agent_loop/missing.tcl" $out] >= 0}] \
+        [expr {[string first "BAD_PATH CAL-DOD-9.10-EVENTS tests tests/unit/missing.test" $out] >= 0}] \
+        [expr {[string first "bad_paths=2" $out] >= 0}]
 } -cleanup {
-    file delete -force $trace
+    file delete -force $dir
 } -result {1 1 1}
+
+test integration-spec-coverage-tool-missing-catalog-id-2.0 {fails when a catalog requirement is missing from traceability} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list \
+        ULLM-DOD-8.1-CORE-CLIENT \
+        ULLM-DOD-8.2-DATA-MODEL]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "MISSING_REQUIREMENT ULLM-DOD-8.2-DATA-MODEL" $out] >= 0}] \
+        [expr {[string first "missing_catalog=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}
+
+test integration-spec-coverage-tool-unknown-traceability-id-2.0 {fails when traceability has unknown IDs} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list ULLM-DOD-8.1-CORE-CLIENT]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+"---" \
+"id: ULLM-DOD-8.999-UNKNOWN" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "UNKNOWN_REQUIREMENT ULLM-DOD-8.999-UNKNOWN" $out] >= 0}] \
+        [expr {[string first "unknown_catalog=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}

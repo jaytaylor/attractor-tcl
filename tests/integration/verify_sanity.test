@@ -1,0 +1,86 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+set tool [file join $root tools spec_coverage.tcl]
+
+namespace eval ::tests::integration::verify_sanity {
+    variable idx 0
+}
+
+proc ::tests::integration::verify_sanity::tmpdir {} {
+    variable idx
+    incr idx
+    set dir [file join [pwd] .scratch verification SPRINT-002 coverage verify-sanity-$idx]
+    file delete -force $dir
+    file mkdir $dir
+    return $dir
+}
+
+proc ::tests::integration::verify_sanity::write_file {path body} {
+    file mkdir [file dirname $path]
+    set fh [open $path w]
+    puts -nonewline $fh $body
+    close $fh
+}
+
+test integration-verify-sanity-valid-pattern-1.0 {passes when verify pattern matches at least one real test} -setup {
+    set dir [::tests::integration::verify_sanity::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::verify_sanity::write_file $reqPath {"requirements":[{"id":"CAL-DOD-9.1-TOOL-REGISTRY"}]}
+    ::tests::integration::verify_sanity::write_file $tracePath [join [list \
+"id: CAL-DOD-9.1-TOOL-REGISTRY" \
+"spec: coding-agent-loop-spec.md#section-9" \
+"impl: lib/coding_agent_loop/main.tcl" \
+"tests: tests/unit/coding_agent_loop.test" \
+"verify: `tclsh tests/all.tcl -match coding_agent_loop-*`" \
+] "\n"]
+} -body {
+    set out [exec tclsh $tool --trace $tracePath --requirements $reqPath]
+    expr {[string first "bad_verify=0" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1
+
+test integration-verify-sanity-invalid-pattern-1.0 {fails when verify pattern matches no tests} -setup {
+    set dir [::tests::integration::verify_sanity::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::verify_sanity::write_file $reqPath {"requirements":[{"id":"CAL-DOD-9.1-TOOL-REGISTRY"}]}
+    ::tests::integration::verify_sanity::write_file $tracePath [join [list \
+"id: CAL-DOD-9.1-TOOL-REGISTRY" \
+"spec: coding-agent-loop-spec.md#section-9" \
+"impl: lib/coding_agent_loop/main.tcl" \
+"tests: tests/unit/coding_agent_loop.test" \
+"verify: `tclsh tests/all.tcl -match DOES-NOT-EXIST-*`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "BAD_VERIFY_PATTERN CAL-DOD-9.1-TOOL-REGISTRY DOES-NOT-EXIST-*" $out] >= 0}] \
+        [expr {[string first "bad_verify=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}
+
+test integration-verify-sanity-missing-pattern-1.0 {fails when verify command does not include tests/all.tcl -match} -setup {
+    set dir [::tests::integration::verify_sanity::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::verify_sanity::write_file $reqPath {"requirements":[{"id":"CAL-DOD-9.1-TOOL-REGISTRY"}]}
+    ::tests::integration::verify_sanity::write_file $tracePath [join [list \
+"id: CAL-DOD-9.1-TOOL-REGISTRY" \
+"spec: coding-agent-loop-spec.md#section-9" \
+"impl: lib/coding_agent_loop/main.tcl" \
+"tests: tests/unit/coding_agent_loop.test" \
+"verify: `echo ok`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "BAD_VERIFY CAL-DOD-9.1-TOOL-REGISTRY verify must include tests/all.tcl -match <pattern>" $out] >= 0}] \
+        [expr {[string first "bad_verify=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}
