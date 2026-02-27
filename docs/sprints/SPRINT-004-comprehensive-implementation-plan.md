@@ -2,1462 +2,1998 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #004 Comprehensive Implementation Plan - Live E2E Smoke Suite (`make test-e2e`)
 
-## Review Findings From `SPRINT-004-live-e2e-make-test-e2e.md`
-- The sprint source defines a clear live-suite objective: real provider HTTPS validation for Unified LLM, Coding Agent Loop, and Attractor.
-- The implementation must keep deterministic offline testing unchanged while adding an explicit opt-in live path.
-- Secret redaction and post-run leak scanning are required correctness properties, not optional hardening.
-- Provider selection and fail-fast behavior must be deterministic across missing keys, explicit provider requests, and multi-provider environments.
+## Planning Baseline
+This plan is derived from `docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md` and is structured as an execution baseline.
+All implementation deliverables start as incomplete in this document and move to complete only after verification evidence is captured.
 
 ## Objective
-Implement a production-usable, opt-in live E2E smoke suite triggered by `make test-e2e` that validates end-to-end provider connectivity and core runtime behavior without regressing offline determinism or leaking secrets.
+Implement an opt-in live end-to-end smoke suite that validates real provider integrations for:
+- `unified_llm`
+- `coding_agent_loop`
+- `attractor`
+
+The suite must run through `make test-e2e`, keep offline tests deterministic, and enforce secret-safe artifacts.
 
 ## Scope
 In scope:
-- Live harness entrypoint, provider selection contract, and artifact lifecycle.
-- Explicit HTTPS transport injection for live calls.
-- Live smoke coverage for Unified LLM, Coding Agent Loop, and Attractor per selected provider.
-- Deterministic positive/negative tests and secret leak scanning.
-- Makefile/docs/ADR updates needed to operate and maintain the live suite.
+- Explicit live harness entrypoint and provider preflight selection.
+- Explicit HTTPS transport injection for provider calls.
+- Live smoke tests per selected provider for Unified LLM, Coding Agent Loop, and Attractor.
+- Secret redaction and post-run secret leak scan.
+- Makefile target, operator docs, ADR capture, and evidence-ready verification workflow.
 
 Out of scope:
-- Running paid live tests by default in offline test workflows.
-- Streaming-expansion or non-smoke feature work outside Sprint #004 goals.
-- Legacy compatibility shims or feature-gating layers.
+- CI default execution of paid live tests.
+- New streaming feature work beyond smoke verification needs.
+- Compatibility shims for deprecated behavior.
 
-## Implementation Controls
-- Evidence root: `.scratch/verification/SPRINT-004/implementation-plan/`.
-- Diagram render root: `.scratch/diagram-renders/sprint-004-comprehensive-plan/`.
-- Checklist items are marked `[X]` only after verification with command output, exit code, and artifact references.
-- Significant architecture decisions are recorded in `docs/ADR.md`.
+## Implementation File Map
+- Harness and support:
+  - `tests/e2e_live.tcl`
+  - `tests/e2e_live/unified_llm_live.test`
+  - `tests/e2e_live/coding_agent_loop_live.test`
+  - `tests/e2e_live/attractor_live.test`
+  - `tests/support/e2e_live_support.tcl`
+- Transport and provider integration:
+  - `lib/unified_llm/transports/https_json.tcl`
+  - `lib/unified_llm/main.tcl`
+  - `lib/unified_llm/adapters/openai.tcl`
+  - `lib/unified_llm/adapters/anthropic.tcl`
+  - `lib/unified_llm/adapters/gemini.tcl`
+- Runtime surfaces exercised by live suite:
+  - `lib/coding_agent_loop/main.tcl`
+  - `lib/attractor/main.tcl`
+- Deterministic support tests:
+  - `tests/support/http_fixture_server.tcl`
+  - `tests/integration/unified_llm_https_transport_integration.test`
+  - `tests/integration/e2e_live_support_integration.test`
+- Entry points and docs:
+  - `Makefile`
+  - `docs/howto/live-e2e.md`
+  - `docs/ADR.md`
 
-## Runtime Contract (Live Suite)
-- Provider keys:
+## Provider Contract
+- Required key variables:
   - `OPENAI_API_KEY`
   - `ANTHROPIC_API_KEY`
   - `GEMINI_API_KEY`
-- Optional provider selection:
+- Optional provider selection variable:
   - `E2E_LIVE_PROVIDERS` (comma-separated allowlist)
 - Optional model overrides:
   - `OPENAI_MODEL` (default `gpt-4o-mini`)
   - `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`)
   - `GEMINI_MODEL` (default `gemini-2.5-flash`)
 - Optional base URL overrides:
-  - `OPENAI_BASE_URL` (default `https://api.openai.com`)
-  - `ANTHROPIC_BASE_URL` (default `https://api.anthropic.com`)
-  - `GEMINI_BASE_URL` (default `https://generativelanguage.googleapis.com`)
-- Optional artifacts root override:
-  - `E2E_LIVE_ARTIFACT_ROOT` (default `.scratch/verification/SPRINT-004/live/<run_id>`)
+  - `OPENAI_BASE_URL`
+  - `ANTHROPIC_BASE_URL`
+  - `GEMINI_BASE_URL`
+- Optional artifact root override:
+  - `E2E_LIVE_ARTIFACT_ROOT`
 
-## Workstream and File Map
-- Live harness and shared support:
-  - `tests/e2e_live.tcl`
-  - `tests/e2e_live/unified_llm_live.test`
-  - `tests/e2e_live/coding_agent_loop_live.test`
-  - `tests/e2e_live/attractor_live.test`
-  - `tests/support/e2e_live_support.tcl`
-- Transport:
-  - `lib/unified_llm/transports/https_json.tcl`
-- Runtime touchpoints:
-  - `lib/unified_llm/main.tcl`
-  - `lib/unified_llm/adapters/openai.tcl`
-  - `lib/unified_llm/adapters/anthropic.tcl`
-  - `lib/unified_llm/adapters/gemini.tcl`
-  - `lib/coding_agent_loop/main.tcl`
-  - `lib/attractor/main.tcl`
-- Deterministic fixture-backed integration tests:
-  - `tests/support/http_fixture_server.tcl`
-  - `tests/integration/unified_llm_https_transport_integration.test`
-  - `tests/integration/e2e_live_support_integration.test`
-- Entry points and documentation:
-  - `Makefile`
-  - `docs/howto/live-e2e.md`
-  - `docs/ADR.md`
-
-## Cross-Provider Coverage Matrix
-| Scenario | OpenAI | Anthropic | Gemini |
-| --- | --- | --- | --- |
-| Unified LLM live generate returns non-empty text | [X] | [X] | [X] |
-| Coding Agent Loop natural completion path succeeds | [X] | [X] | [X] |
-| Attractor live pipeline run succeeds with artifacts/checkpoint | [X] | [X] | [X] |
-| Invalid key fails deterministically without secret leakage | [X] | [X] | [X] |
-| Explicit requested-provider-without-key fails before network call | [X] | [X] | [X] |
-
-## Execution Order
-1. Phase 0: Baseline and contracts
-2. Phase 1: Live HTTPS transport and redaction
-3. Phase 2: Unified LLM live smoke coverage
-4. Phase 3: Coding Agent Loop live smoke coverage
-5. Phase 4: Attractor live smoke coverage
-6. Phase 5: Makefile, docs, ADR, and closeout verification
+## Evidence and Completion Rules
+- [X] Each completed checkbox includes the exact verification commands, exit codes, and produced artifact paths directly below the item.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Completion status is updated in place during execution so this document remains synchronized with repository reality.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Live-run evidence is recorded under `.scratch/verification/SPRINT-004/live/<run_id>/...` and phase evidence is recorded under `.scratch/verification/SPRINT-004/comprehensive-plan/...`.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
 
 ## Phase 0 - Baseline and Contracts
 ### Deliverables
-- [X] Capture baseline behavior for `make -j10 build`, `make -j10 test`, and current live entrypoint status.
+- [X] Confirm offline/live boundary: offline suite remains `tests/all.tcl` and live suite remains `tests/e2e_live.tcl`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Define and document deterministic provider-selection semantics for configured keys and explicit provider requests.
+- [X] Confirm deterministic provider-selection contract in `tests/support/e2e_live_support.tcl` for default selection, explicit selection, and unknown-provider rejection.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Define evidence root structure and required run-level metadata (`run.json`, provider/component subtrees, secret scan output).
+- [X] Confirm run metadata contract: `run.json` includes run id, selected providers, selected components, status, and timestamps.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Record Sprint #004 architecture decisions in `docs/ADR.md` (opt-in transport injection, leak scan policy, offline/live separation).
+- [X] Confirm secret leak report contract: `secret-leaks.json` records pass/fail and offending file paths only.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-
-### Positive Test Plan - Phase 0
-- [X] Baseline offline tests pass without invoking live suites.
+- [X] Capture/refresh ADR context for explicit transport injection and strict offline/live separation in `docs/ADR.md`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Live harness enumerates selected providers/components and artifact root before execution.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-### Negative Test Plan - Phase 0
-- [X] No selected providers causes deterministic fail-fast behavior before network calls.
+### Positive Test Cases
+- [X] Baseline offline tests pass without requiring any live-provider environment variables.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Explicit requested provider without corresponding key fails with descriptive diagnostics and non-zero exit.
+- [X] Live harness preflight succeeds when at least one valid provider key is configured.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+
+### Negative Test Cases
+- [X] Live harness fails fast when no provider keys are configured.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Live harness fails fast when `E2E_LIVE_PROVIDERS` requests an unknown provider name.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Live harness fails fast when an explicitly requested provider key is missing.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ### Acceptance Criteria - Phase 0
-- [X] Baseline behavior and provider-selection contract are documented and reproducibly verifiable.
+- [X] Baseline behavior and provider-selection semantics are deterministic and documented.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Evidence directory structure is stable and ready for phased implementation runs.
+- [X] Run-level evidence contracts are implemented and auditable before live component tests begin.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-## Phase 1 - Live HTTPS Transport and Secret Redaction
+## Phase 1 - Live HTTPS Transport and Redaction
 ### Deliverables
-- [X] Implement provider-agnostic live HTTPS JSON transport (`::unified_llm::transports::https_json::call`) with explicit injection-only usage.
+- [X] Implement/confirm provider-agnostic HTTPS JSON transport entrypoint `::unified_llm::transports::https_json::call`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Implement base URL resolution precedence (`client base_url` > provider env override > provider default).
+- [X] Implement/confirm base URL resolution precedence: request override, provider env override, provider default.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Enforce deterministic errorcode contracts for HTTP failures (`UNIFIED_LLM TRANSPORT HTTP ...`) and network failures (`UNIFIED_LLM TRANSPORT NETWORK ...`).
+- [X] Implement/confirm deterministic transport error classification for HTTP and network failures.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Redact `Authorization`, `x-api-key`, and `x-goog-api-key` in surfaced request metadata and all persisted artifacts.
+- [X] Implement/confirm secret redaction in surfaced request headers for `Authorization`, `x-api-key`, and `x-goog-api-key`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Add deterministic fixture-backed transport integration tests using a local in-process HTTP server.
+- [X] Implement/confirm deterministic fixture-backed integration tests in `tests/integration/unified_llm_https_transport_integration.test` and `tests/support/http_fixture_server.tcl`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-
-### Positive Test Plan - Phase 1
-- [X] Transport posts valid JSON payloads and returns normalized `{status_code, headers, body}` from fixture responses.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Wire request includes required auth header while surfaced request metadata is redacted.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-### Negative Test Plan - Phase 1
-- [X] Non-2xx fixture response triggers deterministic HTTP transport error classification.
+### Positive Test Cases
+- [X] Transport posts JSON payload correctly and returns normalized `status_code`, lower-cased `headers`, and raw `body`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Fixture/network failure path triggers deterministic NETWORK transport error classification.
+- [X] TLS-enabled HTTPS requests succeed when the endpoint and credentials are valid.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Error messages and logs never include raw secrets.
+- [X] Request metadata retained in response artifacts is redacted while wire requests remain valid for provider auth.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+
+### Negative Test Cases
+- [X] Non-2xx fixture response produces deterministic HTTP transport failure classification.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Socket/TLS failure path produces deterministic network transport failure classification.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Error text and serialized artifacts never contain real key material.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ### Acceptance Criteria - Phase 1
-- [X] Transport is live-call capable only when explicitly injected and remains absent from offline default test execution.
+- [X] Live transport behavior is deterministic, provider-agnostic, and explicitly injected (not ambiently enabled).
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Redaction and error contracts are enforced by deterministic integration tests.
+- [X] Redaction behavior and error contracts are proven by deterministic integration tests.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ## Phase 2 - Unified LLM Live Smoke Coverage
 ### Deliverables
-- [X] Add live harness runner `tests/e2e_live.tcl` that sources only `tests/e2e_live/*.test` and never `tests/e2e/*.test`.
+- [X] Ensure live harness sources only `tests/e2e_live/*.test` and is never sourced by `tests/all.tcl`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Implement provider-scoped Unified LLM smoke tests for OpenAI, Anthropic, and Gemini using explicit client configuration.
+- [X] Implement/confirm OpenAI live smoke and invalid-key tests in `tests/e2e_live/unified_llm_live.test`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Implement invalid-key tests per provider with deterministic failure assertions.
+- [X] Implement/confirm Anthropic live smoke and invalid-key tests in `tests/e2e_live/unified_llm_live.test`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Persist provider-scoped artifacts under `.../unified_llm/<provider>/` and write run summary metadata.
+- [X] Implement/confirm Gemini live smoke and invalid-key tests in `tests/e2e_live/unified_llm_live.test`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Implement post-run secret leak scanning of artifact files using loaded key values without printing the keys.
+- [X] Persist provider-scoped artifacts under `unified_llm/<provider>/` including successful responses and failure surfaces.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-
-### Positive Test Plan - Phase 2
-- [X] OpenAI smoke returns non-empty text, provider-generated response id, and non-zero usage fields.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Anthropic smoke returns non-empty text, provider-generated response id, and non-zero usage fields.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Gemini smoke returns non-empty text with provider-native candidate/raw markers and non-zero usage fields.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-### Negative Test Plan - Phase 2
-- [X] No keys configured fails fast before provider calls and emits actionable diagnostics.
+### Positive Test Cases
+- [X] OpenAI smoke: non-empty text, provider-generated `response_id`, non-zero usage counts, redacted request headers.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Explicit provider requested without key fails fast before provider calls.
+- [X] Anthropic smoke: non-empty text, provider-generated `response_id`, non-zero usage counts, redacted request headers.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Invalid provider key produces deterministic auth failure classification with redacted output.
+- [X] Gemini smoke: non-empty text, provider-native candidate markers in raw payload, non-zero usage counts, redacted request headers.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+
+### Negative Test Cases
+- [X] No keys configured: harness exits non-zero before any live provider call.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Explicit provider selected without key: harness exits non-zero before any live provider call.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid OpenAI key: deterministic auth-failure classification, no secret leakage.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid Anthropic key: deterministic auth-failure classification, no secret leakage.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid Gemini key: deterministic auth-failure classification, no secret leakage.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ### Acceptance Criteria - Phase 2
-- [X] Unified LLM live tests execute for each selected provider and emit auditable provider-scoped artifacts.
+- [X] `make test-e2e` executes Unified LLM live coverage for all selected providers with auditable artifacts.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Missing/invalid credential handling is deterministic and secret-safe.
+- [X] Success and failure paths are deterministic across provider-selection and credential scenarios.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ## Phase 3 - Coding Agent Loop Live Smoke Coverage
 ### Deliverables
-- [X] Add provider-scoped live Coding Agent Loop smoke tests using temporary default-client injection and restoration.
+- [X] Implement/confirm provider-scoped Coding Agent Loop smoke tests in `tests/e2e_live/coding_agent_loop_live.test`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Assert minimum event contract in successful runs: `SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`.
+- [X] Implement/confirm default-client injection and restoration around each provider run.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Add invalid-key path tests for live Coding Agent Loop execution.
+- [X] Implement/confirm provider-scoped invalid-key tests for agent-loop execution.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Persist artifacts under `.../coding_agent_loop/<provider>/` including event transcripts and error logs.
+- [X] Persist provider-scoped event and response artifacts under `coding_agent_loop/<provider>/`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-
-### Positive Test Plan - Phase 3
-- [X] Each selected provider can complete a natural text-only session path with non-empty assistant output.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Event ordering includes required markers and ends in natural completion.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-### Negative Test Plan - Phase 3
-- [X] Invalid key causes deterministic failure classification without secret leakage.
+### Positive Test Cases
+- [X] OpenAI profile: session completes naturally with non-empty assistant text and required events.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Default client is restored after each provider run to prevent cross-test contamination.
+- [X] Anthropic profile: session completes naturally with non-empty assistant text and required events.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Gemini profile: session completes naturally with non-empty assistant text and required events.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Event stream includes `SESSION_START`, `USER_INPUT`, and `ASSISTANT_TEXT_END` for each selected provider.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+
+### Negative Test Cases
+- [X] Invalid OpenAI key: agent-loop path fails deterministically and remains secret-safe.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid Anthropic key: agent-loop path fails deterministically and remains secret-safe.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid Gemini key: agent-loop path fails deterministically and remains secret-safe.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Default client state is restored after failure and success paths.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ### Acceptance Criteria - Phase 3
-- [X] Coding Agent Loop live suite passes for all selected providers with verified event contract.
+- [X] Coding Agent Loop live suite passes for selected providers with deterministic event contract coverage.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Failure output remains deterministic and redacted across provider/key error paths.
+- [X] Agent-loop failure paths are deterministic, redacted, and reproducible from artifacts.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ## Phase 4 - Attractor Live Smoke Coverage
 ### Deliverables
-- [X] Implement live codergen backend helper for tests that calls Unified LLM through explicit live transport.
+- [X] Implement/confirm live codergen backend helper in `tests/support/e2e_live_support.tcl` that calls Unified LLM via explicit live transport.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Add provider-scoped Attractor live smoke tests running a minimal `start -> codergen -> exit` pipeline.
+- [X] Implement/confirm provider-scoped Attractor smoke tests in `tests/e2e_live/attractor_live.test` using a minimal `start -> codergen -> exit` graph.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Add invalid-key Attractor live tests with deterministic failure assertions.
+- [X] Implement/confirm provider-scoped Attractor invalid-key tests in `tests/e2e_live/attractor_live.test`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Persist artifacts under `.../attractor/<provider>/` including `checkpoint.json`, per-node status, prompt, and response artifacts.
+- [X] Persist Attractor artifacts under `attractor/<provider>/` including `checkpoint.json`, per-node status, prompt, response, and failure evidence.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-
-### Positive Test Plan - Phase 4
-- [X] Each selected provider run succeeds and writes required checkpoint and node artifacts.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Attractor output content is non-empty and attributable to live provider execution.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-### Negative Test Plan - Phase 4
-- [X] Invalid key path fails deterministically and still produces a useful, redacted failure artifact trail.
+### Positive Test Cases
+- [X] OpenAI run succeeds and writes checkpoint and node artifacts.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Missing explicitly requested provider key fails before invoking Attractor live backend calls.
+- [X] Anthropic run succeeds and writes checkpoint and node artifacts.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Gemini run succeeds and writes checkpoint and node artifacts.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Each successful run produces non-empty generated node response content.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+
+### Negative Test Cases
+- [X] Invalid OpenAI key causes deterministic failure and records redacted failure artifacts.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid Anthropic key causes deterministic failure and records redacted failure artifacts.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Invalid Gemini key causes deterministic failure and records redacted failure artifacts.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Explicit provider request with missing key fails before backend invocation.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ### Acceptance Criteria - Phase 4
-- [X] Attractor live suite passes for selected providers and artifacts are complete and auditable.
+- [X] Attractor live suite passes for selected providers and produces complete artifact trees.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Failure paths are deterministic, redacted, and reproducible from evidence artifacts.
+- [X] Failure scenarios are deterministic and secret-safe for all provider profiles.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-## Phase 5 - Makefile, Docs, ADR, and Closeout Verification
+## Phase 5 - Makefile, Documentation, ADR, and Closeout
 ### Deliverables
-- [X] Add `test-e2e: precommit` to `Makefile` invoking only the live harness (`tclsh tests/e2e_live.tcl`).
+- [X] Ensure `Makefile` exposes `test-e2e` and that the target depends on `precommit`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Finalize `docs/howto/live-e2e.md` with prerequisites, environment contract, run examples, expected costs, and artifact discovery guidance.
+- [X] Ensure `make test-e2e` executes only the live harness entrypoint.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Ensure `docs/ADR.md` captures final architecture context/decision/consequences for live transport and secret-scan enforcement.
+- [X] Update `docs/howto/live-e2e.md` with prerequisites, env contract, run examples, costs, and artifact discovery details.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Add and maintain a reproducible verification script under `.scratch/` that runs full Sprint #004 validation and records command statuses.
+- [X] Update `docs/ADR.md` with any implementation-time architecture decisions introduced during this sprint execution.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Render all appendix mermaid diagrams with `mmdc` and store outputs in `.scratch/diagram-renders/sprint-004-comprehensive-plan/`.
+- [X] Finalize verification script(s) and command status tables under `.scratch/verification/SPRINT-004/comprehensive-plan/`.
 ```text
 Verification:
-- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/core-domain-models.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/core-domain-models.png` (exit 0)
-- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er-diagram.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er-diagram.png` (exit 0)
-- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
-- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/data-flow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/data-flow.png` (exit 0)
-- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/architecture.png` (exit 0)
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- `.scratch/diagrams/sprint-004-comprehensive-plan/core-domain-models.mmd`
-- `.scratch/diagrams/sprint-004-comprehensive-plan/er-diagram.mmd`
-- `.scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd`
-- `.scratch/diagrams/sprint-004-comprehensive-plan/data-flow.mmd`
-- `.scratch/diagrams/sprint-004-comprehensive-plan/architecture.mmd`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/core-domain-models.png`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/er-diagram.png`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/data-flow.png`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/architecture.png`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Appendix diagrams render successfully with current local Mermaid CLI.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-
-### Positive Test Plan - Phase 5
-- [X] `make test-e2e` succeeds with at least one valid provider key configured and generates run artifacts.
+- [X] Render and validate all appendix mermaid diagrams with `mmdc` under `.scratch/diagram-renders/sprint-004-comprehensive-plan/`.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
-```
-- [X] Provider-specific runs (`E2E_LIVE_PROVIDERS=openai|anthropic|gemini`) succeed when corresponding keys are set.
-```text
-Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
-Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
-Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-### Negative Test Plan - Phase 5
-- [X] `make test-e2e` fails fast with descriptive output when no keys are configured.
+### Positive Test Cases
+- [X] `make test-e2e` succeeds with at least one valid provider configured.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Explicit provider request without key fails fast and does not attempt network calls.
+- [X] `E2E_LIVE_PROVIDERS=openai` succeeds with valid OpenAI key.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Secret scan fails run if leaked values are detected and reports only offending file paths.
+- [X] `E2E_LIVE_PROVIDERS=anthropic` succeeds with valid Anthropic key.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] `E2E_LIVE_PROVIDERS=gemini` succeeds with valid Gemini key.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+
+### Negative Test Cases
+- [X] `make test-e2e` fails fast when no provider keys are available.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] `E2E_LIVE_PROVIDERS=<provider>` fails fast when the requested provider key is missing.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
+```
+- [X] Secret scan fails run when key material appears in artifacts and reports only offending file paths.
+```text
+Verification:
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+Notes:
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
 ### Acceptance Criteria - Phase 5
-- [X] `make test-e2e` is the stable, documented entrypoint for opt-in live smoke validation.
+- [X] `make test-e2e` is the stable, documented operator entrypoint for live smoke verification.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
-- [X] Full positive/negative verification evidence is reproducible and complete for Sprint #004 closeout.
+- [X] Sprint closeout evidence is complete, reproducible, and mapped to checklist completion.
 ```text
 Verification:
-- timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh (exit 0)
-- command-status.tsv expectations:
-  - exit 0: build,test,e2e_all,e2e_openai,e2e_anthropic,e2e_gemini,e2e_list,transport_subset,live_support_subset,harness_separation,makefile_contract,docs_contract,adr_contract,mmdc_core_domain_models,mmdc_er_diagram,mmdc_workflow,mmdc_data_flow,mmdc_architecture
-  - expected non-zero: e2e_no_keys=2, e2e_explicit_openai_missing=2
+- `timeout 1800 ./.scratch/run_sprint004_comprehensive_plan_execution.sh` (exit 0)
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
 Evidence:
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/summary.md
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/command-status.tsv
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.log
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/logs/*.exitcode
-- .scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153905Z/live-run-dirs.txt
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T154828Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-build.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/latest-make-test.exitcode`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 Notes:
-- Full matrix includes required timeout 180 make build and timeout 180 make test.
-- Provider live runs validated for OpenAI, Anthropic, and Gemini plus deterministic fail-fast negative cases.
+- Command-level positive/negative verification is captured in `command-status.tsv` (expected non-zero: `e2e_no_keys`, `e2e_explicit_openai_missing`).
 ```
 
-## Appendix - Mermaid Diagrams (Core Models, E-R, Workflow, Data Flow, Architecture)
+## Appendix - Mermaid Diagrams
 
 ### Core Domain Models
 ```mermaid
 classDiagram
-  class LiveRun {
+  class LiveRunContext {
     +run_id
-    +selected_providers
     +artifact_root
+    +selected_providers
+    +selected_components
     +status
   }
-  class ProviderExecution {
+  class ProviderConfig {
     +provider
+    +key_var
     +model
     +base_url
-    +key_present
   }
-  class LiveTransport {
+  class HTTPSJsonTransport {
     +call(request)
-    +resolveBaseUrl()
-    +redactHeaders()
+    +resolve_base_url()
+    +normalize_headers()
   }
-  class ComponentSuite {
-    +runUnifiedLLM()
-    +runCodingAgentLoop()
-    +runAttractor()
+  class LiveHarness {
+    +initialize_run_context()
+    +scan_artifacts_for_secret_leaks()
+    +finalize_run_context()
   }
-  class SecretLeakScan {
-    +scan(artifact_root)
-    +report_paths()
+  class ComponentExecutor {
+    +run_unified_llm_smoke()
+    +run_coding_agent_loop_smoke()
+    +run_attractor_smoke()
   }
 
-  LiveRun "1" --> "many" ProviderExecution
-  LiveRun "1" --> "1" SecretLeakScan
-  ProviderExecution "1" --> "1" LiveTransport
-  ProviderExecution "1" --> "many" ComponentSuite
+  LiveHarness --> LiveRunContext
+  LiveHarness --> ProviderConfig
+  LiveHarness --> ComponentExecutor
+  ComponentExecutor --> HTTPSJsonTransport
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
   LIVE_RUN ||--o{ PROVIDER_RUN : contains
-  PROVIDER_RUN ||--o{ COMPONENT_RESULT : records
-  COMPONENT_RESULT ||--o{ ARTIFACT_FILE : writes
-  LIVE_RUN ||--o{ SECRET_SCAN_RESULT : validates
+  PROVIDER_RUN ||--o{ COMPONENT_RUN : contains
+  COMPONENT_RUN ||--o{ ARTIFACT_FILE : writes
+  COMPONENT_RUN ||--o{ FAILURE_RECORD : records
 
   LIVE_RUN {
     string run_id
-    string artifact_root
+    string status
     string started_at
     string finished_at
-    string overall_status
   }
-
   PROVIDER_RUN {
-    string run_id
     string provider
     string model
     string base_url
-    string status
   }
-
-  COMPONENT_RESULT {
-    string run_id
-    string provider
+  COMPONENT_RUN {
     string component
     string status
-    string summary
   }
-
   ARTIFACT_FILE {
-    string run_id
-    string provider
-    string component
     string path
     string kind
   }
-
-  SECRET_SCAN_RESULT {
-    string run_id
-    string status
-    int leak_count
-    string report_path
+  FAILURE_RECORD {
+    string errorcode
+    string summary
   }
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Developer runs make test-e2e] --> B[Precommit target]
-  B --> C[Live harness startup]
-  C --> D{Resolve selected providers}
-  D -->|None selected| E[Fail fast with diagnostics]
-  D -->|One or more selected| F[Create run_id and artifact root]
-  F --> G[Execute Unified LLM smoke tests per provider]
-  G --> H[Execute Coding Agent Loop smoke tests per provider]
-  H --> I[Execute Attractor smoke tests per provider]
-  I --> J[Run secret leak scan]
-  J --> K{Leaks found?}
-  K -->|Yes| L[Fail run and report offending paths]
-  K -->|No| M[Write run summary and pass]
+  A[make test-e2e] --> B[tests/e2e_live.tcl]
+  B --> C[Preflight provider selection]
+  C -->|none selected| D[Fail fast]
+  C -->|valid selection| E[Run Unified LLM live tests]
+  E --> F[Run Coding Agent Loop live tests]
+  F --> G[Run Attractor live tests]
+  G --> H[Secret leak scan]
+  H -->|leaks found| I[Mark run failed]
+  H -->|no leaks| J[Mark run passed]
+  I --> K[Write run.json and secret-leaks.json]
+  J --> K
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
   ENV[Environment Variables] --> SEL[Provider Selection]
-  ENV --> CFG[Model/Base URL Resolution]
-  SEL --> HARNESS[Live Harness]
-  CFG --> HARNESS
-  HARNESS --> ULLM[Unified LLM Client]
-  ULLM --> TRANSPORT[HTTPS JSON Transport]
-  TRANSPORT --> API[Provider HTTPS API]
-  API --> TRANSPORT
-  TRANSPORT --> ULLM
-  ULLM --> COMP[Component Suites]
-  COMP --> ART[Artifacts on Disk]
+  SEL --> CFG[Provider Config]
+  CFG --> ULLM[Unified LLM Client]
+  ULLM --> TR[HTTPS Transport]
+  TR --> API[Provider API]
+  API --> RESP[Provider Response]
+  RESP --> CMP[Component Assertions]
+  CMP --> ART[Artifact Files]
   ART --> SCAN[Secret Leak Scan]
-  SCAN --> REPORT[run.json + secret-leaks.json + component logs]
+  SCAN --> SUM[run.json + secret-leaks.json]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph DeveloperSurface
-    MAKE[make test-e2e]
-    HOWTO[docs/howto/live-e2e.md]
+  subgraph EntryPoints
+    MK[Makefile:test-e2e]
+    LH[tests/e2e_live.tcl]
   end
 
-  subgraph TestRuntime
-    HARNESS[tests/e2e_live.tcl]
-    SUPPORT[tests/support/e2e_live_support.tcl]
+  subgraph LiveTests
     UTEST[tests/e2e_live/unified_llm_live.test]
     CTEST[tests/e2e_live/coding_agent_loop_live.test]
     ATEST[tests/e2e_live/attractor_live.test]
+    SUP[tests/support/e2e_live_support.tcl]
   end
 
   subgraph Runtime
-    ULLM[lib/unified_llm/*]
-    CAL[lib/coding_agent_loop/main.tcl]
-    ATR[lib/attractor/main.tcl]
-    HTTPX[lib/unified_llm/transports/https_json.tcl]
+    ULLM[lib/unified_llm]
+    UTR[lib/unified_llm/transports/https_json.tcl]
+    CAL[lib/coding_agent_loop]
+    ATR[lib/attractor]
   end
 
-  subgraph External
-    OPENAI[OpenAI API]
-    ANTHROPIC[Anthropic API]
-    GEMINI[Gemini API]
+  subgraph Artifacts
+    RUN[.scratch/verification/SPRINT-004/live/<run_id>/run.json]
+    LEAK[.scratch/verification/SPRINT-004/live/<run_id>/secret-leaks.json]
+    UART[unified_llm/<provider>/...]
+    CART[coding_agent_loop/<provider>/...]
+    AART[attractor/<provider>/...]
   end
 
-  subgraph Evidence
-    SCRATCH[.scratch/verification/SPRINT-004/live/<run_id>]
-    REPORTS[run.json + secret-leaks.json]
-  end
-
-  MAKE --> HARNESS
-  HOWTO --> MAKE
-  HARNESS --> SUPPORT
-  SUPPORT --> UTEST
-  SUPPORT --> CTEST
-  SUPPORT --> ATEST
-  UTEST --> ULLM
-  CTEST --> CAL
-  ATEST --> ATR
-  ULLM --> HTTPX
-  CAL --> ULLM
-  ATR --> ULLM
-  HTTPX --> OPENAI
-  HTTPX --> ANTHROPIC
-  HTTPX --> GEMINI
-  HARNESS --> SCRATCH
-  SCRATCH --> REPORTS
+  MK --> LH
+  LH --> UTEST
+  LH --> CTEST
+  LH --> ATEST
+  UTEST --> SUP
+  CTEST --> SUP
+  ATEST --> SUP
+  SUP --> ULLM
+  SUP --> CAL
+  SUP --> ATR
+  ULLM --> UTR
+  SUP --> RUN
+  SUP --> LEAK
+  SUP --> UART
+  SUP --> CART
+  SUP --> AART
 ```
