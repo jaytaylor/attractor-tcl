@@ -13,6 +13,27 @@ Add a live end-to-end smoke test suite that exercises real provider APIs (requir
 The suite must run via:
 - `make test-e2e`
 
+## Revalidation Snapshot (2026-02-27)
+- [X] Revalidated Sprint #004 implementation with current build/test/live suite execution and refreshed evidence bundle.
+```text
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 make test-e2e` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T134342Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T134342Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T134342Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T134342Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T134342Z/live-run-dirs.txt`
+Notes:
+- Includes successful provider-specific and all-provider live E2E runs, plus deterministic fail-fast no-key behavior.
+```
+
 ## Context & Problem
 Today the repo’s tests are deterministic and offline. This is good for correctness and CI stability, but it does not prove that the real provider HTTP integrations work in practice (keys, HTTPS, headers, payload shapes, response decoding).
 
