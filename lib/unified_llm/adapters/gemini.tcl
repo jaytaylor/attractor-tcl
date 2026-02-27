@@ -45,6 +45,7 @@ proc ::unified_llm::adapters::gemini::__translate_tools {tools} {
 
 proc ::unified_llm::adapters::gemini::translate_request {request} {
     set contents {}
+    set systemParts {}
     foreach message [dict get $request messages] {
         if {![dict exists $message content_parts]} {
             set message [::unified_llm::__normalize_message $message]
@@ -53,10 +54,26 @@ proc ::unified_llm::adapters::gemini::translate_request {request} {
         foreach part [dict get $message content_parts] {
             lappend parts [::unified_llm::adapters::gemini::__translate_part $part]
         }
-        lappend contents [dict create role [dict get $message role] parts $parts]
+        set role [dict get $message role]
+        if {$role eq "system"} {
+            foreach translated $parts {
+                lappend systemParts $translated
+            }
+            continue
+        }
+        if {$role eq "assistant"} {
+            set role model
+        }
+        if {$role ni {user model}} {
+            set role user
+        }
+        lappend contents [dict create role $role parts $parts]
     }
 
     set out [dict create contents $contents]
+    if {[llength $systemParts] > 0} {
+        dict set out systemInstruction [dict create parts $systemParts]
+    }
     if {[dict exists $request tools] && [dict size [dict get $request tools]] > 0} {
         dict set out tools [::unified_llm::adapters::gemini::__translate_tools [dict get $request tools]]
     }

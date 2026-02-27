@@ -12,6 +12,30 @@ test attractor_core-json-roundtrip-1.0 {json encode/decode roundtrip} -body {
     expr {[dict get $decoded a] == 1 && [dict get $decoded b] eq "two" && [dict get [dict get $decoded c] nested] eq "true"}
 } -result 1
 
+test attractor_core-json-encodes-space-string-as-string-1.0 {strings with spaces are encoded as JSON strings} -body {
+    set payload [dict create text "Say hello in one sentence."]
+    set decoded [::attractor_core::json_decode [::attractor_core::json_encode $payload]]
+    dict get $decoded text
+} -result {Say hello in one sentence.}
+
+test attractor_core-json-encodes-single-object-list-as-array-1.0 {single-item list of dicts is encoded as JSON array} -body {
+    set payload [dict create items [list [dict create role user content hi]]]
+    set decoded [::attractor_core::json_decode [::attractor_core::json_encode $payload]]
+    list [llength [dict get $decoded items]] [dict get [lindex [dict get $decoded items] 0] role]
+} -result {1 user}
+
+test attractor_core-json-encodes-multi-object-list-as-array-1.0 {multi-item list of dicts is not misclassified as dict} -body {
+    set payload [dict create items [list [dict create role system] [dict create role user]]]
+    set decoded [::attractor_core::json_decode [::attractor_core::json_encode $payload]]
+    list [llength [dict get $decoded items]] [dict get [lindex [dict get $decoded items] 1] role]
+} -result {2 user}
+
+test attractor_core-json-encodes-empty-dict-1.0 {empty dict values remain JSON objects} -body {
+    set payload [dict create properties {}]
+    set decoded [::attractor_core::json_decode [::attractor_core::json_encode $payload]]
+    dict size [dict get $decoded properties]
+} -result 0
+
 test attractor_core-schema-validate-1.0 {schema required/type checks} -body {
     set schema [dict create \
         type object \

@@ -70,16 +70,27 @@ proc ::unified_llm::adapters::anthropic::translate_request {request} {
 
     set merged [::unified_llm::adapters::anthropic::__merge_same_role $normalizedMessages]
     set anthropicMessages {}
+    set systemParts {}
 
     foreach message $merged {
         set convertedParts {}
         foreach part [dict get $message content_parts] {
             lappend convertedParts [::unified_llm::adapters::anthropic::__translate_part $part]
         }
-        lappend anthropicMessages [dict create role [dict get $message role] content $convertedParts]
+        set role [dict get $message role]
+        if {$role eq "system"} {
+            foreach converted $convertedParts {
+                lappend systemParts $converted
+            }
+            continue
+        }
+        lappend anthropicMessages [dict create role $role content $convertedParts]
     }
 
     set out [dict create messages $anthropicMessages max_tokens 1024]
+    if {[llength $systemParts] > 0} {
+        dict set out system $systemParts
+    }
     if {[dict exists $request model] && [dict get $request model] ne ""} {
         dict set out model [dict get $request model]
     }

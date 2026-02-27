@@ -1,8 +1,14 @@
 namespace eval ::coding_agent_loop::profiles::gemini {}
 
 proc ::coding_agent_loop::profiles::gemini::build {} {
+    set model gemini-2.5-flash
+    if {[info exists ::env(GEMINI_MODEL)] && [string trim $::env(GEMINI_MODEL)] ne ""} {
+        set model [string trim $::env(GEMINI_MODEL)]
+    }
+
     return [dict create \
         name gemini \
+        model $model \
         identity "You are a Gemini-profile coding agent optimized for filesystem and command workflows." \
         tool_guidance "Use edit_file for focused replacements and keep command execution deterministic and scoped." \
         system_prompt_topics [list "filesystem operations" "command execution" "tool-first operation"] \

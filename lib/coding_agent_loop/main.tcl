@@ -52,6 +52,10 @@ proc ::coding_agent_loop::__collect_project_docs {} {
 }
 
 proc ::coding_agent_loop::__build_system_prompt {state} {
+    if {[dict exists $state config system_prompt] && [string trim [dict get $state config system_prompt]] ne ""} {
+        return [dict get $state config system_prompt]
+    }
+
     set profile [dict get $state profile]
     set identity "You are a coding agent."
     if {[dict exists $profile identity]} {
@@ -353,13 +357,24 @@ proc ::coding_agent_loop::__session_submit {id text} {
 
     set profileName [dict get [dict get $state profile] name]
     set maxToolRounds [dict get $state max_tool_rounds_per_input]
+    set model ""
+    if {[dict exists $state profile model]} {
+        set model [dict get $state profile model]
+    }
+    if {[dict exists $state config model] && [string trim [dict get $state config model]] ne ""} {
+        set model [string trim [dict get $state config model]]
+    }
 
     ::coding_agent_loop::__emit $id [dict create type MODEL_REQUEST_START provider $profileName]
-    set response [::unified_llm::generate \
+    set generateArgs [list \
         -messages $messages \
         -provider $profileName \
         -tools $toolDefs \
         -max_tool_rounds $maxToolRounds]
+    if {$model ne ""} {
+        lappend generateArgs -model $model
+    }
+    set response [::unified_llm::generate {*}$generateArgs]
     ::coding_agent_loop::__emit $id [dict create type MODEL_REQUEST_END provider $profileName usage [dict get $response usage]]
 
     set state [dict get $sessions $id]

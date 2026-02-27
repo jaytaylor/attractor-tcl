@@ -13,7 +13,7 @@ proc ::tests::e2e_live::provider_specs {} {
     return [dict create \
         openai [dict create key_var OPENAI_API_KEY model_var OPENAI_MODEL model_default gpt-4o-mini base_url_var OPENAI_BASE_URL base_url_default https://api.openai.com] \
         anthropic [dict create key_var ANTHROPIC_API_KEY model_var ANTHROPIC_MODEL model_default claude-sonnet-4-5 base_url_var ANTHROPIC_BASE_URL base_url_default https://api.anthropic.com] \
-        gemini [dict create key_var GEMINI_API_KEY model_var GEMINI_MODEL model_default gemini-1.5-pro base_url_var GEMINI_BASE_URL base_url_default https://generativelanguage.googleapis.com]]
+        gemini [dict create key_var GEMINI_API_KEY model_var GEMINI_MODEL model_default gemini-2.5-flash base_url_var GEMINI_BASE_URL base_url_default https://generativelanguage.googleapis.com]]
 }
 
 proc ::tests::e2e_live::timestamp_utc {} {
@@ -373,7 +373,7 @@ proc ::tests::e2e_live::run_coding_agent_loop_smoke {provider} {
     }
     set code [catch {
         ::unified_llm::set_default_client $client
-        set session [::coding_agent_loop::session new -profile $provider]
+        set session [::coding_agent_loop::session new -profile $provider -config [dict create system_prompt "live smoke"]]
         set response [$session submit "Reply with one short sentence saying hello."]
         set events [$session events]
         set required {SESSION_START USER_INPUT ASSISTANT_TEXT_END}
@@ -413,7 +413,7 @@ proc ::tests::e2e_live::run_coding_agent_loop_invalid_key {provider} {
     }
     set code [catch {
         ::unified_llm::set_default_client $client
-        set session [::coding_agent_loop::session new -profile $provider]
+        set session [::coding_agent_loop::session new -profile $provider -config [dict create system_prompt "live smoke"]]
         $session submit "Say hello in one sentence."
     } err opts]
     if {$session ne ""} {

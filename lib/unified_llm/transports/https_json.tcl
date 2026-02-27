@@ -41,8 +41,27 @@ proc ::unified_llm::transports::https_json::__resolve_base_url {request} {
 }
 
 proc ::unified_llm::transports::https_json::__join_url {baseUrl endpoint} {
-    set normalizedBase [string trimright [string trim $baseUrl] "/"]
-    return "${normalizedBase}${endpoint}"
+    set normalizedBase [string trim $baseUrl]
+    if {$normalizedBase eq ""} {
+        return $endpoint
+    }
+
+    # Preserve endpoint when it already includes the base path prefix.
+    if {![regexp {^([a-z]+://[^/]+)(/.*)?$} $normalizedBase -> origin basePath]} {
+        set normalizedBase [string trimright $normalizedBase "/"]
+        return "${normalizedBase}${endpoint}"
+    }
+
+    if {$basePath eq "" || $basePath eq "/"} {
+        return "${origin}${endpoint}"
+    }
+
+    set normalizedPath [string trimright $basePath "/"]
+    if {$endpoint eq $normalizedPath || [string match "${normalizedPath}/*" $endpoint]} {
+        return "${origin}${endpoint}"
+    }
+
+    return "${origin}${normalizedPath}${endpoint}"
 }
 
 proc ::unified_llm::transports::https_json::__headers_to_list {headers} {
@@ -53,12 +72,39 @@ proc ::unified_llm::transports::https_json::__headers_to_list {headers} {
     return $out
 }
 
+proc ::unified_llm::transports::https_json::__split_content_type {headers} {
+    set outHeaders {}
+    set contentType application/json
+    foreach key [dict keys $headers] {
+        set value [dict get $headers $key]
+        if {[string tolower $key] eq "content-type"} {
+            if {[string trim $value] ne ""} {
+                set contentType [string trim $value]
+            }
+            continue
+        }
+        dict set outHeaders $key $value
+    }
+    return [dict create content_type $contentType headers $outHeaders]
+}
+
 proc ::unified_llm::transports::https_json::__normalize_headers {meta} {
     set out {}
     foreach {k v} $meta {
         dict set out [string tolower $k] $v
     }
     return $out
+}
+
+proc ::unified_llm::transports::https_json::__summarize_body {body} {
+    set compact [string trim [string map [list "\n" " " "\r" " " "\t" " "] $body]]
+    if {$compact eq ""} {
+        return ""
+    }
+    if {[string length $compact] > 512} {
+        return "[string range $compact 0 511]..."
+    }
+    return $compact
 }
 
 proc ::unified_llm::transports::https_json::__ensure_https_registered {provider} {
@@ -107,7 +153,9 @@ proc ::unified_llm::transports::https_json::call {request} {
         set timeoutMs [dict get $request timeout_ms]
     }
 
-    set headerList [::unified_llm::transports::https_json::__headers_to_list [dict get $request headers]]
+    set headerParts [::unified_llm::transports::https_json::__split_content_type [dict get $request headers]]
+    set contentType [dict get $headerParts content_type]
+    set headerList [::unified_llm::transports::https_json::__headers_to_list [dict get $headerParts headers]]
     set payloadBody [::attractor_core::json_encode [dict get $request payload]]
     set token ""
     set status 0
@@ -117,7 +165,7 @@ proc ::unified_llm::transports::https_json::call {request} {
     set code [catch {
         set token [::http::geturl $url \
             -method POST \
-            -type "application/json" \
+            -type $contentType \
             -headers $headerList \
             -query $payloadBody \
             -timeout $timeoutMs]
@@ -131,11 +179,21 @@ proc ::unified_llm::transports::https_json::call {request} {
     }
 
     if {$code} {
-        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "network request failed for provider $provider"
+        set summary [::unified_llm::transports::https_json::__summarize_body $err]
+        set detail ""
+        if {$summary ne ""} {
+            set detail ": $summary"
+        }
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "network request failed for provider $provider$detail"
     }
 
     if {$status < 200 || $status >= 300} {
-        return -code error -errorcode [list UNIFIED_LLM TRANSPORT HTTP $provider $status] "http request failed for provider $provider with status $status"
+        set summary [::unified_llm::transports::https_json::__summarize_body $responseBody]
+        set detail ""
+        if {$summary ne ""} {
+            set detail " body=$summary"
+        }
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT HTTP $provider $status] "http request failed for provider $provider with status $status$detail"
     }
 
     return [dict create status_code $status headers $responseHeaders body $responseBody]

@@ -9,6 +9,14 @@ source [file join $root tests support http_fixture_server.tcl]
 
 namespace eval ::tests::integration::https_transport {}
 
+test integration-unified-llm-https-transport-join-url-default-1.0 {join_url appends endpoint when base has no path suffix} -body {
+    ::unified_llm::transports::https_json::__join_url "https://api.openai.com" "/v1/responses"
+} -result {https://api.openai.com/v1/responses}
+
+test integration-unified-llm-https-transport-join-url-dedup-1.0 {join_url avoids duplicate /v1 prefix when base already has it} -body {
+    ::unified_llm::transports::https_json::__join_url "http://127.0.0.1:58298/v1" "/v1/responses"
+} -result {http://127.0.0.1:58298/v1/responses}
+
 test integration-unified-llm-https-transport-happy-1.0 {transport sends JSON and redacts sensitive response request headers} -setup {
     set body [::attractor_core::json_encode [dict create \
         id "resp-123" \
@@ -25,17 +33,22 @@ test integration-unified-llm-https-transport-happy-1.0 {transport sends JSON and
     set requests [$server requests]
     set request [lindex $requests 0]
     set payload [::attractor_core::json_decode [dict get $request body]]
+    set firstInput [lindex [dict get $payload input] 0]
+    set firstPart [lindex [dict get $firstInput content] 0]
     list \
         [dict get $request path] \
         [dict get $request headers Content-Type] \
         [dict get $request headers Authorization] \
         [dict get $payload model] \
+        [dict get $firstInput role] \
+        [dict get $firstPart type] \
+        [dict get $firstPart text] \
         [dict get $response text] \
         [dict get $response request headers Authorization]
 } -cleanup {
     $client close
     $server close
-} -result {/v1/responses application/json {Bearer sk-test-secret} gpt-4o-mini {hello from fixture} <redacted>}
+} -result {/v1/responses application/json {Bearer sk-test-secret} gpt-4o-mini user input_text {Say hello in one sentence.} {hello from fixture} <redacted>}
 
 test integration-unified-llm-https-transport-http-error-1.0 {transport raises deterministic HTTP errorcode without secrets} -setup {
     set body [::attractor_core::json_encode [dict create error [dict create message "bad key"]]]

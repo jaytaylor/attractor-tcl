@@ -21,6 +21,23 @@ proc ::attractor_core::__is_dict_like {value} {
     if {[catch {set vlen [llength $value]}]} {
         return 0
     }
+    if {$vlen == 0} {
+        return 1
+    }
+    if {$vlen == 2} {
+        set key [lindex $value 0]
+        set val [lindex $value 1]
+        if {[::attractor_core::__is_dict_like $key]} {
+            return 0
+        }
+        if {![regexp {^[A-Za-z_][A-Za-z0-9_:-]*$} $key]} {
+            return 0
+        }
+        if {[::attractor_core::__is_dict_like $val] || [regexp {\s} $val] || [regexp {\}\s+\{} $val] || [regexp {[^A-Za-z0-9_.-]} $val]} {
+            return 1
+        }
+        return 0
+    }
     if {$vlen < 4} {
         return 0
     }
@@ -30,6 +47,15 @@ proc ::attractor_core::__is_dict_like {value} {
     if {[catch {dict size $value}]} {
         return 0
     }
+
+    # Reject list-of-dicts payloads that can be parsed as dicts accidentally.
+    for {set idx 0} {$idx < $vlen} {incr idx 2} {
+        set key [lindex $value $idx]
+        if {[::attractor_core::__is_dict_like $key]} {
+            return 0
+        }
+    }
+
     return 1
 }
 
@@ -37,19 +63,28 @@ proc ::attractor_core::__is_list_like {value} {
     if {[catch {llength $value}]} {
         return 0
     }
-    if {[llength $value] <= 1} {
+    if {[llength $value] == 0} {
         return 0
     }
     if {[::attractor_core::__is_dict_like $value]} {
         return 0
     }
+
+    # Container-style Tcl list representations must be treated as JSON arrays.
     if {[regexp {\}\s+\{} $value]} {
         return 1
     }
-    if {[string match "\\{*\\}" $value]} {
-        return 1
+
+    # Lists containing dictionary-like items should always serialize as arrays,
+    # including the one-item case used by provider request payloads.
+    foreach item $value {
+        if {[::attractor_core::__is_dict_like $item]} {
+            return 1
+        }
     }
-    return 1
+
+    # Treat whitespace-delimited scalar text as a JSON string, not an array.
+    return 0
 }
 
 proc ::attractor_core::__json_encode_value {value} {
