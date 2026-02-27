@@ -33,58 +33,94 @@ Deliver a deterministic, offline-verifiable parity implementation where each Spr
 
 ## Phase 0 - Re-baseline and Evidence Scaffolding
 ### Deliverables
-- [ ] Create this execution sprint document and initialize all checklist items as incomplete.
+- [X] Create this execution sprint document and initialize all checklist items as incomplete.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Capture baseline command status for build/test/coverage and persist command+exit-code table.
+- [X] Capture baseline command status for build/test/coverage and persist command+exit-code table.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Generate a requirement-family gap ledger for ULLM/CAL/ATR ownership from catalog and traceability outputs.
+- [X] Generate a requirement-family gap ledger for ULLM/CAL/ATR ownership from catalog and traceability outputs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Create per-phase evidence indexes under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/README.md`.
+- [X] Create per-phase evidence indexes under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/README.md`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ### Acceptance Criteria - Phase 0
-- [ ] No unowned requirement IDs remain in the gap ledger.
+- [X] No unowned requirement IDs remain in the gap ledger.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Baseline evidence is reproducible from command tables and logs.
+- [X] Baseline evidence is reproducible from command tables and logs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [ ] Verify provider resolution semantics (explicit provider/default/ambiguity errors) in `lib/unified_llm/main.tcl`.
+- [X] Verify provider resolution semantics (explicit provider/default/ambiguity errors) in `lib/unified_llm/main.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify normalized message/content-part parity for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, `tool_result`.
+- [X] Verify normalized message/content-part parity for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, `tool_result`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify adapter translation parity across blocking and streaming in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
+- [X] Verify adapter translation parity across blocking and streaming in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify tool-call loop continuation semantics and deterministic round limits.
+- [X] Verify tool-call loop continuation semantics and deterministic round limits.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify structured output parity (`generate_object`, `stream_object`) with deterministic `INVALID_JSON` and `SCHEMA_MISMATCH` failures.
+- [X] Verify structured output parity (`generate_object`, `stream_object`) with deterministic `INVALID_JSON` and `SCHEMA_MISMATCH` failures.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify usage/reasoning/caching normalization and `provider_options` validation behavior.
+- [X] Verify usage/reasoning/caching normalization and `provider_options` validation behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ### Test Matrix - Phase 1
@@ -101,157 +137,256 @@ Negative cases:
 - Invalid JSON and schema mismatch return deterministic structured output errors.
 
 ### Acceptance Criteria - Phase 1
-- [ ] ULLM unit/integration parity coverage is green for OpenAI, Anthropic, Gemini.
+- [X] ULLM unit/integration parity coverage is green for OpenAI, Anthropic, Gemini.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] ULLM requirement IDs in traceability resolve to implementation/tests/evidence.
+- [X] ULLM requirement IDs in traceability resolve to implementation/tests/evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [ ] Verify `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
+- [X] Verify `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` (completion, per-input rounds, turn limits, cancellation).
+- [X] Verify loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` (completion, per-input rounds, turn limits, cancellation).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify truncation marker behavior while preserving complete terminal output payloads.
+- [X] Verify truncation marker behavior while preserving complete terminal output payloads.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify `steer` and `follow_up` queue injection semantics.
+- [X] Verify `steer` and `follow_up` queue injection semantics.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify required event-kind parity and loop-warning semantics.
+- [X] Verify required event-kind parity and loop-warning semantics.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify profile prompt construction and project-document discovery in `lib/coding_agent_loop/profiles/*.tcl`.
+- [X] Verify profile prompt construction and project-document discovery in `lib/coding_agent_loop/profiles/*.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify subagent lifecycle parity (spawn/send_input/wait/close, shared env, independent history, depth limits).
+- [X] Verify subagent lifecycle parity (spawn/send_input/wait/close, shared env, independent history, depth limits).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ### Acceptance Criteria - Phase 2
-- [ ] CAL unit/integration parity coverage is green for lifecycle/tools/steering/subagents/events.
+- [X] CAL unit/integration parity coverage is green for lifecycle/tools/steering/subagents/events.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] CAL requirement IDs in traceability resolve to implementation/tests/evidence.
+- [X] CAL requirement IDs in traceability resolve to implementation/tests/evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ## Phase 3 - Attractor Runtime Parity Closure
 ### Deliverables
-- [ ] Verify DOT parser parity in `lib/attractor/main.tcl` for supported syntax, quoting, chained edges, defaults, and comment stripping.
+- [X] Verify DOT parser parity in `lib/attractor/main.tcl` for supported syntax, quoting, chained edges, defaults, and comment stripping.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify validation parity for start/exit invariants, reachability, edge validity, and deterministic rule/severity metadata.
+- [X] Verify validation parity for start/exit invariants, reachability, edge validity, and deterministic rule/severity metadata.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify execution parity for handler resolution, edge routing priority, and checkpoint/resume equivalence.
+- [X] Verify execution parity for handler resolution, edge routing priority, and checkpoint/resume equivalence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
+- [X] Verify built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify interviewer parity (`AutoApprove`, `Console`, `Callback`, `Queue`) and `wait.human` option routing behavior.
+- [X] Verify interviewer parity (`AutoApprove`, `Console`, `Callback`, `Queue`) and `wait.human` option routing behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify condition expression and stylesheet specificity behavior.
+- [X] Verify condition expression and stylesheet specificity behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume`.
+- [X] Verify CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ### Acceptance Criteria - Phase 3
-- [ ] ATR unit/integration/e2e parity coverage is green for parser/validator/execution/handlers/interviewer/CLI.
+- [X] ATR unit/integration/e2e parity coverage is green for parser/validator/execution/handlers/interviewer/CLI.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] ATR requirement IDs in traceability resolve to implementation/tests/evidence.
+- [X] ATR requirement IDs in traceability resolve to implementation/tests/evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [ ] Verify deterministic end-to-end flow across Attractor traversal, CAL codergen execution, and ULLM provider mocks.
+- [X] Verify deterministic end-to-end flow across Attractor traversal, CAL codergen execution, and ULLM provider mocks.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify checkpoint persistence, resume behavior, artifact layout, and event stream integrity across runtime boundaries.
+- [X] Verify checkpoint persistence, resume behavior, artifact layout, and event stream integrity across runtime boundaries.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify provider-specific integrated fixture paths for OpenAI, Anthropic, and Gemini.
+- [X] Verify provider-specific integrated fixture paths for OpenAI, Anthropic, and Gemini.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify CLI e2e success/failure exit-code assertions for `validate`, `run`, and `resume`.
+- [X] Verify CLI e2e success/failure exit-code assertions for `validate`, `run`, and `resume`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ### Acceptance Criteria - Phase 4
-- [ ] Offline `make test` execution is sufficient to validate integrated ULLM + CAL + ATR behavior.
+- [X] Offline `make test` execution is sufficient to validate integrated ULLM + CAL + ATR behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Integration evidence indexes include commands, exit codes, and artifact paths for all scenarios.
+- [X] Integration evidence indexes include commands, exit codes, and artifact paths for all scenarios.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ## Phase 5 - Traceability, ADR, and Closeout
 ### Deliverables
-- [ ] Verify `docs/spec-coverage/traceability.md` closes all Sprint #003 mappings with implementation/test/evidence references.
+- [X] Verify `docs/spec-coverage/traceability.md` closes all Sprint #003 mappings with implementation/test/evidence references.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Verify requirement catalog consistency with `tclsh tools/requirements_catalog.tcl --check-ids` and `--summary`.
+- [X] Verify requirement catalog consistency with `tclsh tools/requirements_catalog.tcl --check-ids` and `--summary`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Update `docs/ADR.md` with final Sprint #003 architecture decisions introduced in this implementation pass.
+- [X] Update `docs/ADR.md` with final Sprint #003 architecture decisions introduced in this implementation pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Run sprint docs/evidence lint checks for Sprint #003 planning and execution documents.
+- [X] Run sprint docs/evidence lint checks for Sprint #003 planning and execution documents.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Render and verify all appendix mermaid diagrams with `mmdc`, storing outputs in `.scratch/diagram-renders/sprint-003/`.
+- [X] Render and verify all appendix mermaid diagrams with `mmdc`, storing outputs in `.scratch/diagram-renders/sprint-003/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ### Acceptance Criteria - Phase 5
-- [ ] Traceability closure is complete and `tclsh tools/spec_coverage.tcl` returns a clean status.
+- [X] Traceability closure is complete and `tclsh tools/spec_coverage.tcl` returns a clean status.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
-- [ ] Sprint closeout evidence is reproducible from phase README command tables.
+- [X] Sprint closeout evidence is reproducible from phase README command tables.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_execution_verification.sh` (exit code 0)
+- Evidence: `.scratch/verification/SPRINT-003/execution-2026-02-27/command-status-all.tsv`
+- Notes: Use per-phase tables and logs under `.scratch/verification/SPRINT-003/execution-2026-02-27/phase-*/` for command-level verification context.
 ```
 
 ## Canonical Verification Command Set
