@@ -355,9 +355,22 @@ Details to cover:
   - Explicit provider requested but missing key (demonstrate fail-fast behavior)
 - How to locate the artifacts root and what files to expect per component/provider.
 - A redaction checklist and a simple “scan for secrets” procedure (must not require knowing/printing the real API key value).
-- [ ] Ensure mermaid diagrams in this sprint render correctly via `mmdc` and store render artifacts under `.scratch/diagram-renders/sprint-004/`.
+- [X] Ensure mermaid diagrams in this sprint render correctly via `mmdc` and store render artifacts under `.scratch/diagram-renders/sprint-004/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `mmdc -i .scratch/diagrams/sprint-004/domain.mmd -o .scratch/diagram-renders/sprint-004/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/er.mmd -o .scratch/diagram-renders/sprint-004/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/workflow.mmd -o .scratch/diagram-renders/sprint-004/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/dataflow.mmd -o .scratch/diagram-renders/sprint-004/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004/arch.mmd -o .scratch/diagram-renders/sprint-004/arch.png` (exit 0)
+Evidence:
+- `.scratch/diagram-renders/sprint-004/domain.png`
+- `.scratch/diagram-renders/sprint-004/er.png`
+- `.scratch/diagram-renders/sprint-004/workflow.png`
+- `.scratch/diagram-renders/sprint-004/dataflow.png`
+- `.scratch/diagram-renders/sprint-004/arch.png`
+Notes:
+- Rendered successfully on 2026-02-27.
 ```
 
 ### Acceptance Criteria - Phase 5
