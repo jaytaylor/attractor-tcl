@@ -1,0 +1,19 @@
+package require Tcl 8.5
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+set tool [file join $root tools build_check.tcl]
+
+test integration-build-check-smoke-1.0 {build_check passes from repo root} -body {
+    set output [exec tclsh $tool]
+    expr {[string match "*build check complete*" $output]}
+} -result 1
+
+test integration-build-check-smoke-2.0 {build_check passes from non-root cwd} -body {
+    set rootEscaped [string map {"'" "'\\''"} $root]
+    set toolEscaped [string map {"'" "'\\''"} $tool]
+    set cmd "cd / && cd '$rootEscaped' && tclsh '$toolEscaped'"
+    set output [exec sh -lc $cmd]
+    expr {[string match "*build check complete*" $output]}
+} -result 1
