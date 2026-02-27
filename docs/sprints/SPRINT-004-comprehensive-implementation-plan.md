@@ -2,107 +2,54 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #004 Comprehensive Implementation Plan - Live E2E Smoke Suite (`make test-e2e`)
 
-## Plan Status
-This document tracks implementation and verification completion for Sprint #004 as of 2026-02-27. All checklist items below are synchronized with the latest evidence bundle.
+## Review Findings From `SPRINT-004-live-e2e-make-test-e2e.md`
+- The sprint source defines a clear live-suite objective: real provider HTTPS validation for Unified LLM, Coding Agent Loop, and Attractor.
+- The implementation must keep deterministic offline testing unchanged while adding an explicit opt-in live path.
+- Secret redaction and post-run leak scanning are required correctness properties, not optional hardening.
+- Provider selection and fail-fast behavior must be deterministic across missing keys, explicit provider requests, and multi-provider environments.
 
-## Executive Summary
-Sprint #004 adds an opt-in live end-to-end smoke suite that verifies real provider integrations for:
-- `unified_llm`
-- `coding_agent_loop`
-- `attractor`
-
-The implementation must preserve deterministic offline testing while introducing a separate live path invoked only through `make test-e2e`.
-
-## Implementation Objectives
-- [X] Add a live-only test entrypoint that is never invoked by default offline test workflows.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
-- [X] Validate real HTTPS request/response behavior for OpenAI, Anthropic, and Gemini through explicit transport injection.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
-- [X] Enforce secret redaction and leak detection as correctness requirements for logs, artifacts, and surfaced errors.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
-- [X] Produce auditable artifacts for each live run under `.scratch/verification/SPRINT-004/live/<run_id>/...`.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
+## Objective
+Implement a production-usable, opt-in live E2E smoke suite triggered by `make test-e2e` that validates end-to-end provider connectivity and core runtime behavior without regressing offline determinism or leaking secrets.
 
 ## Scope
 In scope:
-- Live harness behavior and provider-selection semantics.
-- Provider-agnostic HTTPS JSON transport for explicit live invocation.
-- Live E2E smoke coverage for Unified LLM, Coding Agent Loop, and Attractor.
-- Explicit positive and negative test coverage for each selected provider.
-- Documentation and ADR updates needed for sustainable maintenance.
+- Live harness entrypoint, provider selection contract, and artifact lifecycle.
+- Explicit HTTPS transport injection for live calls.
+- Live smoke coverage for Unified LLM, Coding Agent Loop, and Attractor per selected provider.
+- Deterministic positive/negative tests and secret leak scanning.
+- Makefile/docs/ADR updates needed to operate and maintain the live suite.
 
 Out of scope:
-- Running paid live tests by default in `make test`.
-- Streaming expansion beyond smoke-level goals for this sprint.
+- Running paid live tests by default in offline test workflows.
+- Streaming-expansion or non-smoke feature work outside Sprint #004 goals.
+- Legacy compatibility shims or feature-gating layers.
 
-## Required Runtime Contract
+## Implementation Controls
+- Evidence root: `.scratch/verification/SPRINT-004/implementation-plan/`.
+- Diagram render root: `.scratch/diagram-renders/sprint-004-comprehensive-plan/`.
+- Each checklist item remains `[ ]` until verified with command output, exit code, and artifact references.
+- Significant architecture decisions are recorded in `docs/ADR.md`.
+
+## Runtime Contract (Live Suite)
 - Provider keys:
   - `OPENAI_API_KEY`
   - `ANTHROPIC_API_KEY`
   - `GEMINI_API_KEY`
-- Provider selector:
+- Optional provider selection:
   - `E2E_LIVE_PROVIDERS` (comma-separated allowlist)
-- Model overrides:
+- Optional model overrides:
   - `OPENAI_MODEL` (default `gpt-4o-mini`)
   - `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`)
   - `GEMINI_MODEL` (default `gemini-2.5-flash`)
-- Base URL overrides:
+- Optional base URL overrides:
   - `OPENAI_BASE_URL` (default `https://api.openai.com`)
   - `ANTHROPIC_BASE_URL` (default `https://api.anthropic.com`)
   - `GEMINI_BASE_URL` (default `https://generativelanguage.googleapis.com`)
-- Artifact root override:
+- Optional artifacts root override:
   - `E2E_LIVE_ARTIFACT_ROOT` (default `.scratch/verification/SPRINT-004/live/<run_id>`)
 
-## Architecture and File Targets
-- Harness and live support:
+## Workstream and File Map
+- Live harness and shared support:
   - `tests/e2e_live.tcl`
   - `tests/e2e_live/unified_llm_live.test`
   - `tests/e2e_live/coding_agent_loop_live.test`
@@ -110,1130 +57,813 @@ Out of scope:
   - `tests/support/e2e_live_support.tcl`
 - Transport:
   - `lib/unified_llm/transports/https_json.tcl`
-- Runtime integration points:
+- Runtime touchpoints:
   - `lib/unified_llm/main.tcl`
   - `lib/unified_llm/adapters/openai.tcl`
   - `lib/unified_llm/adapters/anthropic.tcl`
   - `lib/unified_llm/adapters/gemini.tcl`
   - `lib/coding_agent_loop/main.tcl`
   - `lib/attractor/main.tcl`
-- Deterministic local transport tests:
+- Deterministic fixture-backed integration tests:
   - `tests/support/http_fixture_server.tcl`
   - `tests/integration/unified_llm_https_transport_integration.test`
   - `tests/integration/e2e_live_support_integration.test`
-- Developer entrypoints and docs:
+- Entry points and documentation:
   - `Makefile`
   - `docs/howto/live-e2e.md`
   - `docs/ADR.md`
 
-## Cross-Provider and Cross-Component Coverage Matrix
+## Cross-Provider Coverage Matrix
 | Scenario | OpenAI | Anthropic | Gemini |
 | --- | --- | --- | --- |
-| Unified LLM live generate returns non-empty text | [X] | [X] | [X] |
-| Coding Agent Loop live natural completion | [X] | [X] | [X] |
-| Attractor live pipeline run writes checkpoint and node artifacts | [X] | [X] | [X] |
-| Invalid key fails deterministically with no secret leakage | [X] | [X] | [X] |
-| Requested provider missing key fails before any network call | [X] | [X] | [X] |
+| Unified LLM live generate returns non-empty text | [ ] | [ ] | [ ] |
+| Coding Agent Loop natural completion path succeeds | [ ] | [ ] | [ ] |
+| Attractor live pipeline run succeeds with artifacts/checkpoint | [ ] | [ ] | [ ] |
+| Invalid key fails deterministically without secret leakage | [ ] | [ ] | [ ] |
+| Explicit requested-provider-without-key fails before network call | [ ] | [ ] | [ ] |
 
-## Phase 0 - Baseline, Contracts, and Evidence Layout
+## Execution Order
+1. Phase 0: Baseline and contracts
+2. Phase 1: Live HTTPS transport and redaction
+3. Phase 2: Unified LLM live smoke coverage
+4. Phase 3: Coding Agent Loop live smoke coverage
+5. Phase 4: Attractor live smoke coverage
+6. Phase 5: Makefile, docs, ADR, and closeout verification
+
+## Phase 0 - Baseline and Contracts
 ### Deliverables
-- [X] Confirm baseline behavior: offline suite remains network-free and independent from live harness execution.
+- [ ] Capture baseline behavior for `make -j10 build`, `make -j10 test`, and current live entrypoint status.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Define and document provider-selection algorithm for configured keys vs requested providers.
+- [ ] Define and document deterministic provider-selection semantics for configured keys and explicit provider requests.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Define live evidence root and per-component subtree structure under `.scratch/verification/SPRINT-004/live/<run_id>/`.
+- [ ] Define evidence root structure and required run-level metadata (`run.json`, provider/component subtrees, secret scan output).
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Add ADR entry documenting the opt-in live transport architecture and secret-scan enforcement.
+- [ ] Record Sprint #004 architecture decisions in `docs/ADR.md` (opt-in transport injection, leak scan policy, offline/live separation).
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Positive Test Plan - Phase 0
-- [X] Verify offline tests execute without selecting live suites.
+- [ ] Baseline offline tests pass without invoking live suites.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Verify live harness can list tests and summarize selected providers/components.
+- [ ] Live harness enumerates selected providers/components and artifact root before execution.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Negative Test Plan - Phase 0
-- [X] Verify live harness fails when no providers are selected.
+- [ ] No selected providers causes deterministic fail-fast behavior before network calls.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Verify explicitly requested provider without corresponding key fails immediately before network operations.
+- [ ] Explicit requested provider without corresponding key fails with descriptive diagnostics and non-zero exit.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Acceptance Criteria - Phase 0
-- [X] A contributor can read docs and ADR and run the live suite correctly without ambiguity.
+- [ ] Baseline behavior and provider-selection contract are documented and reproducibly verifiable.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Baseline and fail-fast behavior are reproducible with clear evidence artifacts.
+- [ ] Evidence directory structure is stable and ready for phased implementation runs.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
-## Phase 1 - HTTPS Transport and Secret Redaction
+## Phase 1 - Live HTTPS Transport and Secret Redaction
 ### Deliverables
-- [X] Implement provider-agnostic HTTPS JSON transport entrypoint for explicit `-transport` injection.
+- [ ] Implement provider-agnostic live HTTPS JSON transport (`::unified_llm::transports::https_json::call`) with explicit injection-only usage.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Ensure transport output contract returns `status_code`, normalized `headers`, and raw `body`.
+- [ ] Implement base URL resolution precedence (`client base_url` > provider env override > provider default).
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Ensure non-2xx and network failures surface deterministic Tcl errorcode shapes by provider.
+- [ ] Enforce deterministic errorcode contracts for HTTP failures (`UNIFIED_LLM TRANSPORT HTTP ...`) and network failures (`UNIFIED_LLM TRANSPORT NETWORK ...`).
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Ensure surfaced request metadata and logs redact auth headers and key values.
+- [ ] Redact `Authorization`, `x-api-key`, and `x-goog-api-key` in surfaced request metadata and all persisted artifacts.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Add deterministic local fixture-backed integration tests for transport behavior and redaction.
+- [ ] Add deterministic fixture-backed transport integration tests using a local in-process HTTP server.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Positive Test Plan - Phase 1
-- [X] Happy-path JSON request reaches local fixture and returns expected status/body/headers.
+- [ ] Transport posts valid JSON payloads and returns normalized `{status_code, headers, body}` from fixture responses.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Redacted headers are present in surfaced metadata while wire headers remain valid for transport.
+- [ ] Wire request includes required auth header while surfaced request metadata is redacted.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Negative Test Plan - Phase 1
-- [X] Fixture non-2xx response triggers deterministic HTTP transport error classification.
+- [ ] Non-2xx fixture response triggers deterministic HTTP transport error classification.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Simulated network/TLS failure triggers deterministic NETWORK transport error classification.
+- [ ] Fixture/network failure path triggers deterministic NETWORK transport error classification.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Error surfaces and logs do not contain raw auth header values or API keys.
+- [ ] Error messages and logs never include raw secrets.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Acceptance Criteria - Phase 1
-- [X] Transport is live-call capable via explicit injection and remains unused by offline default tests.
+- [ ] Transport is live-call capable only when explicitly injected and remains absent from offline default test execution.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Redaction and error classification are verified in deterministic local integration tests.
+- [ ] Redaction and error contracts are enforced by deterministic integration tests.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ## Phase 2 - Unified LLM Live Smoke Coverage
 ### Deliverables
-- [X] Implement provider-by-provider live smoke execution for Unified LLM using explicit client configuration.
+- [ ] Add live harness runner `tests/e2e_live.tcl` that sources only `tests/e2e_live/*.test` and never `tests/e2e/*.test`.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Capture provider-scoped Unified LLM artifacts under `.../unified_llm/<provider>/`.
+- [ ] Implement provider-scoped Unified LLM smoke tests for OpenAI, Anthropic, and Gemini using explicit client configuration.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Add invalid-key live tests for each provider with deterministic failure assertions.
+- [ ] Implement invalid-key tests per provider with deterministic failure assertions.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
+```
+- [ ] Persist provider-scoped artifacts under `.../unified_llm/<provider>/` and write run summary metadata.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
+```
+- [ ] Implement post-run secret leak scanning of artifact files using loaded key values without printing the keys.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Positive Test Plan - Phase 2
-- [X] OpenAI smoke: non-empty text, real response ID, non-zero usage fields.
+- [ ] OpenAI smoke returns non-empty text, provider-generated response id, and non-zero usage fields.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Anthropic smoke: non-empty text, real response ID, non-zero usage fields.
+- [ ] Anthropic smoke returns non-empty text, provider-generated response id, and non-zero usage fields.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Gemini smoke: non-empty text, provider-native candidate/raw markers, non-zero usage fields.
+- [ ] Gemini smoke returns non-empty text with provider-native candidate/raw markers and non-zero usage fields.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Negative Test Plan - Phase 2
-- [X] No keys present: harness exits non-zero before live provider calls.
+- [ ] No keys configured fails fast before provider calls and emits actionable diagnostics.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Requested provider missing key: harness exits non-zero before live provider calls.
+- [ ] Explicit provider requested without key fails fast before provider calls.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Invalid provider key: provider auth failure is deterministic and secret-safe.
+- [ ] Invalid provider key produces deterministic auth failure classification with redacted output.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Acceptance Criteria - Phase 2
-- [X] Unified LLM live tests run for every selected provider and emit auditable artifacts.
+- [ ] Unified LLM live tests execute for each selected provider and emit auditable provider-scoped artifacts.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Invalid/missing credential behavior is deterministic and free of secret leakage.
+- [ ] Missing/invalid credential handling is deterministic and secret-safe.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ## Phase 3 - Coding Agent Loop Live Smoke Coverage
 ### Deliverables
-- [X] Implement provider-specific Coding Agent Loop live smoke tests using temporary default-client injection and restoration.
+- [ ] Add provider-scoped live Coding Agent Loop smoke tests using temporary default-client injection and restoration.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Capture provider-scoped Coding Agent Loop artifacts under `.../coding_agent_loop/<provider>/`.
+- [ ] Assert minimum event contract in successful runs: `SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Assert required event contract in each successful live run.
+- [ ] Add invalid-key path tests for live Coding Agent Loop execution.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
+```
+- [ ] Persist artifacts under `.../coding_agent_loop/<provider>/` including event transcripts and error logs.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Positive Test Plan - Phase 3
-- [X] Each selected provider can complete a natural text-only session path.
+- [ ] Each selected provider can complete a natural text-only session path with non-empty assistant output.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Required event sequence includes `SESSION_START`, `USER_INPUT`, and `ASSISTANT_TEXT_END`.
+- [ ] Event ordering includes required markers and ends in natural completion.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Negative Test Plan - Phase 3
-- [X] Invalid key for a selected provider yields deterministic failure classification.
+- [ ] Invalid key causes deterministic failure classification without secret leakage.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Failed run logs remain redacted and do not include secret values.
+- [ ] Default client is restored after each provider run to prevent cross-test contamination.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Acceptance Criteria - Phase 3
-- [X] Coding Agent Loop live coverage passes for all selected providers with event-contract verification.
+- [ ] Coding Agent Loop live suite passes for all selected providers with verified event contract.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Provider isolation and default-client restoration prevent cross-test contamination.
+- [ ] Failure output remains deterministic and redacted across provider/key error paths.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ## Phase 4 - Attractor Live Smoke Coverage
 ### Deliverables
-- [X] Implement live codergen backend adapter for tests that delegates to Unified LLM with explicit live transport.
+- [ ] Implement live codergen backend helper for tests that calls Unified LLM through explicit live transport.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Add per-provider Attractor live smoke tests for a minimal `start -> codergen -> exit` pipeline.
+- [ ] Add provider-scoped Attractor live smoke tests running a minimal `start -> codergen -> exit` pipeline.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Capture provider-scoped Attractor artifacts under `.../attractor/<provider>/` including checkpoint and node outputs.
+- [ ] Add invalid-key Attractor live tests with deterministic failure assertions.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
+```
+- [ ] Persist artifacts under `.../attractor/<provider>/` including `checkpoint.json`, per-node status, prompt, and response artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Positive Test Plan - Phase 4
-- [X] For each selected provider, pipeline execution succeeds and writes `checkpoint.json` plus node artifacts.
+- [ ] Each selected provider run succeeds and writes required checkpoint and node artifacts.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Artifacts include readable prompt/response material for auditability.
+- [ ] Attractor output content is non-empty and attributable to live provider execution.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Negative Test Plan - Phase 4
-- [X] Invalid key causes deterministic run failure and records useful redacted failure artifacts.
+- [ ] Invalid key path fails deterministically and still produces a useful, redacted failure artifact trail.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Missing requested provider key fails before invoking Attractor execution.
+- [ ] Missing explicitly requested provider key fails before invoking Attractor live backend calls.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Acceptance Criteria - Phase 4
-- [X] Attractor live tests are provider-complete for selected providers and artifact-complete by contract.
+- [ ] Attractor live suite passes for selected providers and artifacts are complete and auditable.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Failure-path artifacts remain useful for diagnosis without exposing secrets.
+- [ ] Failure paths are deterministic, redacted, and reproducible from evidence artifacts.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
-## Phase 5 - Makefile Integration, Documentation, and Closeout
+## Phase 5 - Makefile, Docs, ADR, and Closeout Verification
 ### Deliverables
-- [X] Ensure `test-e2e` target exists in `Makefile`, depends on `precommit`, and invokes only the live harness.
+- [ ] Add `test-e2e: precommit` to `Makefile` invoking only the live harness (`tclsh tests/e2e_live.tcl`).
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Finalize `docs/howto/live-e2e.md` with prerequisites, environment contract, provider-selection rules, examples, and artifact interpretation.
+- [ ] Finalize `docs/howto/live-e2e.md` with prerequisites, environment contract, run examples, expected costs, and artifact discovery guidance.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Add closeout summary section in sprint doc linking implementation evidence paths and command result ledger.
+- [ ] Ensure `docs/ADR.md` captures final architecture context/decision/consequences for live transport and secret-scan enforcement.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Verify appendix diagrams render with `mmdc` and store outputs under `.scratch/diagram-renders/sprint-004-comprehensive-plan/`.
+- [ ] Add and maintain a reproducible verification script under `.scratch/` that runs full Sprint #004 validation and records command statuses.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
+```
+- [X] Render all appendix mermaid diagrams with `mmdc` and store outputs in `.scratch/diagram-renders/sprint-004-comprehensive-plan/`.
 ```text
 Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/core-domain-models.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/core-domain-models.png` (exit 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er-diagram.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er-diagram.png` (exit 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/data-flow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/data-flow.png` (exit 0)
+- `timeout 135 mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/architecture.png` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
+- `.scratch/diagrams/sprint-004-comprehensive-plan/core-domain-models.mmd`
+- `.scratch/diagrams/sprint-004-comprehensive-plan/er-diagram.mmd`
+- `.scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd`
+- `.scratch/diagrams/sprint-004-comprehensive-plan/data-flow.mmd`
+- `.scratch/diagrams/sprint-004-comprehensive-plan/architecture.mmd`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/core-domain-models.png`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/er-diagram.png`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/data-flow.png`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/architecture.png`
 Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+- Appendix diagrams render successfully with current local Mermaid CLI.
 ```
 
 ### Positive Test Plan - Phase 5
-- [X] `make test-e2e` succeeds when at least one selected provider is correctly configured.
+- [ ] `make test-e2e` succeeds with at least one valid provider key configured and generates run artifacts.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Single-provider and multi-provider executions each produce complete run summaries and component artifacts.
+- [ ] Provider-specific runs (`E2E_LIVE_PROVIDERS=openai|anthropic|gemini`) succeed when corresponding keys are set.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Negative Test Plan - Phase 5
-- [X] `make test-e2e` fails with clear instructions when no providers are selectable.
+- [ ] `make test-e2e` fails fast with descriptive output when no keys are configured.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Secret leak scanner fails the run when any artifact includes raw key material and reports only file paths.
+- [ ] Explicit provider request without key fails fast and does not attempt network calls.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
+```
+- [ ] Secret scan fails run if leaked values are detected and reports only offending file paths.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
 ### Acceptance Criteria - Phase 5
-- [X] Developers can run and troubleshoot live E2E from docs alone and reproduce artifact outputs.
+- [ ] `make test-e2e` is the stable, documented entrypoint for opt-in live smoke validation.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
-- [X] Entire Sprint #004 live suite is executable through `make test-e2e` with deterministic success/failure surfaces.
+- [ ] Full positive/negative verification evidence is reproducible and complete for Sprint #004 closeout.
 ```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
+{placeholder for verification justification/reasoning and evidence log}
+- Verification command(s): {placeholder}
+- Exit code(s): {placeholder}
+- Evidence artifact path(s): {placeholder}
+- Notes: {placeholder}
 ```
 
-## Verification and Evidence Protocol
-- [X] Every checklist item is marked complete only after command execution and evidence path capture.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
-- [X] Every completion log entry must include command text, exit code, and artifact paths.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
-- [X] Evidence is organized under `.scratch/verification/SPRINT-004/comprehensive-plan/<execution-id>/`.
-```text
-Verification:
-- `./.scratch/run_sprint004_comprehensive_verification.sh` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T153015Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
-Notes:
-- Command-level exit codes, including positive and negative live-suite cases plus mermaid rendering, are recorded in `command-status.tsv`.
-```
+## Appendix - Mermaid Diagrams (Core Models, E-R, Workflow, Data Flow, Architecture)
 
-## Appendix A - Core Domain Models (Mermaid)
+### Core Domain Models
 ```mermaid
 classDiagram
-  class LiveE2EHarness {
-    +selectProviders(env)
-    +computeRunId()
-    +writeRunSummary()
-    +runSecretLeakScan()
+  class LiveRun {
+    +run_id
+    +selected_providers
+    +artifact_root
+    +status
   }
-
-  class LiveProviderConfig {
+  class ProviderExecution {
     +provider
-    +apiKeyEnvVar
     +model
-    +baseUrl
+    +base_url
+    +key_present
+  }
+  class LiveTransport {
+    +call(request)
+    +resolveBaseUrl()
+    +redactHeaders()
+  }
+  class ComponentSuite {
+    +runUnifiedLLM()
+    +runCodingAgentLoop()
+    +runAttractor()
+  }
+  class SecretLeakScan {
+    +scan(artifact_root)
+    +report_paths()
   }
 
-  class UnifiedLLMClient {
-    +generate(request)
-    +stream(request)
-  }
-
-  class HttpsJsonTransport {
-    +call(requestDict)
-    +normalizeHeaders(headerList)
-    +redactHeaders(headers)
-  }
-
-  class LiveEvidenceStore {
-    +runRoot
-    +writeComponentArtifact(component, provider, file)
-    +writeCommandLedger(entry)
-  }
-
-  LiveE2EHarness --> LiveProviderConfig
-  LiveE2EHarness --> UnifiedLLMClient
-  UnifiedLLMClient --> HttpsJsonTransport
-  LiveE2EHarness --> LiveEvidenceStore
+  LiveRun "1" --> "many" ProviderExecution
+  LiveRun "1" --> "1" SecretLeakScan
+  ProviderExecution "1" --> "1" LiveTransport
+  ProviderExecution "1" --> "many" ComponentSuite
 ```
 
-## Appendix B - E-R Diagram (Mermaid)
+### E-R Diagram
 ```mermaid
 erDiagram
   LIVE_RUN ||--o{ PROVIDER_RUN : contains
-  PROVIDER_RUN ||--o{ COMPONENT_RUN : executes
-  COMPONENT_RUN ||--o{ ARTIFACT : produces
-  PROVIDER_RUN ||--o{ ERROR_EVENT : records
+  PROVIDER_RUN ||--o{ COMPONENT_RESULT : records
+  COMPONENT_RESULT ||--o{ ARTIFACT_FILE : writes
+  LIVE_RUN ||--o{ SECRET_SCAN_RESULT : validates
 
   LIVE_RUN {
     string run_id
+    string artifact_root
     string started_at
     string finished_at
-    string selected_providers
+    string overall_status
   }
 
   PROVIDER_RUN {
+    string run_id
     string provider
     string model
     string base_url
     string status
   }
 
-  COMPONENT_RUN {
+  COMPONENT_RESULT {
+    string run_id
+    string provider
     string component
     string status
-    string summary_file
+    string summary
   }
 
-  ARTIFACT {
+  ARTIFACT_FILE {
+    string run_id
+    string provider
+    string component
     string path
-    string type
-    string redaction_status
+    string kind
   }
 
-  ERROR_EVENT {
-    string code
-    string message_class
-    string artifact_ref
+  SECRET_SCAN_RESULT {
+    string run_id
+    string status
+    int leak_count
+    string report_path
   }
 ```
 
-## Appendix C - Workflow Diagram (Mermaid)
+### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[make test-e2e] --> B[tests/e2e_live.tcl]
-  B --> C[Resolve provider selection]
-  C --> D{Any providers selected?}
-  D -->|No| E[Fail fast with guidance]
-  D -->|Yes| F[Create run root and run.json]
-  F --> G[Run Unified LLM smoke per provider]
-  G --> H[Run Coding Agent Loop smoke per provider]
-  H --> I[Run Attractor smoke per provider]
-  I --> J[Execute secret leak scan]
-  J --> K{Leak detected?}
-  K -->|Yes| L[Fail run with offending file paths]
-  K -->|No| M[Exit success]
+  A[Developer runs make test-e2e] --> B[Precommit target]
+  B --> C[Live harness startup]
+  C --> D{Resolve selected providers}
+  D -->|None selected| E[Fail fast with diagnostics]
+  D -->|One or more selected| F[Create run_id and artifact root]
+  F --> G[Execute Unified LLM smoke tests per provider]
+  G --> H[Execute Coding Agent Loop smoke tests per provider]
+  H --> I[Execute Attractor smoke tests per provider]
+  I --> J[Run secret leak scan]
+  J --> K{Leaks found?}
+  K -->|Yes| L[Fail run and report offending paths]
+  K -->|No| M[Write run summary and pass]
 ```
 
-## Appendix D - Data-Flow Diagram (Mermaid)
+### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  ENV[Environment Variables] --> HARNESS[Live Harness]
-  HARNESS --> CFG[Provider Config Resolution]
-  CFG --> CLIENTS[Explicit Unified LLM Clients]
-  CLIENTS --> HTTP[HTTPS JSON Transport]
-  HTTP --> PROVIDERS[Provider APIs]
-  PROVIDERS --> RESP[Normalized Responses]
-  RESP --> TESTS[Component Assertions]
-  TESTS --> ARTIFACTS[Run Artifacts]
-  ARTIFACTS --> SCAN[Secret Leak Scan]
-  SCAN --> RESULT[Final Exit Status]
+  ENV[Environment Variables] --> SEL[Provider Selection]
+  ENV --> CFG[Model/Base URL Resolution]
+  SEL --> HARNESS[Live Harness]
+  CFG --> HARNESS
+  HARNESS --> ULLM[Unified LLM Client]
+  ULLM --> TRANSPORT[HTTPS JSON Transport]
+  TRANSPORT --> API[Provider HTTPS API]
+  API --> TRANSPORT
+  TRANSPORT --> ULLM
+  ULLM --> COMP[Component Suites]
+  COMP --> ART[Artifacts on Disk]
+  ART --> SCAN[Secret Leak Scan]
+  SCAN --> REPORT[run.json + secret-leaks.json + component logs]
 ```
 
-## Appendix E - Architecture Diagram (Mermaid)
+### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph DeveloperEntry
-    MAKEE2E[make test-e2e]
+  subgraph DeveloperSurface
+    MAKE[make test-e2e]
+    HOWTO[docs/howto/live-e2e.md]
   end
 
-  subgraph LiveHarness
+  subgraph TestRuntime
     HARNESS[tests/e2e_live.tcl]
     SUPPORT[tests/support/e2e_live_support.tcl]
-    LIVECASES[tests/e2e_live/*.test]
+    UTEST[tests/e2e_live/unified_llm_live.test]
+    CTEST[tests/e2e_live/coding_agent_loop_live.test]
+    ATEST[tests/e2e_live/attractor_live.test]
   end
 
   subgraph Runtime
-    ULLM[lib/unified_llm]
-    TRANSPORT[lib/unified_llm/transports/https_json.tcl]
-    CAL[lib/coding_agent_loop]
-    ATTRACTOR[lib/attractor]
+    ULLM[lib/unified_llm/*]
+    CAL[lib/coding_agent_loop/main.tcl]
+    ATR[lib/attractor/main.tcl]
+    HTTPX[lib/unified_llm/transports/https_json.tcl]
+  end
+
+  subgraph External
+    OPENAI[OpenAI API]
+    ANTHROPIC[Anthropic API]
+    GEMINI[Gemini API]
   end
 
   subgraph Evidence
-    RUNROOT[.scratch/verification/SPRINT-004/live/<run_id>]
-    LEDGER[command-status.tsv]
-    LEAKREPORT[secret-leaks.json]
+    SCRATCH[.scratch/verification/SPRINT-004/live/<run_id>]
+    REPORTS[run.json + secret-leaks.json]
   end
 
-  MAKEE2E --> HARNESS
+  MAKE --> HARNESS
+  HOWTO --> MAKE
   HARNESS --> SUPPORT
-  HARNESS --> LIVECASES
-  LIVECASES --> ULLM
-  LIVECASES --> CAL
-  LIVECASES --> ATTRACTOR
-  ULLM --> TRANSPORT
-  HARNESS --> RUNROOT
-  HARNESS --> LEDGER
-  HARNESS --> LEAKREPORT
+  SUPPORT --> UTEST
+  SUPPORT --> CTEST
+  SUPPORT --> ATEST
+  UTEST --> ULLM
+  CTEST --> CAL
+  ATEST --> ATR
+  ULLM --> HTTPX
+  CAL --> ULLM
+  ATR --> ULLM
+  HTTPX --> OPENAI
+  HTTPX --> ANTHROPIC
+  HTTPX --> GEMINI
+  HARNESS --> SCRATCH
+  SCRATCH --> REPORTS
 ```
