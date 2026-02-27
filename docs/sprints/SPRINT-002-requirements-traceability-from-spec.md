@@ -301,6 +301,17 @@ Evidence:
 Notes:
 - Revalidation command-runner completed with successful command statuses.
 ```
+- [X] Phase 6 - Post-commit top-level gates were rerun and remained green.
+```text
+Verification:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-3-post-commit-make-build.log`
+- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-3-post-commit-make-test.log`
+Notes:
+- Post-commit rerun confirms no regressions introduced by sprint-doc synchronization.
+```
 
 ### Acceptance Criteria - Execution Runbook Pass #2
 - [X] The required user-requested gates and full sprint validation stack were rerun and remained green in a fresh timestamped evidence pass.
