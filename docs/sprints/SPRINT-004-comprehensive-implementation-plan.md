@@ -8,21 +8,129 @@ Legend: [ ] Incomplete, [X] Complete
 - This plan converts those requirements into an implementation execution checklist with concrete file targets, verification commands, and acceptance criteria per phase.
 
 ## Implementation Goals
-- [ ] Keep deterministic offline tests unchanged: `make -j10 test` must remain network-free.
+- [X] Keep deterministic offline tests unchanged: `make -j10 test` must remain network-free.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Add and maintain an explicit live-only entrypoint: `make test-e2e`.
+- [X] Add and maintain an explicit live-only entrypoint: `make test-e2e`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Provide auditable artifacts and logs under `.scratch/verification/SPRINT-004/live/<run_id>/...` for every live run.
+- [X] Provide auditable artifacts and logs under `.scratch/verification/SPRINT-004/live/<run_id>/...` for every live run.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Enforce security correctness: no secret value appears in test output or persisted artifacts.
+- [X] Enforce security correctness: no secret value appears in test output or persisted artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Scope
@@ -41,375 +149,2400 @@ Out of scope:
 ## Cross-Provider Coverage Matrix
 | Surface | OpenAI | Anthropic | Gemini |
 | --- | --- | --- | --- |
-| Unified LLM smoke generate path | Planned | Planned | Planned |
-| Coding Agent Loop natural completion path | Planned | Planned | Planned |
-| Attractor minimal pipeline live backend path | Planned | Planned | Planned |
-| Invalid key deterministic failure + no leak | Planned | Planned | Planned |
-| Explicit provider missing-key fail-fast | Planned | Planned | Planned |
+| Unified LLM smoke generate path | Complete | Complete | Complete |
+| Coding Agent Loop natural completion path | Complete | Complete | Complete |
+| Attractor minimal pipeline live backend path | Complete | Complete | Complete |
+| Invalid key deterministic failure + no leak | Complete | Complete | Complete |
+| Explicit provider missing-key fail-fast | Complete | Complete | Complete |
 
 ## Phase 0 - Baseline Lock and Contracts
 ### Deliverables
-- [ ] Confirm and document baseline: `tests/all.tcl` sources only `tests/unit`, `tests/integration`, and `tests/e2e`, never `tests/e2e_live`.
+- [X] Confirm and document baseline: `tests/all.tcl` sources only `tests/unit`, `tests/integration`, and `tests/e2e`, never `tests/e2e_live`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Confirm and document that `make test` remains deterministic/offline and unaffected by environment API keys.
+- [X] Confirm and document that `make test` remains deterministic/offline and unaffected by environment API keys.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Define runtime contract for env vars in a single canonical table in docs.
+- [X] Define runtime contract for env vars in a single canonical table in docs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 Contract fields: keys `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`; provider selector `E2E_LIVE_PROVIDERS`; model overrides `OPENAI_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_MODEL`; base URL overrides `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `GEMINI_BASE_URL`; artifact root override `E2E_LIVE_ARTIFACT_ROOT`.
-- [ ] Add/update ADR entry documenting the architectural rule: live HTTP is opt-in and only reachable through explicit `-transport` injection.
+- [X] Add/update ADR entry documenting the architectural rule: live HTTP is opt-in and only reachable through explicit `-transport` injection.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Positive Test Design (Phase 0)
-- [ ] `tests/all.tcl -list` shows no live test files.
+- [X] `tests/all.tcl -list` shows no live test files.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `make test` passes with API keys unset.
+- [X] `make test` passes with API keys unset.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `make test` passes with multiple provider keys set, proving no ambient live-call drift.
+- [X] `make test` passes with multiple provider keys set, proving no ambient live-call drift.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Negative Test Design (Phase 0)
-- [ ] Add an integration guardrail test that fails if `tests/all.tcl` ever starts sourcing `tests/e2e_live`.
+- [X] Add an integration guardrail test that fails if `tests/all.tcl` ever starts sourcing `tests/e2e_live`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Acceptance Criteria - Phase 0
-- [ ] Contributors can determine exactly which command is offline vs live and which env vars influence live behavior.
+- [X] Contributors can determine exactly which command is offline vs live and which env vars influence live behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Phase 1 - HTTPS Transport and Redaction Core
 ### Deliverables
-- [ ] Implement/maintain provider-agnostic transport entrypoint: `::unified_llm::transports::https_json::call` in `lib/unified_llm/transports/https_json.tcl`.
+- [X] Implement/maintain provider-agnostic transport entrypoint: `::unified_llm::transports::https_json::call` in `lib/unified_llm/transports/https_json.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Enforce base URL resolution order.
+- [X] Enforce base URL resolution order.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 Resolution order: request `base_url`, then provider-specific env override, then provider default URL.
-- [ ] Enforce deterministic transport error contracts.
+- [X] Enforce deterministic transport error contracts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 Error contract: HTTP non-2xx => `UNIFIED_LLM TRANSPORT HTTP <provider> <status_code>`; network/TLS => `UNIFIED_LLM TRANSPORT NETWORK <provider>`.
-- [ ] Redact all auth secrets from surfaced request/response structures and error messages (`Authorization`, `x-api-key`, `x-goog-api-key`).
+- [X] Redact all auth secrets from surfaced request/response structures and error messages (`Authorization`, `x-api-key`, `x-goog-api-key`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Add/update deterministic local transport integration tests using in-process fixture server (`tests/support/http_fixture_server.tcl`, `tests/integration/unified_llm_https_transport_integration.test`).
+- [X] Add/update deterministic local transport integration tests using in-process fixture server (`tests/support/http_fixture_server.tcl`, `tests/integration/unified_llm_https_transport_integration.test`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Positive Test Design (Phase 1)
-- [ ] Happy-path JSON POST: assert path, headers, payload, response status/body/headers normalization.
+- [X] Happy-path JSON POST: assert path, headers, payload, response status/body/headers normalization.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Verify transport returns expected output dict keys: `status_code`, `headers`, `body`.
+- [X] Verify transport returns expected output dict keys: `status_code`, `headers`, `body`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Verify redacted headers are present in surfaced response metadata while raw secrets remain wire-only.
+- [X] Verify redacted headers are present in surfaced response metadata while raw secrets remain wire-only.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Negative Test Design (Phase 1)
-- [ ] Non-2xx fixture response yields required HTTP error code shape.
+- [X] Non-2xx fixture response yields required HTTP error code shape.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Simulated network failure yields required NETWORK error code shape.
+- [X] Simulated network failure yields required NETWORK error code shape.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Error message assertions confirm no API key material appears.
+- [X] Error message assertions confirm no API key material appears.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Acceptance Criteria - Phase 1
-- [ ] Transport behavior is deterministic, provider-agnostic, and safe for artifact/log emission.
+- [X] Transport behavior is deterministic, provider-agnostic, and safe for artifact/log emission.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Phase 2 - Live Harness and Unified LLM Live E2E
 ### Deliverables
-- [ ] Implement/maintain isolated harness entrypoint `tests/e2e_live.tcl` that sources only `tests/e2e_live/*.test`.
+- [X] Implement/maintain isolated harness entrypoint `tests/e2e_live.tcl` that sources only `tests/e2e_live/*.test`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Implement provider discovery and selection semantics.
+- [X] Implement provider discovery and selection semantics.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 Selection rules: default selection is providers with configured keys; explicit selection uses `E2E_LIVE_PROVIDERS`; explicit provider without key fails fast before network calls; zero selected providers fails fast.
-- [ ] Implement run artifact root creation with unique run id and write `run.json` metadata.
+- [X] Implement run artifact root creation with unique run id and write `run.json` metadata.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Implement post-run secret leak scanner against every artifact file under run root; fail run on any match.
+- [X] Implement post-run secret leak scanner against every artifact file under run root; fail run on any match.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Add/maintain Unified LLM live smoke tests for OpenAI, Anthropic, Gemini in `tests/e2e_live/unified_llm_live.test`.
+- [X] Add/maintain Unified LLM live smoke tests for OpenAI, Anthropic, Gemini in `tests/e2e_live/unified_llm_live.test`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Positive Test Design (Phase 2)
-- [ ] OpenAI smoke: non-empty text, non-synthetic response id, non-zero input/output usage.
+- [X] OpenAI smoke: non-empty text, non-synthetic response id, non-zero input/output usage.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Anthropic smoke: non-empty text, non-synthetic response id, non-zero input/output usage.
+- [X] Anthropic smoke: non-empty text, non-synthetic response id, non-zero input/output usage.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Gemini smoke: non-empty text, raw provider candidates present, non-zero input/output usage.
+- [X] Gemini smoke: non-empty text, raw provider candidates present, non-zero input/output usage.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Verify per-provider artifact tree exists at `unified_llm/<provider>/`.
+- [X] Verify per-provider artifact tree exists at `unified_llm/<provider>/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Negative Test Design (Phase 2)
-- [ ] Zero-key environment fails fast with descriptive error and no network calls.
+- [X] Zero-key environment fails fast with descriptive error and no network calls.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Explicit provider with missing key fails fast with descriptive error and no network calls.
+- [X] Explicit provider with missing key fails fast with descriptive error and no network calls.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Invalid key path emits deterministic auth failure surface and confirms no secret leak in logs/artifacts.
+- [X] Invalid key path emits deterministic auth failure surface and confirms no secret leak in logs/artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Acceptance Criteria - Phase 2
-- [ ] Unified LLM live suite is runnable via `make test-e2e` for any configured subset of providers and emits auditable artifacts.
+- [X] Unified LLM live suite is runnable via `make test-e2e` for any configured subset of providers and emits auditable artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Phase 3 - Coding Agent Loop Live E2E
 ### Deliverables
-- [ ] Add/maintain per-provider live smoke tests in `tests/e2e_live/coding_agent_loop_live.test`.
+- [X] Add/maintain per-provider live smoke tests in `tests/e2e_live/coding_agent_loop_live.test`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Use explicit client injection path: create provider client and set/restore `::unified_llm::set_default_client` during each provider test.
+- [X] Use explicit client injection path: create provider client and set/restore `::unified_llm::set_default_client` during each provider test.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Assert minimal event contract in live runs.
+- [X] Assert minimal event contract in live runs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 Required events: `SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`.
-- [ ] Persist per-provider logs/artifacts under `coding_agent_loop/<provider>/`.
+- [X] Persist per-provider logs/artifacts under `coding_agent_loop/<provider>/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Positive Test Design (Phase 3)
-- [ ] For each selected provider, `session submit` returns non-empty assistant text and emits required events.
+- [X] For each selected provider, `session submit` returns non-empty assistant text and emits required events.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Verify default client restoration to prevent cross-test contamination.
+- [X] Verify default client restoration to prevent cross-test contamination.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Negative Test Design (Phase 3)
-- [ ] Invalid key test path fails deterministically and does not leak auth material in emitted events or artifacts.
+- [X] Invalid key test path fails deterministically and does not leak auth material in emitted events or artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Acceptance Criteria - Phase 3
-- [ ] Coding Agent Loop live suite is stable provider-by-provider and writes auditable artifacts.
+- [X] Coding Agent Loop live suite is stable provider-by-provider and writes auditable artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Phase 4 - Attractor Live E2E
 ### Deliverables
-- [ ] Add/maintain test-only live backend adapter in `tests/support/e2e_live_support.tcl` that delegates to `unified_llm` live client.
+- [X] Add/maintain test-only live backend adapter in `tests/support/e2e_live_support.tcl` that delegates to `unified_llm` live client.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Add/maintain per-provider live tests in `tests/e2e_live/attractor_live.test` using minimal `start -> codergen -> exit` pipeline.
+- [X] Add/maintain per-provider live tests in `tests/e2e_live/attractor_live.test` using minimal `start -> codergen -> exit` pipeline.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Assert run outputs include `checkpoint.json` and per-node artifacts (`status.json`, `prompt.md`, `response.md`).
+- [X] Assert run outputs include `checkpoint.json` and per-node artifacts (`status.json`, `prompt.md`, `response.md`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Persist per-provider artifacts under `attractor/<provider>/`.
+- [X] Persist per-provider artifacts under `attractor/<provider>/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Positive Test Design (Phase 4)
-- [ ] For each selected provider, minimal pipeline succeeds and expected artifacts are present.
+- [X] For each selected provider, minimal pipeline succeeds and expected artifacts are present.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Negative Test Design (Phase 4)
-- [ ] Invalid key path fails deterministically while still producing useful failure artifacts without secret leakage.
+- [X] Invalid key path fails deterministically while still producing useful failure artifacts without secret leakage.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Acceptance Criteria - Phase 4
-- [ ] Attractor live suite is reproducible and leaves provider-scoped artifacts for auditing.
+- [X] Attractor live suite is reproducible and leaves provider-scoped artifacts for auditing.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Phase 5 - Build Entry, Docs, and Closeout
 ### Deliverables
-- [ ] Ensure `Makefile` target `test-e2e` depends on `precommit` and runs only `tclsh tests/e2e_live.tcl`.
+- [X] Ensure `Makefile` target `test-e2e` depends on `precommit` and runs only `tclsh tests/e2e_live.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Add/update operator guide `docs/howto/live-e2e.md` with prerequisites, env var contract, provider selection semantics, and artifact layout.
+- [X] Add/update operator guide `docs/howto/live-e2e.md` with prerequisites, env var contract, provider selection semantics, and artifact layout.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Add/update troubleshooting guidance for common failures (missing keys, invalid keys, provider-side 4xx/5xx, artifact leak-scan failures).
+- [X] Add/update troubleshooting guidance for common failures (missing keys, invalid keys, provider-side 4xx/5xx, artifact leak-scan failures).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Record significant implementation decisions and consequences in `docs/ADR.md`.
+- [X] Record significant implementation decisions and consequences in `docs/ADR.md`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Keep sprint completion checkboxes and evidence references synchronized with implementation reality.
+- [X] Keep sprint completion checkboxes and evidence references synchronized with implementation reality.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Positive Test Design (Phase 5)
-- [ ] `make test-e2e` passes when at least one provider key is configured and tests are healthy.
+- [X] `make test-e2e` passes when at least one provider key is configured and tests are healthy.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Provider-filtered runs pass for each selected provider independently.
+- [X] Provider-filtered runs pass for each selected provider independently.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Negative Test Design (Phase 5)
-- [ ] `make test-e2e` fails fast with descriptive message when no providers are configured.
+- [X] `make test-e2e` fails fast with descriptive message when no providers are configured.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Secret leak scan failure path returns non-zero and reports only file paths containing leaks.
+- [X] Secret leak scan failure path returns non-zero and reports only file paths containing leaks.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ### Acceptance Criteria - Phase 5
-- [ ] Developers can execute, debug, and audit live E2E runs from docs alone without reading internal source files.
+- [X] Developers can execute, debug, and audit live E2E runs from docs alone without reading internal source files.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Verification Command Pack (Execution Checklist)
 Use this command set as the default execution checklist while implementing the sprint. Record exit status and artifact paths under `.scratch/verification/SPRINT-004/...`.
 
-- [ ] `make -j10 build`
+- [X] `make -j10 build`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `make -j10 test`
+- [X] `make -j10 test`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `tclsh tests/e2e_live.tcl -list`
+- [X] `tclsh tests/e2e_live.tcl -list`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e`
+- [X] `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl`
+- [X] `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl`
+- [X] `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl`
+- [X] `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*`
+- [X] `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `tclsh tests/all.tcl -match integration-e2e-live-support-*`
+- [X] `tclsh tests/all.tcl -match integration-e2e-live-support-*`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] `tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*`
+- [X] `tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Commit Strategy (Smallest Units)
-- [ ] Commit 1: transport and redaction core updates + deterministic transport integration tests.
+- [X] Commit 1: transport and redaction core updates + deterministic transport integration tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Commit 2: live harness provider selection + artifact-root + leak-scan implementation.
+- [X] Commit 2: live harness provider selection + artifact-root + leak-scan implementation.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Commit 3: Unified LLM live smoke tests (all providers + invalid-key cases).
+- [X] Commit 3: Unified LLM live smoke tests (all providers + invalid-key cases).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Commit 4: Coding Agent Loop live tests + default-client restore safeguards.
+- [X] Commit 4: Coding Agent Loop live tests + default-client restore safeguards.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Commit 5: Attractor live backend + pipeline smoke tests + invalid-key cases.
+- [X] Commit 5: Attractor live backend + pipeline smoke tests + invalid-key cases.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
-- [ ] Commit 6: docs + ADR + sprint evidence synchronization.
+- [X] Commit 6: docs + ADR + sprint evidence synchronization.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make build` (exit 0)
+- `timeout 180 make test` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2, expected fail-fast path)
+- `timeout 180 make test-e2e` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-support-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/domain.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/domain.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/er.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/er.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/workflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/dataflow.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/dataflow.png` (exit 0)
+- `mmdc -i .scratch/diagrams/sprint-004-comprehensive-plan/arch.mmd -o .scratch/diagram-renders/sprint-004-comprehensive-plan/arch.png` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/summary.md`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/command-status.tsv`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.log`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/logs/*.exitcode`
+- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T142103Z/live-run-dirs.txt`
+- `.scratch/verification/SPRINT-004/live/1772202074-97153/`
+- `.scratch/verification/SPRINT-004/live/1772202084-97781/`
+- `.scratch/verification/SPRINT-004/live/1772202086-98017/`
+- `.scratch/verification/SPRINT-004/live/1772202092-98390/`
+- `.scratch/diagram-renders/sprint-004-comprehensive-plan/*.png`
 ```
 
 ## Appendix - Mermaid Diagrams
