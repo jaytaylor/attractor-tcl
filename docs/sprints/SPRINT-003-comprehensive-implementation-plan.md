@@ -1,858 +1,456 @@
 Legend: [ ] Incomplete, [X] Complete
 
-# Sprint #003 Comprehensive Implementation Plan - Close Full Spec Parity (Tcl)
+# Sprint #003 Comprehensive Implementation Plan - Close Spec Parity (Tcl)
 
 ## Executive Summary
-Implement complete Tcl parity for:
+This plan turns `docs/sprints/SPRINT-003-close-spec-parity-tcl.md` into an execution sequence that can be implemented and verified end-to-end. It is requirement-driven, test-first, and evidence-driven, with all work tracked by requirement family and phase gates.
+
+## Sprint Objective
+Implement and verify full parity across:
 - `unified-llm-spec.md`
 - `coding-agent-loop-spec.md`
 - `attractor-spec.md`
 
-This plan is execution-ready and scoped so a developer can implement Sprint #003 from this document alone.
-
-## Objective
-Implement and verify full Tcl behavioral parity for Unified LLM, Coding Agent Loop, and Attractor runtime surfaces specified by Sprint #003 requirements.
-
-## Goal
-Deliver deterministic, offline-verifiable parity where every Sprint #003 requirement is mapped to:
-- implementation location
-- automated tests (unit, integration, e2e where applicable)
-- reproducible verification evidence under `.scratch/verification/SPRINT-003/`
-
-## Scope and Non-Goals
+## Scope
 In scope:
-- ULLM parity (provider routing, normalization, streaming, tool loops, structured output, typed errors)
-- CAL parity (session loop lifecycle, tool execution semantics, event contracts, profiles, subagents)
-- ATR parity (DOT parser/validator/engine/handlers/interviewers, CLI `validate|run|resume`)
-- Traceability and evidence closure in spec coverage docs
+- Unified LLM parity for provider resolution, request/response normalization, streaming semantics, tool continuation, structured output, and typed failures.
+- Coding Agent Loop parity for lifecycle semantics, tool contracts, profile parity, event contracts, steering/follow-up behavior, and subagent behavior.
+- Attractor parity for parser, validator, runtime traversal, handlers, interviewer implementations, and CLI contracts.
+- Cross-runtime parity for ULLM + CAL + ATR end-to-end execution and failure propagation.
+- Traceability closure and architecture decision logging.
 
 Out of scope:
-- Legacy behavior preservation
-- Feature gating
-- UI/IDE surface expansion not required by Sprint #003 requirements
+- New product surfaces not required by Sprint #003 requirements.
+- Feature flags or gated rollout behavior.
+- Legacy compatibility shims.
 
-## Dependency Inputs
-- `docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
-- `docs/spec-coverage/requirements.md`
-- `docs/spec-coverage/traceability.md`
-- `docs/ADR.md`
-- Source/test surfaces in `lib/`, `tests/`, `tools/`, `bin/`
+## Baseline Review Snapshot (2026-02-27)
+- Requirement catalog count: 263 (`ULLM=109`, `CAL=66`, `ATR=88`).
+- Coverage tool status: `missing=0`, `duplicates=0`, `unknown_catalog=0`, `bad_paths=0`, `bad_verify=0`.
+- Build and test baseline status: green.
 
-## Requirement Summary
-- Total requirements to satisfy: 263
-- ULLM: 109
-- CAL: 66
-- ATR: 88
+## Requirement Slicing Strategy
+| Family | Count | Execution Slices | Primary Implementation Surfaces | Primary Tests |
+|---|---:|---|---|---|
+| ULLM | 109 | Provider resolution, request normalization, adapter parity, streaming parity, structured output parity, typed failures | `lib/unified_llm/main.tcl`, `lib/unified_llm/adapters/*.tcl` | `tests/unit/unified_llm.test`, `tests/integration/unified_llm_parity.test` |
+| CAL | 66 | Execution environment contracts, lifecycle transitions, event contracts, profile parity, steering/follow-up semantics, subagent lifecycle | `lib/coding_agent_loop/main.tcl`, `lib/coding_agent_loop/tools/core.tcl`, `lib/coding_agent_loop/profiles/*.tcl` | `tests/unit/coding_agent_loop.test`, `tests/integration/coding_agent_loop_integration.test` |
+| ATR | 88 | DOT parsing, validation rules, traversal and edge selection, handlers, interviewers, CLI validate/run/resume parity | `lib/attractor/main.tcl`, `lib/attractor_core/core.tcl`, `bin/attractor` | `tests/unit/attractor*.test`, `tests/integration/attractor_integration.test`, `tests/e2e/attractor_cli_e2e.test` |
 
 ## Global Delivery Rules
-- [X] Every requirement ID mapped to implementation + tests + verification command evidence.
-```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
-```
-- [X] Every phase has explicit positive and negative tests executed before phase completion.
-```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
-```
-- [X] Architecture-impacting design decisions logged in `docs/ADR.md` before broad code rollout.
-```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
-```
-- [X] Sprint evidence index maintained under `.scratch/verification/SPRINT-003/` with command exit status tables.
-```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
-```
+- No checkbox is marked complete until verification evidence is captured.
+- Every completed checkbox must include command list, exit status, and artifact references under `.scratch/verification/SPRINT-003/`.
+- Significant architecture choices must be captured in `docs/ADR.md` before or during implementation.
+- Each phase must include explicit positive and negative test evidence.
+- Keep this document status synchronized with actual implementation state.
 
-## Phase Order
+## Phase Execution Order
 1. Phase 0: Baseline and harness hardening
 2. Phase 1: Unified LLM parity closure
 3. Phase 2: Coding Agent Loop parity closure
-4. Phase 3: Attractor runtime parity closure
+4. Phase 3: Attractor parity closure
 5. Phase 4: Cross-runtime integration closure
 6. Phase 5: Traceability and closeout
 
 ## Phase 0 - Baseline and Harness Hardening
 ### Deliverables
-- [X] Capture clean baseline outputs for build/test/spec-coverage and record them in sprint evidence index.
+- [X] Establish a phase-indexed evidence directory structure under `.scratch/verification/SPRINT-003/` with per-phase command status tables.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Phase-indexed directories for `phase-0` through `phase-5` were created under `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/`.
 ```
-- [X] Build a requirement-family gap ledger for ULLM/CAL/ATR with file-level ownership and test ownership.
+- [X] Generate a requirement-family gap ledger that groups all Sprint #003 requirements into ULLM/CAL/ATR implementation slices.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/requirement-family-gap-ledger.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-req-summary.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-spec-coverage.log`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Gap ledger records family counts and owner surfaces for implementation and tests.
 ```
-- [X] Harden `tests/support/mock_http_server.tcl` contracts for deterministic blocking and streaming behavior across provider fixtures.
+- [X] Harden `tests/support/mock_http_server.tcl` for deterministic blocking and streaming replay behavior.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-ullm.log`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Provider parity suite exercises deterministic blocking and streaming fixture replay contracts.
 ```
-- [X] Normalize fixture structure (request, response, stream events, metadata) and enforce schema checks in tests.
+- [X] Normalize fixture schema naming and enforce fixture schema validation in test setup.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-ullm.log`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Fixture schema checks are enforced by parity test setup and must pass before suite completion.
 ```
-- [X] Prepare phase-level evidence directories and command status tables for all later phases.
+- [X] Record baseline architecture assumptions and execution boundaries in `docs/ADR.md`.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- ADR review confirms baseline/runtime boundary decisions are present (`ADR-001` through `ADR-010`).
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `docs/ADR.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-spec-coverage.log`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Architecture assumptions remain synchronized with implementation and verification workflows.
 ```
 
 ### Test Matrix - Phase 0
 Positive cases:
-- Deterministic replay of provider fixtures for OpenAI, Anthropic, Gemini.
-- Harness captures method/path/headers/body/stream chunks for every request.
-- Fixture validation accepts well-formed fixture bundles and preserves canonical ordering.
+- Requirement catalog and spec coverage tools report expected counts and no integrity errors.
+- Baseline `make -j10 build` and `make -j10 test` succeed from a clean workspace.
+- Mock server fixture replay is deterministic for blocking and streaming runs.
+- Fixture schema validator accepts canonical fixture bundles for each provider.
 
 Negative cases:
-- Missing fixture keys fail with deterministic diagnostics.
-- Unexpected endpoint/header mismatch fails with exact mismatch context.
-- Malformed stream event payload fails with deterministic parser diagnostics.
+- Missing required fixture fields fail with deterministic diagnostics.
+- Unexpected request method/path/header values fail with deterministic mismatch output.
+- Malformed stream fixture events fail parser/stream validation deterministically.
+- Unknown or duplicate requirement IDs fail catalog and coverage checks.
 
 ### Acceptance Criteria - Phase 0
-- [X] No unowned requirement IDs remain in gap ledger.
+- [X] All Sprint #003 requirements are assigned to an implementation slice and test owner.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/requirement-family-gap-ledger.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/p0-spec-coverage.log`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Coverage reported `missing=0` and `unknown_catalog=0`; ledger maps all requirement families to owner surfaces.
 ```
-- [X] Harness contracts are deterministic and used by unit/integration suites.
+- [X] Baseline command index includes command, exit status, and artifact location for reproducibility.
 ```text
 Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- Phase command tables captured from deterministic run script; all Phase 0 command exit codes are zero.
 Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-0/logs/`
 Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+- Each command line is logged with command string, exit code, and log path.
 ```
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [X] Align provider resolution in `lib/unified_llm/main.tcl` for explicit provider selection, environment defaults, and deterministic ambiguity errors.
+- [ ] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete normalized message/content-part support for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, `tool_result`.
+- [ ] Implement complete normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming.
+- [ ] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming behavior.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Implement deterministic streaming event ordering and middleware visibility guarantees.
+- [ ] Enforce deterministic streaming event ordering and event payload visibility for downstream CAL consumers.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Implement tool-call continuation semantics with active/passive tool handling and deterministic round bounds.
+- [ ] Implement tool-call continuation semantics including batched tool-result forwarding.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Implement structured output parity (`generate_object`, `stream_object`) including deterministic invalid-json and schema-mismatch behavior.
+- [ ] Implement structured output parity for `generate_object` and `stream_object`, including deterministic parse and schema failures.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Normalize usage/reasoning/caching fields and enforce `provider_options` shape validation.
+- [ ] Normalize usage, reasoning, and caching metadata across provider adapters.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` to exhaustively cover parity matrix.
+- [ ] Expand ULLM unit and integration parity tests to cover all requirement slices and provider paths.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Test Matrix - Phase 1
 Positive cases:
-- Prompt-only and messages-only requests produce normalized outputs.
-- Provider default selection routes deterministically when unambiguous.
-- Streaming event sequence reconstructs equivalent blocking output.
-- Multimodal inputs map to provider-specific transport correctly.
-- Multiple tool calls are continued in deterministic batched order.
-- Structured output succeeds when JSON and schema are valid.
+- Prompt-only and messages-only requests normalize to canonical internal payloads.
+- Single-provider default resolution works for OpenAI, Anthropic, and Gemini fixture paths.
+- Streaming event sequence reconstructs final output equivalent to blocking mode.
+- Multimodal image inputs are translated correctly for each provider adapter.
+- Multi-tool assistant turns forward complete tool results in continuation requests.
+- Structured output succeeds for schema-valid responses in blocking and streaming modes.
 
 Negative cases:
-- Simultaneous `prompt` and `messages` fails deterministic validation.
-- Missing provider config fails before transport dispatch.
-- Ambiguous provider env fails with deterministic config error.
-- Unknown tool call returns deterministic `tool_result` error payload.
-- Invalid tool args fail deterministic schema validation.
-- Invalid structured output JSON fails with deterministic parse error.
-- Schema mismatch fails with deterministic typed mismatch error.
+- Requests containing both `prompt` and `messages` fail before transport execution.
+- No configured provider fails with deterministic configuration error.
+- Ambiguous provider environment fails with deterministic ambiguity error.
+- Unknown tool names and invalid tool arguments fail with typed validation errors.
+- Invalid JSON or schema mismatches in structured output fail deterministically.
+- Invalid provider option shape fails validation before adapter invocation.
 
 ### Acceptance Criteria - Phase 1
-- [X] ULLM parity tests are green across OpenAI/Anthropic/Gemini for blocking and streaming.
+- [ ] ULLM parity tests pass for OpenAI, Anthropic, and Gemini in blocking and streaming modes.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] All ULLM requirement IDs map to implementation + automated tests + evidence artifacts.
+- [ ] Every ULLM requirement ID maps to implementation, tests, and verification evidence.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` behavior contracts in `lib/coding_agent_loop/tools/core.tcl`.
+- [ ] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete loop lifecycle behavior in `lib/coding_agent_loop/main.tcl` for completion, per-input tool rounds, turn limits, cancellation, and deterministic terminal states.
+- [ ] Complete loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, round limits, turn limits, and cancellation.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Align truncation marker behavior while preserving full terminal output in event payloads.
+- [ ] Align truncation behavior so surfaced summaries are bounded while events retain full payload.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Implement queued `steer` and `follow_up` semantics affecting next model requests.
+- [ ] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Ensure required event-kind parity with complete payload contracts.
+- [ ] Implement lifecycle event-kind and payload parity, including deterministic loop-warning emission.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Implement repeated-tool-signature loop detection with deterministic warning emission.
+- [ ] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl`, including environment and project-document context behavior.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl` including environment context and project-doc ingestion.
+- [ ] Complete subagent lifecycle parity with shared execution environment and isolated histories.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete subagent lifecycle parity (spawn/send_input/wait/close), shared execution env, independent histories, and depth enforcement.
+- [ ] Expand CAL unit and integration tests for lifecycle, tool execution, steering queue semantics, subagent depth, and terminal states.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
-```
-- [X] Expand `tests/unit/coding_agent_loop.test` and `tests/integration/coding_agent_loop_integration.test` for full parity matrix coverage.
-```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Test Matrix - Phase 2
 Positive cases:
-- Multi-turn session reaches natural completion with valid event ordering.
-- Steering input changes next model request deterministically.
-- Follow-up queue executes after current input completes.
-- Truncation marker appears while full terminal output remains in tool events.
-- Profile prompts include guidance, environment, and discovered project docs.
-- Subagent returns scoped results while parent session remains consistent.
+- Multi-turn sessions reach natural completion with deterministic event ordering.
+- `steer` modifies the next model request and then clears.
+- `follow_up` queues execute only after current input processing completes.
+- Truncation markers appear in surfaced output while full payload remains in emitted events.
+- Profile prompts include identity, tool context, environment context, and project docs.
+- Subagents complete scoped tasks and return deterministic results to parent sessions.
 
 Negative cases:
-- Unknown tool name yields deterministic error result without crashing loop.
-- Invalid tool args produce deterministic schema error result.
-- Tool-round limit breach terminates turn deterministically.
-- Cancellation during active work transitions to deterministic terminal state.
-- Repeated tool-signature loop emits deterministic warning event.
-- Subagent depth overflow fails with deterministic depth error.
+- Unknown tools produce deterministic tool errors without corrupting session state.
+- Invalid tool arguments produce deterministic validation failures.
+- Round/turn limit breaches produce deterministic terminal state transitions.
+- Explicit cancellation transitions to terminal state with no extra turns.
+- Repeated identical tool signatures produce deterministic loop warnings.
+- Subagent depth overflow fails with deterministic depth-limit errors.
 
 ### Acceptance Criteria - Phase 2
-- [X] CAL parity tests cover lifecycle, tools, steering, subagents, event contracts, and profile behaviors.
+- [ ] CAL parity tests pass for lifecycle, tool contracts, steering/follow-up semantics, subagents, and event contracts.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] All CAL requirement IDs map to implementation + automated tests + evidence artifacts.
+- [ ] Every CAL requirement ID maps to implementation, tests, and verification evidence.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 3 - Attractor Runtime Parity Closure
+## Phase 3 - Attractor Parity Closure
 ### Deliverables
-- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for supported syntax, quoting, chained edges, defaults, and comment stripping.
+- [ ] Complete DOT parser parity in `lib/attractor/main.tcl` for quoted/unquoted values, chained edges, defaults, comments, and supported attributes.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete validation parity for start/exit invariants, reachability, edge validity, and deterministic diagnostics metadata.
+- [ ] Complete validator parity for start/exit invariants, reachability diagnostics, edge validity, and deterministic rule metadata.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete execution engine parity for handler resolution, edge selection precedence, goal routing, checkpoint persistence, and resume equivalence.
+- [ ] Complete runtime traversal parity in `lib/attractor_core/core.tcl` for handler execution and deterministic edge-selection priority.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, `stack.manager_loop`.
+- [ ] Complete checkpoint persistence and resume parity across interrupted and resumed runs.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, `Queue`, and `wait.human` routing behavior.
+- [ ] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete condition expression and stylesheet specificity parity.
+- [ ] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, and `Queue` implementations.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete transform extensibility and custom handler registration lifecycle parity.
+- [ ] Complete condition expression and stylesheet application parity.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume`.
+- [ ] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` output shape and exit behavior.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Expand `tests/unit/attractor.test`, `tests/unit/attractor_core.test`, `tests/integration/attractor_integration.test`, and `tests/e2e/attractor_cli_e2e.test`.
+- [ ] Expand ATR unit, integration, and e2e tests for parser, validator, runtime, handler, interviewer, and CLI parity coverage.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Test Matrix - Phase 3
 Positive cases:
-- Parser accepts supported DOT subset including chained edges and multiline attributes.
-- Validator emits stable diagnostics including rule/severity metadata.
-- Engine traverses graph deterministically with configured edge selection behavior.
-- Goal routing enforces terminal success only when goal gates succeed.
-- Resume reaches equivalent terminal outcomes versus uninterrupted runs.
-- Built-in handlers produce expected artifacts and outcomes.
-- `wait.human` presents options and routes correctly based on selected branch.
-- CLI `validate|run|resume` succeeds for valid inputs with expected outputs.
+- Parser accepts supported DOT subset with chained edges and default attribute blocks.
+- Validator emits deterministic diagnostics with stable rule identifiers and severities.
+- Runtime traversal follows deterministic edge selection for equivalent outcomes.
+- Resume from valid checkpoints converges to expected terminal status and artifacts.
+- Built-in handlers and interviewer implementations produce expected outcomes.
+- CLI `validate`, `run`, and `resume` return expected output shape and success behavior.
 
 Negative cases:
-- Missing start/exit nodes fail validation deterministically.
-- Unreachable nodes and unknown edge targets emit deterministic diagnostics.
+- Missing start node fails validation deterministically.
+- Missing exit node fails validation deterministically.
+- Edges targeting unknown nodes fail validation deterministically.
 - Invalid condition expressions fail deterministically.
-- Corrupted checkpoint fails resume deterministically.
-- Invalid interviewer selection fails deterministically.
-- Unknown handler type fails with deterministic registration guidance.
-- CLI commands return non-zero exit codes and deterministic diagnostics for invalid inputs.
+- Missing or incompatible checkpoints fail resume deterministically.
+- Unknown handler types or interviewer options fail with deterministic configuration errors.
 
 ### Acceptance Criteria - Phase 3
-- [X] ATR parity tests cover parser, validator, traversal, handlers, interviewer behavior, transforms, and CLI contracts.
+- [ ] ATR parity tests pass for parser, validator, runtime traversal, handlers, interviewer behavior, and CLI contracts.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] All ATR requirement IDs map to implementation + automated tests + evidence artifacts.
+- [ ] Every ATR requirement ID maps to implementation, tests, and verification evidence.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [X] Add deterministic e2e flow exercising Attractor traversal, CAL codergen execution, and ULLM provider mocks end-to-end.
+- [ ] Add deterministic end-to-end scenarios spanning ATR traversal, CAL tool-loop behavior, and ULLM provider fixtures.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add integration assertions for artifact layout, checkpoint persistence, and event stream integrity across ULLM/CAL/ATR boundaries.
+- [ ] Add integration assertions for artifact layout, checkpoint integrity, and event-stream continuity across runtime boundaries.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Ensure integrated flows execute provider fixture paths for OpenAI, Anthropic, and Gemini.
+- [ ] Expand CLI e2e matrix to cover success and failure behavior for `validate`, `run`, and `resume`.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Expand CLI e2e assertions for success and failure exit-code behavior of `validate`, `run`, and `resume`.
+- [ ] Ensure integration suite runs OpenAI, Anthropic, and Gemini fixture paths end-to-end.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Add cross-runtime failure-propagation tests for typed errors traversing ULLM -> CAL -> ATR surfaces.
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Test Matrix - Phase 4
 Positive cases:
-- Graph validates, executes codergen stages, and exits successfully with expected artifacts.
-- Resume from checkpoint reproduces expected terminal state and artifact set.
-- Each provider path is exercised in integrated flow with normalized events.
+- Valid pipeline graphs execute end-to-end and produce expected artifacts.
+- Resume path from valid checkpoints reaches expected terminal status.
+- Each provider fixture path succeeds with canonical cross-runtime event ordering.
+- Cross-runtime event streams include required event kinds and correlation metadata.
 
 Negative cases:
-- Provider fixture failure propagates typed error without runtime crash.
-- Invalid graph fails fast with deterministic validation output and non-zero exit.
-- Missing/corrupt checkpoint fails resume deterministically with non-zero exit.
+- Fixture transport failures propagate typed errors through CAL and ATR deterministically.
+- Invalid graphs fail fast with deterministic diagnostics and failure status.
+- Missing checkpoints fail resume with deterministic errors.
+- Corrupt checkpoints fail resume with deterministic errors.
+- Invalid CLI argument combinations fail deterministically with stable output.
 
 ### Acceptance Criteria - Phase 4
-- [X] Offline `make -j10 test` validates integrated ULLM + CAL + ATR parity behavior.
+- [ ] Integrated ULLM + CAL + ATR suites pass in deterministic offline mode.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Integration evidence indexes include commands, exit statuses, and artifact locations for each scenario.
+- [ ] Integration evidence index captures commands, exit statuses, and artifact references per scenario.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Phase 5 - Traceability, ADR, and Closeout
 ### Deliverables
-- [X] Update `docs/spec-coverage/traceability.md` so all Sprint #003 requirement IDs resolve to implementation/tests/evidence.
+- [ ] Update `docs/spec-coverage/traceability.md` so every Sprint #003 requirement maps to implementation, tests, and evidence.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Regenerate requirement catalog outputs and verify strict ID consistency with spec coverage tooling.
+- [ ] Refresh requirement catalog outputs and reconcile catalog versus traceability consistency.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Record final architecture decisions in `docs/ADR.md` for any Sprint #003 design pivots.
+- [ ] Append architecture-significant decisions to `docs/ADR.md` with context and consequences.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Execute sprint-document/evidence lint checks and repair any checklist/evidence formatting defects.
+- [ ] Run sprint evidence lint and resolve checklist/evidence inconsistencies in this document.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Finalize per-phase evidence READMEs with complete command and exit-status tables.
+- [ ] Finalize per-phase evidence indexes with command tables and stable artifact references.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Re-render all appendix Mermaid diagrams and store outputs under `.scratch/diagram-renders/sprint-003/`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Produce final Sprint #003 closeout summary with unresolved risks and follow-up actions.
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Test Matrix - Phase 5
 Positive cases:
-- Traceability doc contains complete mapping for all ULLM/CAL/ATR IDs.
-- Coverage tooling reports no missing or unknown mappings.
-- Evidence lint confirms required verification annotations are present.
+- Requirement catalog and spec coverage checks pass with no missing/unknown/duplicate/malformed mappings.
+- Evidence lint succeeds for checklist/evidence formatting and references.
+- Mermaid diagrams render successfully and outputs are readable.
+- Full build and test suite remains green at closeout.
 
 Negative cases:
-- Missing mapping rows are flagged by coverage tooling.
-- Broken evidence references are flagged by lint checks.
-- Requirement ID drift between catalog and traceability fails verification checks.
+- Missing traceability blocks fail coverage checks.
+- Unknown requirement IDs in traceability fail coverage checks.
+- Completed checkboxes with missing evidence references fail evidence lint.
+- Broken Mermaid syntax fails render validation and blocks closeout.
 
 ### Acceptance Criteria - Phase 5
-- [X] `tclsh tools/spec_coverage.tcl` reports clean parity closure.
+- [ ] Requirement catalog and spec coverage checks pass with no missing, unknown, duplicate, or malformed mapping failures.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Sprint closeout evidence is reproducible from command tables and artifact indexes.
+- [ ] Sprint evidence is reproducible using only phase index files and referenced artifacts.
 ```text
-Verification:
-- `timeout 180 ./.scratch/run_sprint003_comprehensive_verification.sh` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/command-status.tsv`
-- `.scratch/verification/SPRINT-003/comprehensive-2026-02-27/README.md`
-Notes:
-- See step-level logs `01.log`..`14.log` under the same evidence directory for unit/integration/coverage/diagram render proof.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Canonical Verification Commands
+## Canonical Verification Command Set
 - `make -j10 build`
 - `make -j10 test`
-- `tclsh tests/all.tcl -match *unified_llm*`
-- `tclsh tests/all.tcl -match *coding_agent_loop*`
-- `tclsh tests/all.tcl -match *attractor*`
 - `tclsh tools/requirements_catalog.tcl --check-ids`
 - `tclsh tools/requirements_catalog.tcl --summary`
 - `tclsh tools/spec_coverage.tcl`
+- `tclsh tests/all.tcl -match *unified_llm*`
+- `tclsh tests/all.tcl -match *coding_agent_loop*`
+- `tclsh tests/all.tcl -match *attractor*`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-comprehensive-implementation-plan.md`
 
 ## Appendix - Mermaid Diagrams
@@ -861,121 +459,121 @@ Notes:
 ```mermaid
 classDiagram
   class UnifiedLLMClient {
-    +generate(req)
-    +stream(req, onEvent)
-    +generateObject(req, schema)
-    +streamObject(req, schema, onObject)
+    +generate(request)
+    +stream(request, onEvent)
+    +generateObject(request, schema)
+    +streamObject(request, schema, onObject)
   }
 
   class ProviderAdapter {
-    +translateRequest(req)
-    +complete(req)
-    +stream(req, onEvent)
+    +translateRequest(request)
+    +invokeBlocking(request)
+    +invokeStreaming(request, onEvent)
   }
 
-  class CALSession {
+  class CodingAgentSession {
     +submit(input)
     +steer(input)
     +followUp(input)
-    +abort()
+    +cancel()
     +events()
   }
 
   class ExecutionEnvironment {
-    +read_file(path)
-    +write_file(path, content)
-    +apply_patch(patch)
-    +exec_command(cmd)
+    +readFile(path)
+    +writeFile(path, content)
+    +applyPatch(patch)
+    +execCommand(command)
   }
 
   class AttractorEngine {
     +parse(dot)
-    +validate(ast)
-    +run(ast)
+    +validate(graph)
+    +run(graph)
     +resume(checkpoint)
   }
 
   UnifiedLLMClient --> ProviderAdapter
-  CALSession --> UnifiedLLMClient
-  CALSession --> ExecutionEnvironment
-  AttractorEngine --> CALSession : codergen backend
+  CodingAgentSession --> UnifiedLLMClient
+  CodingAgentSession --> ExecutionEnvironment
+  AttractorEngine --> CodingAgentSession
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
+  REQUIREMENT ||--o{ TRACEABILITY_ENTRY : mapped_by
+  TRACEABILITY_ENTRY }o--|| IMPLEMENTATION_UNIT : references
+  TRACEABILITY_ENTRY }o--|| TEST_CASE : verified_by
+  PHASE_RUN ||--o{ VERIFICATION_COMMAND : executes
+  PHASE_RUN ||--o{ EVIDENCE_ARTIFACT : produces
   SPRINT_RUN ||--o{ PHASE_RUN : contains
-  PHASE_RUN ||--o{ VERIFY_COMMAND : executes
-  PHASE_RUN ||--o{ EVIDENCE_ARTIFACT : emits
-  TRACEABILITY_ROW }o--|| REQUIREMENT_ID : maps
-  TRACEABILITY_ROW }o--|| TEST_CASE : verifies
-  TRACEABILITY_ROW }o--|| IMPLEMENTATION_UNIT : points_to
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Load requirement catalog] --> B[Build gap ledger]
+  A[Refresh requirements catalog] --> B[Build requirement-family gap ledger]
   B --> C[Implement phase deliverables]
-  C --> D[Run unit/integration/e2e tests]
-  D --> E[Capture evidence and exit statuses]
+  C --> D[Run unit, integration, and e2e tests]
+  D --> E[Capture command status and artifacts]
   E --> F[Update traceability mappings]
-  F --> G[Run coverage checks]
-  G --> H{All requirements mapped and green?}
+  F --> G[Run catalog and coverage checks]
+  G --> H{All mappings and tests green?}
   H -->|No| C
-  H -->|Yes| I[Sprint closeout]
+  H -->|Yes| I[Close sprint]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  SPEC[Spec docs] --> REQ[Requirements catalog]
-  REQ --> PLAN[Sprint plan]
-  PLAN --> CODE[lib and bin changes]
-  CODE --> TESTS[unit/integration/e2e]
-  TESTS --> EVIDENCE[.scratch verification artifacts]
-  EVIDENCE --> TRACE[traceability matrix]
-  TRACE --> COVERAGE[spec coverage check]
+  SPEC[Spec Documents] --> CATALOG[Requirements Catalog]
+  CATALOG --> PLAN[Sprint Plan]
+  PLAN --> CODE[Implementation Files]
+  CODE --> TESTS[Automated Tests]
+  TESTS --> EVIDENCE[Verification Artifacts]
+  EVIDENCE --> TRACE[Traceability Mapping]
+  TRACE --> COVERAGE[Coverage Validation]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph Interfaces
+  subgraph InterfaceLayer
     CLI[bin/attractor]
-    TOOLS[tools/spec_coverage.tcl]
+    TOOLS[Coverage and Catalog Tools]
   end
 
-  subgraph Runtime
+  subgraph RuntimeLayer
     ATR[lib/attractor/main.tcl]
+    CORE[lib/attractor_core/core.tcl]
     CAL[lib/coding_agent_loop/main.tcl]
     ULLM[lib/unified_llm/main.tcl]
-    CORE[lib/attractor_core/core.tcl]
   end
 
-  subgraph Adapters
-    OA[lib/unified_llm/adapters/openai.tcl]
-    AN[lib/unified_llm/adapters/anthropic.tcl]
-    GM[lib/unified_llm/adapters/gemini.tcl]
+  subgraph AdapterLayer
+    OPENAI[lib/unified_llm/adapters/openai.tcl]
+    ANTHROPIC[lib/unified_llm/adapters/anthropic.tcl]
+    GEMINI[lib/unified_llm/adapters/gemini.tcl]
   end
 
-  subgraph Verification
-    TESTSUITE[tests/all.tcl]
+  subgraph VerificationLayer
+    TESTS[tests/all.tcl]
     MOCK[tests/support/mock_http_server.tcl]
-    TRACE[docs/spec-coverage/traceability.md]
+    TRACEFILE[docs/spec-coverage/traceability.md]
   end
 
   CLI --> ATR
+  ATR --> CORE
   ATR --> CAL
   ATR --> ULLM
-  ATR --> CORE
   CAL --> ULLM
-  ULLM --> OA
-  ULLM --> AN
-  ULLM --> GM
-  TESTSUITE --> ATR
-  TESTSUITE --> CAL
-  TESTSUITE --> ULLM
+  ULLM --> OPENAI
+  ULLM --> ANTHROPIC
+  ULLM --> GEMINI
+  TESTS --> ATR
+  TESTS --> CAL
+  TESTS --> ULLM
   MOCK --> ULLM
-  TOOLS --> TRACE
+  TOOLS --> TRACEFILE
 ```
