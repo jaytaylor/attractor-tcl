@@ -2,580 +2,622 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #004 Comprehensive Implementation Plan - Live E2E Smoke Suite (`make test-e2e`)
 
-## Review Findings From `SPRINT-004-live-e2e-make-test-e2e.md`
-- The sprint intent, scope, and architecture decisions are already defined and mostly implemented in code.
-- The remaining completion gap is not feature design; it is execution closure for credentialed live-provider passes and evidence capture for open acceptance criteria.
-- The source sprint document currently mixes planning and execution evidence; this plan separates implementation sequencing and closeout responsibilities.
+## Executive Summary
+- Deliver an opt-in live E2E suite that validates real provider integrations for Unified LLM, Coding Agent Loop, and Attractor.
+- Keep offline test behavior unchanged (`make -j10 test` remains deterministic and network-free).
+- Enforce strict secret redaction and artifact scanning so live evidence is auditable and safe.
 
-## Objective
-Close Sprint #004 end-to-end by delivering a reproducible, auditable live E2E execution program that:
-- passes `make test-e2e` for at least one configured provider
-- preserves deterministic fail-fast behavior when provider selection or credentials are invalid
-- proves zero secret leakage across logs/artifacts
-- leaves sprint completion state and evidence synchronized with reality
+## Sprint Objective
+- Add and operationalize `make test-e2e` as the single entrypoint for live smoke validation.
+- Prove success and failure-path behavior per selected provider (`openai`, `anthropic`, `gemini`).
+- Produce reproducible evidence under `.scratch/verification/SPRINT-004/live/<run_id>/` for every run.
 
 ## Scope
 In scope:
-- Live E2E harness execution closure for Unified LLM, Coding Agent Loop, and Attractor.
-- Provider-by-provider credentialed run orchestration and artifact verification.
-- Negative-path verification for missing keys, explicit missing-provider requests, and invalid-key failures.
-- Documentation and sprint closeout updates with exact evidence links.
+- Live HTTPS transport injection for Unified LLM.
+- Live harness (`tests/e2e_live.tcl` and `tests/e2e_live/*.test`) with deterministic provider selection and preflight validation.
+- Live smoke suites for Unified LLM, Coding Agent Loop, and Attractor.
+- Secret redaction enforcement and post-run secret leak scan.
+- `make test-e2e` target, runbook documentation, ADR entry, and completion evidence.
 
 Out of scope:
-- CI-default execution for live tests.
-- New provider integrations beyond `openai`, `anthropic`, and `gemini`.
-- Any changes unrelated to Sprint #004 live smoke validation.
+- Running live tests by default in CI.
+- Streaming parity changes beyond current sprint requirements.
+- New providers beyond OpenAI, Anthropic, and Gemini.
+- Legacy compatibility shims or feature-gated rollout paths.
 
-## Current Baseline and Open Gaps
-- Completed in source sprint: transport injection, redaction behavior, live harness scaffolding, provider-specific live test definitions, `make test-e2e` target, and run artifacts.
-- Closure status from implementation pass `execution-2026-02-27-pass-01`:
-  - Phase 2 acceptance: closed
-  - Phase 3 acceptance: closed
-  - Phase 4 acceptance: closed
-  - Phase 5 acceptance: closed
+## Constraints and Guardrails
+- Live tests must never auto-run under `make -j10 test`.
+- Live HTTP calls must occur only through explicit transport injection.
+- If zero providers are selected, fail fast before any network call.
+- If an explicitly requested provider key is missing, fail fast before any network call.
+- If a provider key is missing and the provider was not explicitly requested, mark provider as skipped.
+- Secrets must not appear in console output, structured artifacts, or error surfaces.
 
 ## Evidence Contract
-- Evidence root: `.scratch/verification/SPRINT-004/implementation-plan/<execution_id>/`
-- Required index files:
-  - `command-status-all.tsv`
-  - `phase-*/command-status.tsv`
-  - `phase-*/summary.md`
-- Live run artifacts:
-  - `.scratch/verification/SPRINT-004/live/<run_id>/run.json`
-  - `.scratch/verification/SPRINT-004/live/<run_id>/secret-leaks.json`
-  - component/provider artifacts under `unified_llm/`, `coding_agent_loop/`, `attractor/`
+- Evidence root: `.scratch/verification/SPRINT-004/implementation-plan/<execution_id>/`.
+- Live run root: `.scratch/verification/SPRINT-004/live/<run_id>/`.
+- Required per-run evidence:
+  - `run.json`
+  - `secret-leaks.json`
+  - `unified_llm/<provider>/...`
+  - `coding_agent_loop/<provider>/...`
+  - `attractor/<provider>/...`
+- Checklist items are marked complete only after command output, exit code, and artifact paths are captured.
 
-## Execution Order
-1. Phase 0: Baseline Reconciliation and Evidence Scaffolding
-2. Phase 1: Live Harness and Provider-Selection Closure
-3. Phase 2: Unified LLM Credentialed Live Validation
-4. Phase 3: Coding Agent Loop Credentialed Live Validation
-5. Phase 4: Attractor Credentialed Live Validation
-6. Phase 5: Make Target, Documentation, ADR, and Sprint Closeout
+## Implementation Workstreams
+- Unified LLM runtime: `lib/unified_llm/main.tcl`, `lib/unified_llm/adapters/*.tcl`, `lib/unified_llm/transports/https_json.tcl`
+- Live harness and support: `tests/e2e_live.tcl`, `tests/e2e_live/*.test`, `tests/support/e2e_live_support.tcl`
+- Transport fixtures: `tests/support/http_fixture_server.tcl`, `tests/integration/unified_llm_https_transport_integration.test`
+- Attractor runtime integration points: `lib/attractor/main.tcl`, `lib/attractor_core/core.tcl`
+- Build entrypoint: `Makefile`
+- Documentation and architecture decisions: `docs/howto/live-e2e.md`, `docs/ADR.md`
 
-## Phase 0 - Baseline Reconciliation and Evidence Scaffolding
+## Phase Execution Order
+1. Phase 0: Baseline and Evidence Scaffolding
+2. Phase 1: Live HTTPS Transport and Redaction
+3. Phase 2: Live Harness and Unified LLM Provider Smokes
+4. Phase 3: Coding Agent Loop Live Smokes
+5. Phase 4: Attractor Live Smokes
+6. Phase 5: Make Target, Documentation, ADR, and Closeout
+
+## Phase 0 - Baseline and Evidence Scaffolding
 ### Deliverables
-- [X] Re-verify baseline deterministic suite isolation from live execution (`make -j10 test` excludes live tests).
+- [ ] Confirm offline baseline remains deterministic and isolated from live suites.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Create implementation-plan evidence directory tree and command status ledgers for all phases.
+- [ ] Confirm live harness is independently invocable and not sourced by `tests/all.tcl`.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Capture current open acceptance criteria from `SPRINT-004-live-e2e-make-test-e2e.md` into a closure tracker table in this plan.
+- [ ] Establish implementation-plan evidence folders and command status ledgers.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Record baseline assumptions and sprint-specific architecture decisions in `docs/ADR.md`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-### Closure Tracker - Sprint Source Acceptance Items
-| Source Sprint Acceptance Item | Owner | Verification Command | Status |
-| --- | --- | --- | --- |
-| Phase 2 acceptance (`make test-e2e` runs Unified LLM live suite with auditable artifacts) | Sprint #004 implementation pass | `timeout 180 tclsh tests/e2e_live.tcl` | Closed |
-| Phase 3 acceptance (Coding Agent Loop live suite artifact verification) | Sprint #004 implementation pass | `timeout 180 tclsh tests/e2e_live.tcl` | Closed |
-| Phase 4 acceptance (Attractor live suite artifact verification) | Sprint #004 implementation pass | `timeout 180 tclsh tests/e2e_live.tcl` | Closed |
-| Phase 5 acceptance (`make test-e2e` fail-fast without keys and pass with keys) | Sprint #004 implementation pass | `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` and `timeout 180 make test-e2e` | Closed |
+### Positive Test Cases
+- Offline test suite passes with no live dependencies.
+- Live harness can enumerate tests and selected providers in dry/list mode.
+- Evidence tree and status ledgers are created at expected paths.
 
-### Positive Test Plan - Phase 0
-- `make -j10 test` passes and does not source any `tests/e2e_live/*.test` files.
-- `tclsh tests/e2e_live.tcl -list` lists live suites separately from offline suite.
-- Evidence index files are created and writable.
-
-### Negative Test Plan - Phase 0
-- Invoking live harness with no keys exits non-zero before any network call.
-- Invoking live harness with explicit provider allowlist and missing key exits non-zero before any network call.
+### Negative Test Cases
+- Missing evidence root permissions fail with actionable diagnostics.
+- Live harness invocation with no providers selected fails before network usage.
 
 ### Acceptance Criteria - Phase 0
-- [X] Baseline and evidence scaffolding are reproducible from command logs and phase summaries.
+- [ ] Baseline isolation is proven and reproducible from evidence artifacts.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Closure tracker identifies each open sprint acceptance item with a mapped execution owner and verification command.
+- [ ] Evidence scaffolding exists and is ready for phased execution logs.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-## Phase 1 - Live Harness and Provider-Selection Closure
+## Phase 1 - Live HTTPS Transport and Redaction
 ### Deliverables
-- [X] Validate provider-selection semantics across all combinations of environment inputs (`E2E_LIVE_PROVIDERS`, present/missing key vars).
+- [ ] Implement provider-agnostic HTTPS JSON transport callable through `client_new -transport`.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify run metadata output (`run.json`) includes selected providers, skipped providers, selected components, and timestamps.
+- [ ] Enforce base URL resolution precedence (request override, provider env override, provider default).
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify per-component artifact path construction for each selected provider.
+- [ ] Implement deterministic errorcode shapes for HTTP and network failures.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify secret-leak post-scan behavior for pass and fail states, including path-only leak reporting.
+- [ ] Redact sensitive headers (`Authorization`, `x-api-key`, `x-goog-api-key`) in all logs and structured responses.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Add deterministic transport integration tests with local HTTP fixture coverage for happy and failure paths.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-### Positive Test Plan - Phase 1
-- Default selection picks all providers with configured keys.
-- Explicit allowlist runs only requested providers with configured keys.
-- `run.json` and `secret-leaks.json` are created for every run.
+### Positive Test Cases
+- JSON payload and headers are sent correctly to local fixture.
+- Response headers are normalized and returned with expected structure.
+- Redacted request header copies are present in response metadata.
 
-### Negative Test Plan - Phase 1
-- Unknown provider in `E2E_LIVE_PROVIDERS` fails deterministically.
-- Requested provider missing key fails deterministically.
-- Synthetic leak fixture triggers leak scanner failure and path-only report.
+### Negative Test Cases
+- Non-2xx provider responses produce deterministic transport HTTP errorcodes.
+- Network/TLS failures produce deterministic transport network errorcodes.
+- Error messages and artifacts never include raw key material.
 
 ### Acceptance Criteria - Phase 1
-- [X] Harness preflight behavior is deterministic across provider-selection edge cases.
+- [ ] Transport contract passes deterministic integration tests.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Artifact root and summary metadata are complete and auditable for each run.
+- [ ] Redaction behavior is proven in happy-path and error-path evidence.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-## Phase 2 - Unified LLM Credentialed Live Validation
+## Phase 2 - Live Harness and Unified LLM Provider Smokes
 ### Deliverables
-- [X] Execute credentialed OpenAI live smoke and invalid-key tests, capture pass/fail artifacts and response evidence.
+- [ ] Implement/validate live harness preflight for provider selection and fail-fast semantics.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Execute credentialed Anthropic live smoke and invalid-key tests, capture pass/fail artifacts and response evidence.
+- [ ] Create per-run artifacts root with unique run IDs and write `run.json` metadata.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Execute credentialed Gemini live smoke and invalid-key tests, capture pass/fail artifacts and response evidence.
+- [ ] Implement post-run secret leak scan and path-only leak reporting.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify redaction invariants in persisted response metadata (`response.request.headers`) for each provider.
+- [ ] Add OpenAI live smoke and invalid-key tests with deterministic assertions.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Add Anthropic live smoke and invalid-key tests with deterministic assertions.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Add Gemini live smoke and invalid-key tests with deterministic assertions.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-### Positive Test Plan - Phase 2
-- For each selected provider: non-empty response text (or provider-expected live signal), provider usage tokens populated, and response artifact written.
-- Provider-specific live markers validate real transport path:
-  - OpenAI/Anthropic provider-generated response ID.
-  - Gemini `raw.candidates` presence.
+### Positive Test Cases
+- OpenAI smoke: non-empty text, provider response ID, token usage populated, redacted headers.
+- Anthropic smoke: non-empty text, provider response ID, token usage populated, redacted headers.
+- Gemini smoke: non-empty text, `raw.candidates` present, token usage populated, redacted headers.
+- Default selection runs all configured providers.
 
-### Negative Test Plan - Phase 2
-- Invalid-key requests fail with `UNIFIED_LLM TRANSPORT HTTP <provider> <status>` errorcode shape.
-- Failure surfaces contain no real key value.
-- Unselected providers with missing keys are skipped, not failed.
+### Negative Test Cases
+- No keys configured: harness exits non-zero before network calls.
+- Explicit provider requested without key: harness exits non-zero before network calls.
+- Invalid key per provider: deterministic auth failure classification with no secret leakage.
+- Unknown provider in allowlist: deterministic validation failure.
 
 ### Acceptance Criteria - Phase 2
-- [X] At least one configured provider passes Unified LLM live smoke under `make test-e2e`.
+- [ ] Unified LLM live smokes pass for at least one configured provider and generate auditable artifacts.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Unified LLM artifacts for each selected provider are present under `.scratch/verification/SPRINT-004/live/<run_id>/unified_llm/`.
+- [ ] All negative-path provider-selection and invalid-key tests pass deterministically.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-## Phase 3 - Coding Agent Loop Credentialed Live Validation
+## Phase 3 - Coding Agent Loop Live Smokes
 ### Deliverables
-- [X] Execute live smoke and invalid-key tests for Coding Agent Loop on each selected provider.
+- [ ] Add/validate per-provider Coding Agent Loop live smoke coverage using explicit default client injection.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify required event contract (`SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`) across selected providers.
+- [ ] Enforce default client set/restore around each provider test to prevent cross-provider contamination.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify default-client set/restore isolation during per-provider test execution.
+- [ ] Assert required live event contract (`SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`).
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Add invalid-key tests that prove deterministic failure and no secret leakage.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-### Positive Test Plan - Phase 3
-- For each selected provider: session submit returns non-empty assistant text.
-- Required event types are present in emitted event stream.
-- Per-provider artifacts are written to `coding_agent_loop/<provider>/response.json`.
+### Positive Test Cases
+- For each selected provider, session submit completes naturally with non-empty assistant text.
+- Required event kinds are emitted in expected order.
+- Provider artifacts are written under `coding_agent_loop/<provider>/`.
 
-### Negative Test Plan - Phase 3
-- Invalid-key submit fails with deterministic transport HTTP errorcode shape.
-- No secret values appear in failure artifacts.
-- A provider failure does not corrupt subsequent provider default-client behavior.
+### Negative Test Cases
+- Invalid key causes deterministic failure surface and preserved redaction invariants.
+- Provider failure does not impact subsequent provider runs.
 
 ### Acceptance Criteria - Phase 3
-- [X] At least one configured provider passes Coding Agent Loop live smoke under `make test-e2e`.
+- [ ] Coding Agent Loop live tests pass for at least one configured provider and emit required events.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Coding Agent Loop artifacts for each selected provider are present under `.scratch/verification/SPRINT-004/live/<run_id>/coding_agent_loop/`.
+- [ ] Per-provider Coding Agent Loop artifacts are present and auditable.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-## Phase 4 - Attractor Credentialed Live Validation
+## Phase 4 - Attractor Live Smokes
 ### Deliverables
-- [X] Execute live smoke and invalid-key tests for Attractor on each selected provider using the live backend.
+- [ ] Implement/validate live codergen backend fixture for Attractor that delegates to Unified LLM live transport.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify minimal pipeline success path (`start -> build/codergen -> exit`) and required artifacts (`checkpoint.json`, node status/prompt/response files).
+- [ ] Add per-provider Attractor smoke tests for minimal pipeline (`start -> codergen -> exit`).
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Verify deterministic invalid-key failure capture in `invalid-key-failure.json` with redaction guarantees.
+- [ ] Assert artifact contract for each run (`checkpoint.json`, node `status.json`, `prompt.md`, `response.md`).
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Add invalid-key negative coverage ensuring deterministic failure and retained failure artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-### Positive Test Plan - Phase 4
-- For each selected provider: `attractor::run` returns success status on smoke graph.
-- `checkpoint.json`, `status.json`, `prompt.md`, and `response.md` exist per run.
-- `summary.json` captures result and provider metadata.
+### Positive Test Cases
+- Per selected provider, minimal Attractor pipeline completes with expected filesystem artifacts.
+- Attractor outputs include deterministic status and checkpoint records.
 
-### Negative Test Plan - Phase 4
-- Invalid-key backend run fails with deterministic transport HTTP errorcode shape.
-- Failure artifacts are generated even on runtime failure.
-- Secret leak scan remains clean after failed run artifacts are written.
+### Negative Test Cases
+- Invalid key fails deterministically and writes useful failure artifacts.
+- Failure artifacts remain redacted and pass leak scan.
 
 ### Acceptance Criteria - Phase 4
-- [X] At least one configured provider passes Attractor live smoke under `make test-e2e`.
+- [ ] Attractor live smokes pass for at least one configured provider.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Attractor artifacts for each selected provider are present under `.scratch/verification/SPRINT-004/live/<run_id>/attractor/`.
+- [ ] Attractor artifacts exist under `attractor/<provider>/` for all executed providers.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-## Phase 5 - Make Target, Documentation, ADR, and Sprint Closeout
+## Phase 5 - Make Target, Documentation, ADR, and Closeout
 ### Deliverables
-- [X] Re-verify `make test-e2e` orchestration: fail-fast without keys, pass with at least one valid provider configuration.
+- [ ] Ensure `Makefile` contains `test-e2e: precommit` and runs only the live harness entrypoint.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Update `docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md` completion checkboxes and evidence blocks to reflect verified final state.
+- [ ] Finalize `docs/howto/live-e2e.md` with prerequisites, env vars, examples, artifact map, and secret-safety guidance.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Update `docs/howto/live-e2e.md` with any provider/model compatibility findings discovered during credentialed validation.
+- [ ] Update `docs/ADR.md` with final architecture decisions and consequences from Sprint #004 execution.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Append ADR follow-up entry in `docs/ADR.md` if provider-execution findings introduce architecture-impacting decisions.
+- [ ] Render and validate appendix Mermaid diagrams with `mmdc`, storing outputs under `.scratch/diagram-renders/sprint-004/`.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Render and verify all appendix mermaid diagrams with `mmdc` into `.scratch/diagram-renders/sprint-004/implementation-plan/`.
+- [ ] Execute final closeout matrix: no-key fail-fast, single-provider pass, multi-provider pass, secret-leak scan pass.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-### Positive Test Plan - Phase 5
-- `make test-e2e` returns zero exit status with at least one valid configured provider.
-- Sprint and how-to docs contain accurate commands, expected outputs, and evidence paths.
-- Diagram renders exist and are inspectable.
+### Positive Test Cases
+- `make test-e2e` passes when at least one valid provider is configured.
+- One-provider and multi-provider runs both generate complete artifact trees.
+- Documentation steps are sufficient for a new contributor to run live tests successfully.
 
-### Negative Test Plan - Phase 5
-- Empty credential environment continues to fail fast with clear diagnostic.
-- Invalid-provider request path remains deterministic and preflight-only.
-- Secret-scan failure blocks closeout status updates.
+### Negative Test Cases
+- `make test-e2e` fails fast with descriptive message when no keys are configured.
+- Explicit provider missing required key fails fast without network calls.
+- Injected synthetic leak triggers scanner failure with path-only reporting.
 
 ### Acceptance Criteria - Phase 5
-- [X] All open acceptance criteria from `SPRINT-004-live-e2e-make-test-e2e.md` are closed with verified evidence references.
+- [ ] `make test-e2e` behavior is deterministic for both fail-fast and successful provider-selected runs.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
-- [X] Final closeout run includes command list with exit codes and artifact paths proving pass/fail behavior and secret-scan status.
+- [ ] Secret redaction and leak-scan controls are proven by reproducible evidence.
 ```text
-Verification:
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-2026-02-27-pass-01/phase-*/summary.md`
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
+```
+- [ ] Sprint document status, evidence references, and closeout notes are synchronized with observed results.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+Command(s):
+Exit code(s):
+Evidence path(s):
+Notes:
 ```
 
-## Cross-Component Explicit Test Matrix
-### Positive Cases
-- Provider selection defaults to configured keys and executes all three components.
-- Unified LLM live generation returns provider-valid payload shape and non-empty output.
-- Coding Agent Loop session completes naturally with required event types.
-- Attractor minimal graph run succeeds and writes checkpoint plus node artifacts.
+## Cross-Provider and Cross-Component Verification Matrix
+| Case | OpenAI | Anthropic | Gemini |
+| --- | --- | --- | --- |
+| Unified LLM live smoke (non-empty response and usage) | [ ] | [ ] | [ ] |
+| Coding Agent Loop live smoke (required event contract) | [ ] | [ ] | [ ] |
+| Attractor live smoke (pipeline artifacts + checkpoint) | [ ] | [ ] | [ ] |
+| Invalid key deterministic failure + no secret leak | [ ] | [ ] | [ ] |
 
-### Negative Cases
-- No keys configured: deterministic preflight failure with non-zero exit.
-- Explicit requested provider missing key: deterministic preflight failure with non-zero exit.
-- Invalid key per provider: deterministic HTTP transport errorcode shape in each component.
-- Secret leakage attempt: scan detects exact key material in artifacts and fails run while reporting only file paths.
-
-## Appendix - Mermaid Diagrams (Render-Verified via `mmdc`)
+## Appendix - Mermaid Diagrams
 
 ### Core Domain Models
 ```mermaid
-%% Source: .scratch/diagrams/sprint-004/implementation-plan/domain.mmd
 classDiagram
-  class LiveRunContext {
+  class LiveRun {
     +run_id
+    +providers
     +artifact_root
-    +selected_providers
-    +skipped_providers
+    +started_at
+    +ended_at
   }
-  class ProviderConfig {
+  class ProviderRun {
     +provider
-    +key_var
     +model
-    +base_url
+    +status
+    +error_class
   }
   class LiveHarness {
-    +initialize_run_context()
-    +scan_artifacts_for_secret_leaks()
-    +finalize_run_context()
+    +select_providers()
+    +run_component_tests()
+    +scan_for_secret_leaks()
   }
-  class LiveTransport {
+  class HTTPSJSONTransport {
     +call(request)
-    +resolve_base_url()
+    +redact_headers(headers)
   }
-  class ComponentRunner {
-    +run_unified_llm_smoke()
-    +run_coding_agent_loop_smoke()
-    +run_attractor_smoke()
+  class ArtifactStore {
+    +write_run_json()
+    +write_component_artifacts()
+    +write_secret_scan()
   }
 
-  LiveHarness --> LiveRunContext
-  LiveHarness --> ProviderConfig
-  ComponentRunner --> LiveTransport
-  ComponentRunner --> LiveHarness
+  LiveHarness --> HTTPSJSONTransport
+  LiveHarness --> ArtifactStore
+  LiveRun --> ProviderRun
 ```
 
 ### E-R Diagram
 ```mermaid
-%% Source: .scratch/diagrams/sprint-004/implementation-plan/er.mmd
 erDiagram
-  LIVE_RUN ||--o{ PROVIDER_EXECUTION : contains
-  PROVIDER_EXECUTION ||--o{ COMPONENT_RESULT : emits
-  COMPONENT_RESULT ||--o{ ARTIFACT_FILE : writes
-  LIVE_RUN ||--|| SECRET_SCAN_RESULT : records
+  E2E_RUN ||--o{ PROVIDER_RUN : includes
+  PROVIDER_RUN ||--o{ COMPONENT_RUN : executes
+  COMPONENT_RUN ||--o{ ARTIFACT : writes
+  E2E_RUN ||--|| SECRET_SCAN : records
+
+  E2E_RUN {
+    string run_id
+    string artifact_root
+    string started_at
+    string ended_at
+  }
+  PROVIDER_RUN {
+    string provider
+    string model
+    string status
+  }
+  COMPONENT_RUN {
+    string component
+    string status
+    string error_class
+  }
+  ARTIFACT {
+    string path
+    string type
+  }
+  SECRET_SCAN {
+    string status
+    string report_path
+  }
 ```
 
 ### Workflow Diagram
 ```mermaid
-%% Source: .scratch/diagrams/sprint-004/implementation-plan/workflow.mmd
 flowchart TD
-  A[make test-e2e] --> B[tests/e2e_live.tcl]
-  B --> C{Preflight provider selection}
-  C -->|invalid| D[Exit non-zero with deterministic message]
-  C -->|valid| E[Run component suites per provider]
-  E --> F[Write artifacts per component/provider]
-  F --> G[Scan artifacts for secret leaks]
-  G -->|leaks found| H[Fail run and report file paths only]
-  G -->|no leaks| I[Finalize run.json and exit status]
+  START[make test-e2e] --> PREFLIGHT[Validate env and provider selection]
+  PREFLIGHT -->|none selected| FAIL_FAST[Exit non-zero with descriptive error]
+  PREFLIGHT -->|selected providers| RUN_UNIFIED[Run Unified LLM smoke tests]
+  RUN_UNIFIED --> RUN_CAL[Run Coding Agent Loop smoke tests]
+  RUN_CAL --> RUN_ATTRACTOR[Run Attractor smoke tests]
+  RUN_ATTRACTOR --> SCAN[Run secret leak scan]
+  SCAN -->|leak found| LEAK_FAIL[Fail and report leaked paths only]
+  SCAN -->|clean| PASS[Exit 0 with run summary]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
-%% Source: .scratch/diagrams/sprint-004/implementation-plan/dataflow.mmd
 flowchart LR
-  ENV[Environment Variables] --> PRE[Preflight Resolver]
-  PRE --> CFG[Provider Config Map]
-  CFG --> EXEC[Live Component Execution]
-  EXEC --> RESP[Provider HTTP Responses]
-  RESP --> ART[Redacted Artifacts]
-  ART --> SCAN[Secret Leak Scanner]
-  SCAN --> SUM[run.json + secret-leaks.json]
+  ENV[Environment variables] --> HARNESS[Live harness]
+  HARNESS --> CLIENTS[Explicit Unified LLM clients]
+  CLIENTS --> HTTPS[HTTPS JSON transport]
+  HTTPS --> PROVIDERS[Provider APIs]
+  PROVIDERS --> RESPONSES[Normalized responses]
+  RESPONSES --> ASSERTIONS[Test assertions]
+  ASSERTIONS --> ARTIFACTS[Artifacts under .scratch]
+  ARTIFACTS --> SCAN[Secret leak scanner]
+  SCAN --> SUMMARY[run.json and secret-leaks.json]
 ```
 
 ### Architecture Diagram
 ```mermaid
-%% Source: .scratch/diagrams/sprint-004/implementation-plan/arch.mmd
 flowchart TB
   subgraph Entry
     MAKE[make test-e2e]
   end
-  subgraph Harness
-    H[tests/e2e_live.tcl]
-    S[tests/support/e2e_live_support.tcl]
-  end
-  subgraph Runtime
-    U[lib/unified_llm]
-    T[lib/unified_llm/transports/https_json.tcl]
-    C[lib/coding_agent_loop]
-    A[lib/attractor]
-  end
-  subgraph Evidence
-    R[.scratch/verification/SPRINT-004/live/<run_id>/run.json]
-    L[.scratch/verification/SPRINT-004/live/<run_id>/secret-leaks.json]
-    P[component/provider artifacts]
+
+  subgraph LiveSuite
+    HARNESS[tests/e2e_live.tcl]
+    LIVE_TESTS[tests/e2e_live/*.test]
+    LIVE_SUPPORT[tests/support/e2e_live_support.tcl]
   end
 
-  MAKE --> H
-  H --> S
-  S --> U
-  S --> C
-  S --> A
-  U --> T
-  S --> R
-  S --> L
-  S --> P
+  subgraph Runtime
+    ULLM[lib/unified_llm]
+    TRANSPORT[lib/unified_llm/transports/https_json.tcl]
+    CAL[lib/coding_agent_loop]
+    ATR[lib/attractor]
+  end
+
+  subgraph Evidence
+    RUNROOT[.scratch/verification/SPRINT-004/live/<run_id>]
+    RUNJSON[run.json]
+    LEAKS[secret-leaks.json]
+  end
+
+  MAKE --> HARNESS
+  HARNESS --> LIVE_TESTS
+  LIVE_TESTS --> LIVE_SUPPORT
+  LIVE_SUPPORT --> ULLM
+  ULLM --> TRANSPORT
+  LIVE_SUPPORT --> CAL
+  LIVE_SUPPORT --> ATR
+  LIVE_TESTS --> RUNROOT
+  RUNROOT --> RUNJSON
+  RUNROOT --> LEAKS
 ```
