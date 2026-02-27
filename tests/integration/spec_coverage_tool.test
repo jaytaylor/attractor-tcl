@@ -29,9 +29,9 @@ proc ::tests::integration::spec_cov::requirements_json {ids} {
     foreach id $ids {
         lappend entries "{\"id\":\"$id\"}"
     }
-    set body {"requirements":[}
+    set body "\{\"requirements\":\["
     append body [join $entries ,]
-    append body {]}
+    append body "\]\}"
     return $body
 }
 
@@ -183,3 +183,62 @@ test integration-spec-coverage-tool-unknown-traceability-id-2.0 {fails when trac
 } -cleanup {
     file delete -force $dir
 } -result {1 1}
+
+test integration-spec-coverage-tool-malformed-catalog-json-2.0 {fails when requirements catalog is malformed JSON} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath "not-json"
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    expr {[string first "requirements catalog parse error" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1
+
+test integration-spec-coverage-tool-catalog-missing-requirements-2.0 {fails when requirements key is missing from catalog} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath "\{\"specs\":\[\]\}"
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    expr {[string first "missing 'requirements' array" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1
+
+test integration-spec-coverage-tool-catalog-duplicate-ids-2.0 {fails when requirements catalog contains duplicate IDs} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list \
+        ULLM-DOD-8.1-CORE-CLIENT \
+        ULLM-DOD-8.1-CORE-CLIENT]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    expr {[string first "requirements catalog has duplicate id: ULLM-DOD-8.1-CORE-CLIENT" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1

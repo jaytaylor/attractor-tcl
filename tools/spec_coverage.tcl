@@ -1,5 +1,6 @@
 #!/usr/bin/env tclsh
 package require Tcl 8.5
+package require json
 
 proc usage {} {
     puts stderr "usage: tclsh tools/spec_coverage.tcl ?traceability_path? ?--trace <path>? ?--requirements <path>? ?--skip-verify-sanity?"
@@ -79,14 +80,48 @@ proc parse_catalog_ids {path} {
     set text [read $fh]
     close $fh
 
-    set ids {}
-    foreach {_full id} [regexp -all -inline {"id"\s*:\s*"([A-Z0-9._-]+)"} $text] {
-        lappend ids $id
+    if {[catch {set parsed [::json::json2dict $text]} err]} {
+        puts stderr "requirements catalog parse error: $err"
+        exit 2
     }
 
-    if {[llength $ids] == 0} {
+    if {[catch {dict exists $parsed requirements} hasRequirements]} {
+        puts stderr "requirements catalog parse error: top-level JSON object expected"
+        exit 2
+    }
+    if {!$hasRequirements} {
+        puts stderr "requirements catalog missing 'requirements' array: $path"
+        exit 2
+    }
+
+    set requirements [dict get $parsed requirements]
+    if {[llength $requirements] == 0} {
         puts stderr "requirements catalog has no ids: $path"
         exit 2
+    }
+
+    set ids {}
+    array set seen {}
+    foreach req $requirements {
+        if {[catch {dict exists $req id} hasId]} {
+            puts stderr "requirements catalog entry is not an object: $path"
+            exit 2
+        }
+        if {!$hasId} {
+            puts stderr "requirements catalog entry missing id: $path"
+            exit 2
+        }
+        set id [dict get $req id]
+        if {$id eq ""} {
+            puts stderr "requirements catalog entry has empty id: $path"
+            exit 2
+        }
+        if {[info exists seen($id)]} {
+            puts stderr "requirements catalog has duplicate id: $id"
+            exit 2
+        }
+        set seen($id) 1
+        lappend ids $id
     }
 
     return $ids

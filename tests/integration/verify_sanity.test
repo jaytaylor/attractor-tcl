@@ -24,11 +24,22 @@ proc ::tests::integration::verify_sanity::write_file {path body} {
     close $fh
 }
 
+proc ::tests::integration::verify_sanity::requirements_json {ids} {
+    set entries {}
+    foreach id $ids {
+        lappend entries "{\"id\":\"$id\"}"
+    }
+    set body "\{\"requirements\":\["
+    append body [join $entries ,]
+    append body "\]\}"
+    return $body
+}
+
 test integration-verify-sanity-valid-pattern-1.0 {passes when verify pattern matches at least one real test} -setup {
     set dir [::tests::integration::verify_sanity::tmpdir]
     set reqPath [file join $dir requirements.json]
     set tracePath [file join $dir traceability.md]
-    ::tests::integration::verify_sanity::write_file $reqPath {"requirements":[{"id":"CAL-DOD-9.1-TOOL-REGISTRY"}]}
+    ::tests::integration::verify_sanity::write_file $reqPath [::tests::integration::verify_sanity::requirements_json [list CAL-DOD-9.1-TOOL-REGISTRY]]
     ::tests::integration::verify_sanity::write_file $tracePath [join [list \
 "id: CAL-DOD-9.1-TOOL-REGISTRY" \
 "spec: coding-agent-loop-spec.md#section-9" \
@@ -47,7 +58,7 @@ test integration-verify-sanity-invalid-pattern-1.0 {fails when verify pattern ma
     set dir [::tests::integration::verify_sanity::tmpdir]
     set reqPath [file join $dir requirements.json]
     set tracePath [file join $dir traceability.md]
-    ::tests::integration::verify_sanity::write_file $reqPath {"requirements":[{"id":"CAL-DOD-9.1-TOOL-REGISTRY"}]}
+    ::tests::integration::verify_sanity::write_file $reqPath [::tests::integration::verify_sanity::requirements_json [list CAL-DOD-9.1-TOOL-REGISTRY]]
     ::tests::integration::verify_sanity::write_file $tracePath [join [list \
 "id: CAL-DOD-9.1-TOOL-REGISTRY" \
 "spec: coding-agent-loop-spec.md#section-9" \
@@ -68,7 +79,7 @@ test integration-verify-sanity-missing-pattern-1.0 {fails when verify command do
     set dir [::tests::integration::verify_sanity::tmpdir]
     set reqPath [file join $dir requirements.json]
     set tracePath [file join $dir traceability.md]
-    ::tests::integration::verify_sanity::write_file $reqPath {"requirements":[{"id":"CAL-DOD-9.1-TOOL-REGISTRY"}]}
+    ::tests::integration::verify_sanity::write_file $reqPath [::tests::integration::verify_sanity::requirements_json [list CAL-DOD-9.1-TOOL-REGISTRY]]
     ::tests::integration::verify_sanity::write_file $tracePath [join [list \
 "id: CAL-DOD-9.1-TOOL-REGISTRY" \
 "spec: coding-agent-loop-spec.md#section-9" \
