@@ -70,6 +70,15 @@ Out of scope:
 - Evidence artifacts live under `.scratch/verification/SPRINT-004/...` and are referenced by exact path.
 - Mark an item `[X]` only once the verification commands have been run and evidence artifacts exist.
 
+## Evidence Layout (Live Suite)
+- Default artifact root:
+  - `.scratch/verification/SPRINT-004/live/<run_id>/...`
+  - `run_id` should be unique per invocation (example: `<epoch_seconds>-<pid>`) so repeated runs do not overwrite prior evidence.
+- Component subtrees:
+  - Unified LLM: `.../unified_llm/<provider>/...`
+  - Coding Agent Loop: `.../coding_agent_loop/<provider>/...`
+  - Attractor: `.../attractor/<provider>/...`
+
 ## Provider Selection Semantics (Live Suite)
 - Default provider set for live runs: all providers with configured API keys in the environment.
 - If multiple provider keys are configured, tests must run provider-by-provider using explicit configuration (do not rely on `unified_llm::from_env`, which is intentionally ambiguous when multiple keys are present).
@@ -112,6 +121,8 @@ Contract to define (must be documented in Phase 5):
   - `OPENAI_BASE_URL` (default: `https://api.openai.com`)
   - `ANTHROPIC_BASE_URL` (default: `https://api.anthropic.com`)
   - `GEMINI_BASE_URL` (default: `https://generativelanguage.googleapis.com`)
+- Optional artifacts root override:
+  - `E2E_LIVE_ARTIFACT_ROOT` (default: `.scratch/verification/SPRINT-004/live/<run_id>`)
 
 ### Acceptance Criteria - Phase 0
 - [ ] A contributor can read the ADR + docs and understand exactly how to run live tests and why they are not part of the offline suite.
@@ -194,6 +205,10 @@ Details to cover:
   - Determine configured providers from env (API keys + `E2E_LIVE_PROVIDERS`)
   - If zero providers are selected, print a descriptive message and exit non-zero
 - The harness prints a clear run summary (selected providers, selected components, artifact root path).
+- The harness determines an artifacts root directory:
+  - If `E2E_LIVE_ARTIFACT_ROOT` is set, use it
+  - Otherwise compute `.scratch/verification/SPRINT-004/live/<run_id>` and create it
+  - Write a small `run.json` summary file into the artifacts root (providers selected, models selected, timestamps)
 
 - [ ] Implement OpenAI live smoke tests (requires `OPENAI_API_KEY`).
 ```text
@@ -240,7 +255,7 @@ Negative cases (must be implemented):
 - Invalid key: provider returns an auth error; test asserts a deterministic failure surface (exit code + error classification or message pattern) and confirms no secrets appear in failure output
 
 ### Acceptance Criteria - Phase 2
-- [ ] `make test-e2e` can run the Unified LLM live suite for at least one configured provider and produces an auditable log under `.scratch/verification/SPRINT-004/unified_llm/`.
+- [ ] `make test-e2e` can run the Unified LLM live suite for at least one configured provider and produces an auditable log under `.scratch/verification/SPRINT-004/live/<run_id>/unified_llm/`.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
@@ -250,6 +265,16 @@ Negative cases (must be implemented):
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+Details to cover:
+- Injection approach (required because the loop does not accept a client today):
+  - For each provider under test, create a `unified_llm` client with:
+    - `-provider <provider>`
+    - `-api_key` from env
+    - `-transport` set to the live HTTPS transport
+  - Set that client as the global default via `::unified_llm::set_default_client $client` for the duration of the test.
+  - Ensure tests restore the previous default client afterward to avoid cross-test contamination inside the live harness.
+- Prompt should be short and should naturally complete (no tool calls expected/required for this sprint).
+
 - [ ] Assert the minimal event contract is emitted in live runs.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -267,7 +292,7 @@ Negative cases:
 - Invalid key: session submit fails deterministically and does not leak secrets
 
 ### Acceptance Criteria - Phase 3
-- [ ] Live agent loop tests run under `make test-e2e` and store logs under `.scratch/verification/SPRINT-004/coding_agent_loop/`.
+- [ ] Live agent loop tests run under `make test-e2e` and store logs under `.scratch/verification/SPRINT-004/live/<run_id>/coding_agent_loop/`.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
@@ -277,6 +302,14 @@ Negative cases:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+Details to cover:
+- Backend contract (today):
+  - `attractor::run` accepts `-backend <cmdPrefix>` and invokes it as `{*}$backend requestDict`
+  - The backend should return a dict containing at least `{text usage}`
+- Use a minimal DOT pipeline embedded in the test:
+  - `start -> codergen -> exit`
+  - codergen node includes a small prompt so the response is cheap and quick.
+
 - [ ] Add a live Attractor run test per configured provider.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
@@ -290,10 +323,10 @@ Positive cases:
 - For each configured provider: run succeeds and artifacts exist on disk
 
 Negative cases:
-- Invalid key: run fails deterministically and still writes a useful failure artifact/log (no secret leakage)
+- Invalid key: run fails deterministically; the live harness must still write a useful failure log under the run’s artifact root (no secret leakage)
 
 ### Acceptance Criteria - Phase 4
-- [ ] Attractor live tests run under `make test-e2e` and store artifacts under `.scratch/verification/SPRINT-004/attractor/`.
+- [ ] Attractor live tests run under `make test-e2e` and store artifacts under `.scratch/verification/SPRINT-004/live/<run_id>/attractor/`.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
@@ -306,11 +339,22 @@ Negative cases:
 Details to cover:
 - `test-e2e: precommit`
 - runs only the live harness (not `tests/all.tcl`)
+- default invocation should be:
+  - `tclsh tests/e2e_live.tcl`
 
 - [ ] Add `docs/howto/live-e2e.md` documenting required env vars, expected costs/side-effects, and where logs/artifacts are written.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+Details to cover:
+- Prerequisites (Tcl packages required for HTTPS transport).
+- Environment variables (keys, provider selection, model/base URL overrides, artifacts root override).
+- Example runs:
+  - One provider only
+  - Multiple providers
+  - Explicit provider requested but missing key (demonstrate fail-fast behavior)
+- How to locate the artifacts root and what files to expect per component/provider.
+- A redaction checklist and a simple “scan for secrets” procedure (must not require knowing/printing the real API key value).
 - [ ] Ensure mermaid diagrams in this sprint render correctly via `mmdc` and store render artifacts under `.scratch/diagram-renders/sprint-004/`.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
