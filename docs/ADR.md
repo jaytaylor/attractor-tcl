@@ -266,3 +266,32 @@ Positive:
 Tradeoffs:
 - Evidence generation adds additional local execution time during sprint closeout.
 - Maintaining phase indexes increases documentation overhead, especially for small doc-only changes.
+
+## ADR-011: Opt-In Live E2E Harness with Explicit HTTPS Transport Injection and Secret-Scan Enforcement
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+The deterministic test suite validates runtime behavior using offline fixtures, but it does not prove real provider integration behavior over HTTPS (auth headers, payload shape, and response parsing). We needed a live smoke path that is intentionally opt-in and auditable without allowing ambient environment secrets to alter default offline tests.
+
+### Decision
+- Add a provider-agnostic live transport callback (`::unified_llm::transports::https_json::call`) and require explicit `client_new -transport ...` injection for live suite execution.
+- Keep default offline test entrypoint (`tests/all.tcl`) separate from live entrypoint (`tests/e2e_live.tcl`), wired as `make test-e2e`.
+- Make live harness provider selection deterministic:
+  - default: all providers with configured keys
+  - explicit allowlist via `E2E_LIVE_PROVIDERS`
+  - fail-fast on empty selection or requested provider missing key
+- Treat redaction as a correctness requirement:
+  - redact auth headers in adapter response request metadata
+  - run post-suite artifact secret scan against loaded key values and fail on matches
+- Persist run-level evidence (`run.json`, per-component/provider artifacts, `secret-leaks.json`) under `.scratch/verification/SPRINT-004/live/<run_id>/`.
+
+### Consequences
+Positive:
+- Live provider connectivity and end-to-end behavior can be validated without changing default deterministic workflows.
+- Secret handling becomes auditable and testable rather than best-effort.
+- Developers can run partial provider sets while still receiving deterministic skip/fail-fast behavior.
+
+Tradeoffs:
+- Live test runs now depend on provider availability, credentials, and account/model compatibility.
+- Additional harness and artifact-management code increases maintenance scope.

@@ -132,20 +132,39 @@ All of the following must be satisfied for each provider that is selected for a 
 | Unified LLM: blocking generation returns non-empty text | [ ] | [ ] | [ ] |
 | Coding Agent Loop: session submit completes naturally and emits required events | [ ] | [ ] | [ ] |
 | Attractor: minimal pipeline run succeeds and writes artifacts/checkpoint | [ ] | [ ] | [ ] |
-| Invalid key: deterministic failure surface + no secret leakage | [ ] | [ ] | [ ] |
+| Invalid key: deterministic failure surface + no secret leakage | [X] | [X] | [X] |
 
 ## Phase 0 - Baseline + Design Decisions
-- [ ] Confirm baseline offline behavior and document the “no network by default” rule for tests.
+- [X] Confirm baseline offline behavior and document the “no network by default” rule for tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/all.tcl` (exit 0)
+- `timeout 135 tclsh tests/e2e_live.tcl -list` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-all.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-all.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-list.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-list.exitcode`
+Notes:
+- Offline deterministic suite remains `tests/all.tcl`; live suite is separate (`tests/e2e_live.tcl`).
 ```
-- [ ] Add an ADR describing why live HTTP transport is opt-in via explicit `-transport` injection (prevents ambient environment secrets from changing offline test behavior).
+- [X] Add an ADR describing why live HTTP transport is opt-in via explicit `-transport` injection (prevents ambient environment secrets from changing offline test behavior).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'ADR-011|Opt-In Live E2E Harness|explicit HTTPS transport injection|secret-scan' docs/ADR.md` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-adr-011.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-adr-011.exitcode`
+Notes:
+- ADR-011 records context, decision, and consequences for opt-in live transport and secret scan enforcement.
 ```
-- [ ] Define required environment variables and defaults for live tests (keys, optional model overrides, optional base URL overrides).
+- [X] Define required environment variables and defaults for live tests (keys, optional model overrides, optional base URL overrides).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'E2E_LIVE_PROVIDERS|OPENAI_MODEL|ANTHROPIC_MODEL|GEMINI_MODEL|OPENAI_BASE_URL|ANTHROPIC_BASE_URL|GEMINI_BASE_URL|E2E_LIVE_ARTIFACT_ROOT' docs/howto/live-e2e.md` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-docs-live-e2e.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-docs-live-e2e.exitcode`
 ```
 Contract to define (must be documented in Phase 5):
 - Provider API keys:
@@ -166,15 +185,24 @@ Contract to define (must be documented in Phase 5):
   - `E2E_LIVE_ARTIFACT_ROOT` (default: `.scratch/verification/SPRINT-004/live/<run_id>`)
 
 ### Acceptance Criteria - Phase 0
-- [ ] A contributor can read the ADR + docs and understand exactly how to run live tests and why they are not part of the offline suite.
+- [X] A contributor can read the ADR + docs and understand exactly how to run live tests and why they are not part of the offline suite.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'test-e2e|opt-in|E2E_LIVE_PROVIDERS|artifact|secret' docs/howto/live-e2e.md docs/ADR.md` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-docs-live-e2e.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-adr-011.log`
 ```
 
 ## Phase 1 - Live HTTPS Transport + Redaction
-- [ ] Implement a provider-agnostic HTTPS JSON transport (Tcl `http` + `tls`) callable via `client_new -transport ...`.
+- [X] Implement a provider-agnostic HTTPS JSON transport (Tcl `http` + `tls`) callable via `client_new -transport ...`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.exitcode`
+- `lib/unified_llm/transports/https_json.tcl`
 ```
 Implementation notes (be explicit in ADR + code comments where appropriate):
 - Recommended location: `lib/unified_llm/transports/https_json.tcl`
@@ -205,9 +233,15 @@ Implementation notes (be explicit in ADR + code comments where appropriate):
     - `UNIFIED_LLM TRANSPORT NETWORK <provider>`
   - Error messages must not include API keys or auth header values.
 
-- [ ] Ensure request/response logging redacts secrets (including in error surfaces and in any structured artifacts).
+- [X] Ensure request/response logging redacts secrets (including in error surfaces and in any structured artifacts).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.exitcode`
+Notes:
+- Transport happy-path test asserts raw wire `Authorization` is present while `response.request.headers.Authorization` is `<redacted>`.
 ```
 Details to cover:
 - never log `Authorization`, `x-api-key`, `x-goog-api-key`
@@ -215,9 +249,15 @@ Details to cover:
 - Ensure `unified_llm` response dicts do not carry raw secrets (especially the `response.request.headers` field, since tcltest failure output may print dicts).
   - Preferred approach: store a redacted copy of request headers in the returned response dict and keep raw secrets only in-memory for the actual HTTP call.
 
-- [ ] Add deterministic unit/integration tests for the transport layer using a local in-process HTTP server fixture (no real provider calls).
+- [X] Add deterministic unit/integration tests for the transport layer using a local in-process HTTP server fixture (no real provider calls).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.exitcode`
+- `tests/support/http_fixture_server.tcl`
+- `tests/integration/unified_llm_https_transport_integration.test`
 ```
 Details to cover:
 - Server fixture:
@@ -231,15 +271,32 @@ Details to cover:
   - Negative path: server returns a non-2xx status and transport raises the correct errorcode without secrets in the message
 
 ### Acceptance Criteria - Phase 1
-- [ ] The live transport can successfully reach a local server, send JSON, and receive JSON, with redaction proven by tests.
+- [X] The live transport can successfully reach a local server, send JSON, and receive JSON, with redaction proven by tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.exitcode`
 ```
 
 ## Phase 2 - Unified LLM Live E2E Tests
-- [ ] Add a new live test harness that is not executed by `tests/all.tcl` (example: `tests/e2e_live.tcl` sourcing `tests/e2e_live/*.test`).
+- [X] Add a new live test harness that is not executed by `tests/all.tcl` (example: `tests/e2e_live.tcl` sourcing `tests/e2e_live/*.test`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/e2e_live.tcl -list` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 135 tclsh tests/e2e_live.tcl` (exit 2)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY E2E_LIVE_PROVIDERS=openai timeout 135 tclsh tests/e2e_live.tcl` (exit 2)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-list.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-list.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-failfast-no-keys.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-failfast-no-keys.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-failfast-explicit-missing.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-failfast-explicit-missing.exitcode`
+- `tests/e2e_live.tcl`
+- `tests/e2e_live/*.test`
+- `tests/support/e2e_live_support.tcl`
 ```
 Details to cover:
 - The harness performs pre-flight selection + validation:
@@ -256,9 +313,13 @@ Details to cover:
 - For each selected provider, the harness must create an explicit client (do not rely on `unified_llm::from_env`):
   - `::unified_llm::client_new -provider <provider> -api_key $::env(PROVIDER_API_KEY) -base_url <optional override> -transport ::unified_llm::transports::https_json::call`
 
-- [ ] Implement OpenAI live smoke tests (requires `OPENAI_API_KEY`).
+- [X] Implement OpenAI live smoke tests (requires `OPENAI_API_KEY`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'e2e-live-unified-llm-openai-smoke|run_unified_llm_smoke|run_unified_llm_invalid_key' tests/e2e_live/*.test tests/support/e2e_live_support.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - Use a short, low-variance prompt (example: “Say hello in one sentence.”) and assert:
@@ -267,9 +328,13 @@ Details to cover:
   - response `usage.input_tokens > 0` and `usage.output_tokens > 0`
   - response `request.headers` (if present) is redacted (no bearer token)
 
-- [ ] Implement Anthropic live smoke tests (requires `ANTHROPIC_API_KEY`).
+- [X] Implement Anthropic live smoke tests (requires `ANTHROPIC_API_KEY`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'e2e-live-unified-llm-anthropic-smoke|run_unified_llm_smoke|run_unified_llm_invalid_key' tests/e2e_live/*.test tests/support/e2e_live_support.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - Use a short, low-variance prompt and assert:
@@ -278,9 +343,13 @@ Details to cover:
   - response `usage.input_tokens > 0` and `usage.output_tokens > 0`
   - response `request.headers` (if present) is redacted (no raw `x-api-key`)
 
-- [ ] Implement Gemini live smoke tests (requires `GEMINI_API_KEY`).
+- [X] Implement Gemini live smoke tests (requires `GEMINI_API_KEY`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'e2e-live-unified-llm-gemini-smoke|run_unified_llm_smoke|run_unified_llm_invalid_key' tests/e2e_live/*.test tests/support/e2e_live_support.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - Use a short, low-variance prompt and assert:
@@ -303,13 +372,24 @@ Negative cases (must be implemented):
 ### Acceptance Criteria - Phase 2
 - [ ] `make test-e2e` can run the Unified LLM live suite for at least one configured provider and produces an auditable log under `.scratch/verification/SPRINT-004/live/<run_id>/unified_llm/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification (partial):
+- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772194683-78198/unified_llm/`
+Notes:
+- Harness creates auditable provider/component artifacts, but configured provider credentials/environment did not satisfy positive smoke assertions in this run (provider HTTP 4xx). This acceptance remains open pending a successful provider configuration.
 ```
 
 ## Phase 3 - Coding Agent Loop Live E2E Tests
-- [ ] Add live tests proving `coding_agent_loop` can complete a session with natural completion (text-only response) for each configured provider profile.
+- [X] Add live tests proving `coding_agent_loop` can complete a session with natural completion (text-only response) for each configured provider profile.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'e2e-live-coding-agent-loop-(openai|anthropic|gemini)-smoke|run_coding_agent_loop_smoke' tests/e2e_live/*.test tests/support/e2e_live_support.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - Injection approach (required because the loop does not accept a client today):
@@ -321,9 +401,13 @@ Details to cover:
   - Ensure tests restore the previous default client afterward to avoid cross-test contamination inside the live harness.
 - Prompt should be short and should naturally complete (no tool calls expected/required for this sprint).
 
-- [ ] Assert the minimal event contract is emitted in live runs.
+- [X] Assert the minimal event contract is emitted in live runs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'SESSION_START|USER_INPUT|ASSISTANT_TEXT_END' tests/support/e2e_live_support.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - SESSION_START
@@ -340,13 +424,24 @@ Negative cases:
 ### Acceptance Criteria - Phase 3
 - [ ] Live agent loop tests run under `make test-e2e` and store logs under `.scratch/verification/SPRINT-004/live/<run_id>/coding_agent_loop/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification (partial):
+- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772194683-78198/coding_agent_loop/`
+Notes:
+- Harness and artifact writing are verified; full acceptance remains open until at least one provider passes positive smoke assertions.
 ```
 
 ## Phase 4 - Attractor Live E2E Tests
-- [ ] Add a live codergen backend used only by tests that calls `unified_llm` with the live transport and returns the response text.
+- [X] Add a live codergen backend used only by tests that calls `unified_llm` with the live transport and returns the response text.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'attractor_live_backend|attractor_invalid_key_backend|run_attractor_smoke|run_attractor_invalid_key' tests/support/e2e_live_support.tcl tests/e2e_live/*.test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - Backend contract (today):
@@ -356,9 +451,13 @@ Details to cover:
   - `start -> codergen -> exit`
   - codergen node includes a small prompt so the response is cheap and quick.
 
-- [ ] Add a live Attractor run test per configured provider.
+- [X] Add a live Attractor run test per configured provider.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'e2e-live-attractor-(openai|anthropic|gemini)-smoke|e2e-live-attractor-(openai|anthropic|gemini)-invalid-key' tests/e2e_live/*.test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-live-tests.exitcode`
 ```
 Details to cover:
 - runs a minimal pipeline (start -> codergen -> exit)
@@ -374,13 +473,27 @@ Negative cases:
 ### Acceptance Criteria - Phase 4
 - [ ] Attractor live tests run under `make test-e2e` and store artifacts under `.scratch/verification/SPRINT-004/live/<run_id>/attractor/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification (partial):
+- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772194683-78198/attractor/`
+Notes:
+- Harness writes attractor artifacts and deterministic invalid-key failure logs; full acceptance remains open until at least one provider passes positive smoke assertions.
 ```
 
 ## Phase 5 - Makefile Target + Docs + Closeout
-- [ ] Add `test-e2e` target to `Makefile`.
+- [X] Add `test-e2e` target to `Makefile`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n '^test-e2e:|^\\.PHONY:' Makefile` (exit 0)
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 135 make test-e2e` (exit 2)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-makefile.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-makefile.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/make-test-e2e-failfast.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/make-test-e2e-failfast.exitcode`
 ```
 Details to cover:
 - `test-e2e: precommit`
@@ -388,9 +501,13 @@ Details to cover:
 - default invocation should be:
   - `tclsh tests/e2e_live.tcl`
 
-- [ ] Add `docs/howto/live-e2e.md` documenting required env vars, expected costs/side-effects, and where logs/artifacts are written.
+- [X] Add `docs/howto/live-e2e.md` documenting required env vars, expected costs/side-effects, and where logs/artifacts are written.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n 'E2E_LIVE_PROVIDERS|OPENAI_MODEL|ANTHROPIC_MODEL|GEMINI_MODEL|OPENAI_BASE_URL|ANTHROPIC_BASE_URL|GEMINI_BASE_URL|E2E_LIVE_ARTIFACT_ROOT|Costs and Side Effects' docs/howto/live-e2e.md` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-docs-live-e2e.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/check-docs-live-e2e.exitcode`
 ```
 Details to cover:
 - Prerequisites (Tcl packages required for HTTPS transport).
@@ -422,11 +539,30 @@ Notes:
 ### Acceptance Criteria - Phase 5
 - [ ] `make test-e2e` fails fast and descriptively when no keys are configured, and passes when at least one provider is configured and all its tests pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification (partial):
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 135 make test-e2e` (exit 2)
+- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/make-test-e2e-failfast.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/make-test-e2e-failfast.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
+Notes:
+- Fail-fast behavior is verified.
+- Passing live-provider execution remains pending valid provider credentials/model configuration.
 ```
-- [ ] No secrets appear in any captured logs or artifacts.
+- [X] No secrets appear in any captured logs or artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 135 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-1.0` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772194683-78198/secret-leaks.json` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-live-support.log`
+- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-live-support.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772194683-78198/secret-leaks.json`
 ```
 
 ## Appendix - Mermaid Diagrams (Verify Render With mmdc)
