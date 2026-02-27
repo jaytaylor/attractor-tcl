@@ -1,0 +1,85 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+set tool [file join $root tools evidence_lint.sh]
+
+namespace eval ::tests::integration::evidence_lint {
+    variable idx 0
+}
+
+proc ::tests::integration::evidence_lint::tmpdir {} {
+    variable idx
+    incr idx
+    set dir [file join [pwd] .scratch verification SPRINT-002 docs evidence-lint-$idx]
+    file delete -force $dir
+    file mkdir $dir
+    return $dir
+}
+
+proc ::tests::integration::evidence_lint::write_file {path body} {
+    file mkdir [file dirname $path]
+    set fh [open $path w]
+    puts -nonewline $fh $body
+    close $fh
+}
+
+test integration-evidence-lint-valid-1.0 {passes when checked items include sprint evidence references and commands} -setup {
+    set dir [::tests::integration::evidence_lint::tmpdir]
+    set doc [file join $dir SPRINT-002-sample.md]
+    set evidenceA [file join $dir a.log]
+    set evidenceB [file join [pwd] .scratch diagram-renders sprint-002 sample.png]
+    ::tests::integration::evidence_lint::write_file $evidenceA "ok\n"
+    ::tests::integration::evidence_lint::write_file $evidenceB "png\n"
+    ::tests::integration::evidence_lint::write_file $doc [join [list \
+{Legend: [ ] Incomplete, [X] Complete} \
+{} \
+{- [X] One checked item} \
+{```text} \
+{Verification:} \
+{- `echo ok` (exit code 0)} \
+{Evidence:} \
+{- `.scratch/verification/SPRINT-002/docs/evidence-lint-1/a.log`} \
+{Notes:} \
+{- ok} \
+{```} \
+{} \
+{- [X] Diagram render evidence} \
+{```text} \
+{Verification:} \
+{- `echo ok` (exit code 0)} \
+{Evidence:} \
+{- `.scratch/diagram-renders/sprint-002/sample.png`} \
+{Notes:} \
+{- ok} \
+{```} \
+] "\n"]
+} -body {
+    exec bash $tool $doc
+    return 1
+} -cleanup {
+    file delete -force $dir
+} -result 1
+
+test integration-evidence-lint-missing-evidence-ref-1.0 {fails when checked item lacks an expected .scratch evidence reference} -setup {
+    set dir [::tests::integration::evidence_lint::tmpdir]
+    set doc [file join $dir SPRINT-002-sample.md]
+    ::tests::integration::evidence_lint::write_file $doc [join [list \
+{Legend: [ ] Incomplete, [X] Complete} \
+{} \
+{- [X] One checked item} \
+{```text} \
+{Verification:} \
+{- `echo ok` (exit code 0)} \
+{Evidence:} \
+{- `docs/spec-coverage/requirements.json`} \
+{Notes:} \
+{- missing scratch evidence} \
+{```} \
+] "\n"]
+} -body {
+    catch {exec bash $tool $doc} out
+    expr {[string first "missing .scratch evidence reference" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1
