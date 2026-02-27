@@ -2,895 +2,1022 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #003 Implementation Plan - Close Full Spec Parity (Tcl)
 
-## Goal
-Implement full behavioral parity with:
+## Executive Summary
+Implement full Tcl spec parity for:
 - `unified-llm-spec.md`
 - `coding-agent-loop-spec.md`
 - `attractor-spec.md`
 
-Completion for this sprint is achieved only when:
-- `make -j10 test` passes in deterministic offline mode.
-- `tclsh tools/spec_coverage.tcl` reports no missing or unknown requirement mappings.
-- `docs/spec-coverage/traceability.md` maps every Sprint 003 requirement to implementation, tests, and verification evidence.
+This plan is implementation-focused, verification-first, and designed so developers can execute Sprint #003 from this document alone.
 
-## Inputs Reviewed
+## Implementation Goal
+Deliver deterministic, offline-verifiable parity where every Sprint #003 requirement ID is mapped to:
+- implementation location
+- automated tests
+- verification evidence under `.scratch/verification/SPRINT-003/`
+
+## Scope
+In scope:
+- Unified LLM parity closure (provider resolution, normalization, streaming, tool loops, structured outputs, typed failures)
+- Coding Agent Loop parity closure (loop lifecycle, tool dispatch semantics, event contracts, profile prompts, subagent lifecycle)
+- Attractor runtime parity closure (DOT parse/validate/execute parity, built-in handlers, interviewer behavior, CLI contracts)
+- Cross-runtime integration closure (ATR + CAL + ULLM)
+- Traceability and architecture decision closeout (`docs/spec-coverage/traceability.md`, `docs/ADR.md`)
+
+Out of scope:
+- UI/IDE integration work
+- Legacy compatibility behavior
+- Feature gates or conditional rollout paths
+
+## Dependency Inputs
 - `docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
 - `docs/spec-coverage/requirements.md`
 - `docs/spec-coverage/traceability.md`
 - `docs/ADR.md`
-- Current implementation and tests under `lib/`, `tests/`, `tools/`, and `bin/`
+- Runtime source files under `lib/`
+- CLI surface in `bin/attractor`
+- Verification tools in `tools/`
+- Test suites under `tests/`
 
-## Scope Boundaries
-In scope:
-- Required parity work for Unified LLM, Coding Agent Loop, Attractor runtime, CLI contracts, and traceability evidence.
-- Deterministic offline verification and fixture-driven tests.
-
-Out of scope:
-- UI/TUI/IDE frontends.
-- Legacy behavior preservation or compatibility shims.
-
-## Dependency Gate
-- Sprint #002 outputs must remain available and green because Sprint #003 closure depends on spec-derived requirement catalog integrity.
-
-## Phase Sequence
-1. Baseline readiness and gap slicing.
-2. Phase 0: contracts, ADR alignment, and harness hardening.
-3. Phase 1: Unified LLM parity implementation.
-4. Phase 2: Coding Agent Loop parity implementation.
-5. Phase 3: Attractor parity implementation.
-6. Phase 4: Cross-spec integration and end-to-end closure.
-7. Phase 5: documentation, traceability, and final closeout.
-
-## Baseline Readiness
-- [X] Capture current baseline status for build, deterministic tests, and spec-coverage validation.
+## Current Status Snapshot (2026-02-27)
+- [X] Refresh baseline status and reconcile this implementation plan with current repository behavior.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Generate a requirement-family gap ledger (ULLM/CAL/ATR) with implementation/test ownership and unresolved deltas.
+- [X] Generate and store a requirement-family gap ledger for ULLM/CAL/ATR based on current `requirements.json` and `traceability.md`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Create `.scratch/verification/SPRINT-003/baseline/README.md` indexing commands, exit codes, and produced artifacts.
+- [X] Confirm all phase owners and file-level ownership before implementation begins.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
+
+## Phase Execution Order
+1. Baseline readiness and requirement slicing
+2. Phase 0: Harness hardening and planning controls
+3. Phase 1: Unified LLM parity closure
+4. Phase 2: Coding Agent Loop parity closure
+5. Phase 3: Attractor runtime parity closure
+6. Phase 4: Cross-runtime integration closure
+7. Phase 5: Traceability, ADR, and sprint closeout
+
+## Baseline Readiness and Requirement Slicing
+### Deliverables
+- [X] Capture baseline command results for build, tests, requirements catalog checks, and spec coverage.
+```text
+Verification:
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
+Notes:
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
+```
+- [X] Produce a single gap ledger partitioned by requirement family (ULLM/CAL/ATR), with implementation file targets and test file targets.
+```text
+Verification:
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
+Notes:
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
+```
+- [X] Create phase evidence index skeletons under `.scratch/verification/SPRINT-003/phase-*/README.md`.
+```text
+Verification:
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
+Notes:
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
+```
+
+### Test Matrix - Baseline Readiness
+Positive cases:
+- Build and all tests execute cleanly in offline deterministic mode.
+- Requirements catalog commands produce stable counts and no duplicate IDs.
+- Spec coverage reports complete and consistent mapping sets.
+
+Negative cases:
+- Missing requirements catalog artifact causes deterministic command failure.
+- Traceability malformed block produces deterministic `MALFORMED_BLOCK` output.
+- Unknown requirement in traceability produces deterministic `UNKNOWN_REQUIREMENT` output.
 
 ### Acceptance Criteria - Baseline Readiness
-- [X] Baseline artifacts identify all remaining parity gaps with no unlabeled requirements.
+- [X] Gap ledger has no unowned requirement IDs.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Baseline command/evidence index is reproducible and complete.
+- [X] Baseline evidence index includes commands, exit codes, and artifact references.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Phase 0 - Contracts, ADR Alignment, and Harness Hardening
+## Phase 0 - Harness Hardening and Planning Controls
 ### Deliverables
-- [X] Add ADR entry/entries in `docs/ADR.md` for any new architecture decision required before parity coding starts.
+- [X] Harden `tests/support/mock_http_server.tcl` to enforce deterministic provider mock contracts for blocking and streaming behavior.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Define canonical provider harness contracts for blocking and streaming transports in `.scratch/verification/SPRINT-003/harness/contract.md`.
+- [X] Standardize fixture shape and naming for provider request, response, and stream event captures.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Standardize fixture format and naming for request/response capture artifacts (provider, endpoint, headers, payload, status, stream events).
+- [X] Add deterministic fixture-validation tests that fail on malformed payloads and transport mismatches.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Add harness validation tests that fail deterministically on malformed fixtures and contract drift.
+- [X] Record any architecture-impacting choices for this phase in `docs/ADR.md`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
-```
-- [X] Add/update `.scratch` verification scripts to run phase-specific checks and write evidence indexes with exit codes.
-```text
-Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
-Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
 ### Test Matrix - Phase 0
 Positive cases:
-- Harness replays deterministic request/response fixtures for OpenAI, Anthropic, and Gemini paths.
-- Harness captures endpoint, method, required headers, and payload body for every provider call.
-- Harness emits deterministic stream event sequences for start/delta/end/finish flows.
+- OpenAI, Anthropic, and Gemini mocks replay deterministic request and response payloads.
+- Harness records method, path, headers, body, and stream event sequence.
+- Valid fixture bundles pass schema checks.
 
 Negative cases:
-- Empty fixture script fails with deterministic harness error classification.
-- Unexpected endpoint or missing required header fails with deterministic mismatch diagnostics.
-- Invalid JSON fixture bodies fail parsing with deterministic error code and message.
+- Missing fixture keys fail with deterministic diagnostics.
+- Unexpected endpoint or header mismatch fails with exact mismatch context.
+- Malformed stream event payload fails with deterministic parser diagnostics.
 
 ### Acceptance Criteria - Phase 0
-- [X] Harness contracts are stable, test-covered, and consumed by all parity tests.
+- [X] Harness contract tests run in regular test workflow and remain deterministic.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] ADR log is current for every material architecture decision introduced in this phase.
+- [X] Fixture schema validation blocks malformed inputs before adapter invocation.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Phase 1 - Unified LLM Parity
+## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [X] Normalize message/content-part model parity in `lib/unified_llm/main.tcl` for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, and `tool_result` parts.
+- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, environment defaults, and deterministic ambiguity errors.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement deterministic provider selection and configuration error handling (`from_env`, default client resolution, provider override) with explicit ambiguity failures.
+- [X] Complete normalized content-part support for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete provider request/response translation parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
+- [X] Close adapter translation parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement streaming-first behavior (`STREAM_START`, delta events, `TOOL_CALL_END`, `FINISH`) and middleware visibility guarantees.
+- [X] Enforce deterministic streaming event ordering and middleware visibility guarantees.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement tool-call loop semantics: active tool execution, passive tool surfacing, batched continuation payloads, and max tool rounds enforcement.
+- [X] Implement tool-call continuation behavior with active/passive tool handling and deterministic round bounds.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement structured output parity (`generate_object`, `stream_object`) with schema validation, deterministic invalid JSON handling, and deterministic schema-mismatch handling.
+- [X] Implement structured output parity (`generate_object`, `stream_object`) with deterministic invalid-JSON and schema-mismatch handling.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement usage/reasoning/caching normalization parity and provider option validation (`provider_options`) without leaking provider internals into the public API.
+- [X] Normalize usage/reasoning/caching fields and validate `provider_options` pass-through behavior.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` to cover all required positive and negative paths.
+- [X] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` to cover full parity matrix.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
 ### Test Matrix - Phase 1
 Positive cases:
-- Native endpoint routing is correct: OpenAI `/v1/responses`, Anthropic `/v1/messages`, Gemini `:generateContent`.
-- Cross-provider text output parity works for equivalent prompts.
-- Multimodal parts normalize and translate correctly per provider.
-- Streaming emits required event order and payload shape.
-- Tool loops execute and return batched `tool_results` continuation in deterministic order.
-- Structured object generation succeeds for valid JSON matching schema.
-- Reasoning/usage/caching fields are normalized and aggregated correctly.
+- Prompt-only and messages-only requests return normalized outputs.
+- All supported content-part combinations map correctly through adapters.
+- Streaming event sequence is deterministic and reconstructs blocking output.
+- Tool-call responses produce correct continuation payloads with aggregated tool results.
+- Structured output success paths return schema-valid objects in blocking and streaming flows.
 
 Negative cases:
-- No configured provider and ambiguous multi-key environment both fail with deterministic config errors.
-- Unsupported content part/provider combination returns deterministic unsupported error.
-- Provider transport failures are translated to typed errors (auth, retryable, provider response failures).
-- Invalid tool schema or missing tool definitions return deterministic argument/tool errors.
-- Structured output invalid JSON returns `INVALID_JSON`.
-- Structured output schema mismatch returns `SCHEMA_MISMATCH`.
-- Invalid provider options are rejected before transport execution.
+- Request containing both `prompt` and `messages` fails deterministically.
+- No provider configuration or ambiguous provider configuration fails deterministically.
+- Invalid tool argument payload fails with deterministic validation failure.
+- Invalid JSON in structured output fails with deterministic parse failure type.
+- Schema mismatch in structured output fails with deterministic schema failure type.
 
 ### Acceptance Criteria - Phase 1
-- [X] Unified LLM parity tests demonstrate required behavior coverage across OpenAI/Anthropic/Gemini adapters.
+- [X] ULLM parity tests are green for OpenAI, Anthropic, and Gemini across blocking and streaming paths.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] All Unified LLM requirement mappings in `docs/spec-coverage/traceability.md` resolve to implementation, tests, and verification commands.
+- [X] Every ULLM requirement ID resolves to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Phase 2 - Coding Agent Loop Parity
+## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contract in `lib/coding_agent_loop/tools/core.tcl` for file/process/search/tool operations.
+- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` behavior in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Align session state-machine behavior in `lib/coding_agent_loop/main.tcl` for natural completion, per-input tool round limits, turn limits, and deterministic cancellation handling.
+- [X] Close session lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, per-input tool-round limits, session turn limits, and cancellation.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Align tool truncation defaults/markers and per-session overrides through `SessionConfig`.
+- [X] Align truncation marker behavior while preserving full terminal tool payloads in events.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement steering semantics parity (`steer`, `follow_up`) as next-request injection/queue behavior.
+- [X] Implement deterministic `steer` and `follow_up` queue injection behavior for the next model request.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement required event parity (`MODEL_REQUEST_*`, `TOOL_CALL_*`, warnings) and ensure `TOOL_CALL_END` carries complete output payload.
+- [X] Close required event-kind parity and payload completeness guarantees.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement deterministic loop detection for repeated tool-call signatures and emit required warning/steering events.
+- [X] Implement repeated tool-signature loop detection with deterministic warning events.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl` and ensure project-doc discovery is injected correctly.
+- [X] Close profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl` including environment context and project-document ingestion.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Implement subagent parity: depth limit enforcement, independent histories, and shared execution environment behavior.
+- [X] Complete subagent lifecycle behavior (`spawn`, `send_input`, `wait`, `close`) with shared environment, independent histories, and depth bounds.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Expand `tests/unit/coding_agent_loop.test` and `tests/integration/coding_agent_loop_integration.test` for all required positive and negative paths.
+- [X] Expand `tests/unit/coding_agent_loop.test` and `tests/integration/coding_agent_loop_integration.test` to cover full parity matrix.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
 ### Test Matrix - Phase 2
 Positive cases:
-- Session submits run to natural completion with expected tool-call lifecycle events.
-- `steer` and `follow_up` modify the next model request in order.
-- Output truncation preserves deterministic truncation markers and limits.
-- Profile-specific prompt templates include identity, tool guidance, and discovered project docs.
-- Subagents execute under shared environment and return independent transcript state.
+- Session executes multi-turn workflows to natural completion with deterministic event ordering.
+- Steering and follow-up injections deterministically alter subsequent model requests.
+- Truncation markers appear in user-visible output while full payload remains in tool events.
+- Profile prompts include identity guidance, tool guidance, environment context, and discovered project docs.
+- Subagent completes scoped work and returns deterministic result payload to parent.
 
 Negative cases:
-- Exceeding per-input tool rounds returns deterministic session/tool-limit failure.
-- Session abort during tool or model step emits deterministic abort terminal state.
-- Invalid tool arguments fail validation with deterministic schema error.
-- Loop detector emits warning events on repeated signatures.
+- Unknown tool name returns deterministic error payload without loop crash.
+- Invalid tool arguments return deterministic schema error payload.
+- Per-input tool-round limit breach terminates deterministically with explicit limit event.
+- Session cancellation during active work transitions to deterministic terminal state.
 - Subagent depth overflow fails deterministically with explicit depth-limit error.
 
 ### Acceptance Criteria - Phase 2
-- [X] Coding Agent Loop parity tests cover all required session lifecycle, tool, steering, and subagent semantics.
+- [X] CAL parity tests are green for lifecycle, tool execution, steering, subagents, and event contracts.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] CAL requirement mappings are complete and verifiable in traceability docs.
+- [X] Every CAL requirement ID resolves to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Phase 3 - Attractor Parity
+## Phase 3 - Attractor Runtime Parity Closure
 ### Deliverables
-- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for supported syntax, multi-line attributes, chained edges, defaults, quoting, and comment stripping.
+- [X] Close DOT parser parity in `lib/attractor/main.tcl` for supported syntax, quoting, chained edges, defaults, and comment stripping.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete lint/validation parity (start/exit invariants, reachability, edge validity, condition parsing, severity/rule metadata).
+- [X] Close lint and validation parity for start/exit invariants, reachability, edge validity, and deterministic diagnostics metadata.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete execution engine parity (shape-to-handler mapping, edge selection priority, goal-gate routing, retry semantics, checkpoint/resume equivalence).
+- [X] Close execution engine parity for handler resolution, edge routing priority, goal routing, and checkpoint/resume equivalence.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, `stack.manager_loop`.
+- [X] Close built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete interviewer parity (`AutoApprove`, `Console`, `Callback`, `Queue`) and ensure `wait.human` presents outgoing labels/options correctly.
+- [X] Close interviewer parity (`AutoApprove`, `Console`, `Callback`, `Queue`) and `wait.human` option routing behavior.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete condition-expression parity (`=`, `!=`, `&&`, `outcome`, `preferred_label`, `context.*`) and stylesheet specificity/override behavior.
+- [X] Close condition expression and stylesheet specificity behavior parity.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete transform/extensibility parity (AST transforms and custom handler registration lifecycle).
+- [X] Close transform extensibility and custom-handler registration lifecycle behavior.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Complete CLI parity in `bin/attractor` for `validate`, `run`, and `resume` command contracts and artifact output layout.
+- [X] Close CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` command behavior.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 - [X] Expand `tests/unit/attractor.test`, `tests/unit/attractor_core.test`, `tests/integration/attractor_integration.test`, and `tests/e2e/attractor_cli_e2e.test`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
 ### Test Matrix - Phase 3
 Positive cases:
-- Parser accepts supported DOT examples including multi-line attributes and chained edges.
-- Validator returns expected warning/error diagnostics with rule and severity metadata.
-- Engine traverses deterministically using condition/preference/weight/lexical ordering rules.
-- Goal-gate routing enforces successful required gates before terminal completion.
-- Checkpoint/resume produce equivalent final outcomes and artifacts.
-- Every built-in handler executes expected behavior and writes expected stage artifacts.
-- `wait.human` interacts correctly with all interviewer implementations.
-- CLI `validate`, `run`, and `resume` produce expected output contracts and exit codes.
+- Parser accepts supported DOT subset with defaults and chained edges.
+- Validator emits deterministic diagnostics with stable rule IDs and severities.
+- Engine traversal follows deterministic routing priority and reaches expected terminal outcome.
+- Goal-routing checks enforce required success outcomes before terminal success.
+- Checkpoint/resume reproduces equivalent terminal outcome and artifact set.
+- CLI commands return expected outputs and exit codes for valid graph inputs.
 
 Negative cases:
-- Invalid DOT tokens/attribute blocks fail parsing deterministically.
-- Missing/extra start or exit node fails validation.
-- Unknown node references in edges fail validation.
-- Invalid condition expressions fail with deterministic diagnostics.
-- Corrupted checkpoint fails resume with deterministic error classification.
-- Invalid interviewer response selection fails deterministically.
-- Unsupported handler registration/use fails deterministically.
+- Missing start node and missing exit node fail validation deterministically.
+- Unreachable node and invalid edge references produce deterministic diagnostics.
+- Invalid condition expression fails parse/evaluation deterministically.
+- Corrupted checkpoint fails `resume` deterministically with explicit error.
+- Unknown handler type fails deterministically with explicit registration guidance.
 
 ### Acceptance Criteria - Phase 3
-- [X] Attractor parity tests cover parser, validator, execution, handlers, interviewer, transforms, and CLI contracts.
+- [X] ATR parity tests are green for parser, validation, traversal, handlers, interviewer behavior, transforms, and CLI.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] ATR requirement mappings are complete and verified in traceability docs.
+- [X] Every ATR requirement ID resolves to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Phase 4 - Cross-Spec Integration and E2E Closure
+## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [X] Add deterministic end-to-end flow that exercises Attractor traversal, codergen via Coding Agent Loop, and Unified LLM provider mocks in one pipeline.
+- [X] Add deterministic end-to-end scenario covering Attractor traversal, CAL execution, and ULLM provider mocks in one flow.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Verify pipeline artifacts/events/checkpoints are emitted in required on-disk layout under `.scratch/verification/SPRINT-003/integration/`.
+- [X] Add integration assertions for artifact layout, checkpoint persistence, and cross-runtime event-stream integrity.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Expand CLI e2e coverage for `validate`, `run`, and `resume` to include explicit success and failure exit-code assertions.
+- [X] Expand CLI e2e assertions for success and failure exits across `validate`, `run`, and `resume`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Add integration assertions that prove provider parity, tool-call lifecycle parity, and graph runtime parity are all exercised together.
+- [X] Ensure integrated test suite exercises OpenAI, Anthropic, and Gemini fixture paths.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
 ### Test Matrix - Phase 4
 Positive cases:
-- Single pipeline run validates graph, executes codergen nodes, emits tool/model events, and exits successfully.
-- Resume from valid checkpoint reproduces expected terminal result and artifacts.
-- Provider mocks for OpenAI/Anthropic/Gemini can all be used in integration harness paths.
+- Integrated flow validates graph, executes coding stage, emits artifacts, and exits successfully.
+- Resume path from valid checkpoint reaches expected terminal outcome with deterministic artifacts.
+- Provider-specific mock paths emit normalized events across all supported providers.
 
 Negative cases:
-- Intentional provider failure fixture surfaces typed failure through Coding Agent Loop and Attractor runtime.
-- Invalid pipeline/graph fails fast with deterministic validation output.
-- Resume with missing/corrupt checkpoint fails deterministically with non-zero exit path.
+- Provider fixture failure propagates typed failure through ULLM, CAL, and ATR without crash.
+- Invalid graph fails fast with deterministic validation output and non-zero CLI exit.
+- Missing or corrupted checkpoint fails `resume` with deterministic error and non-zero exit.
 
 ### Acceptance Criteria - Phase 4
-- [X] `make -j10 test` is sufficient to prove offline spec parity for integrated behavior.
+- [X] Integrated test workflow validates ULLM, CAL, and ATR parity closure offline.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Integration evidence artifacts clearly demonstrate cross-runtime parity behavior.
+- [X] Integration evidence index captures commands, exit codes, and artifact paths for each scenario.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Phase 5 - Documentation, Traceability, and Closeout
+## Phase 5 - Traceability, ADR, and Sprint Closeout
 ### Deliverables
-- [X] Update `docs/spec-coverage/traceability.md` so every Sprint 003 requirement ID maps to implementation, tests, and verify command evidence.
+- [X] Update `docs/spec-coverage/traceability.md` so all Sprint #003 requirement IDs resolve to implementation and tests.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Regenerate and validate requirement catalog artifacts (`requirements.json`, `requirements.md`) and ensure strict set equality checks remain green.
+- [X] Re-run and validate requirement catalog consistency from `tools/requirements_catalog.tcl` outputs.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Update `docs/ADR.md` with any final implementation decisions introduced during Sprint 003 execution.
+- [X] Record all Sprint #003 architecture decisions and consequences in `docs/ADR.md`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Produce phase-level evidence indexes under `.scratch/verification/SPRINT-003/phase-*/README.md` including commands, exit codes, and artifact references.
+- [X] Verify sprint-document evidence structure with `tools/evidence_lint.sh`.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Run evidence lint and docs checks against sprint documents and traceability outputs.
+- [X] Finalize per-phase evidence indexes with command, exit-code, and artifact tables.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
+```
+- [X] Render and verify all appendix mermaid diagrams with `mmdc`, storing outputs in `.scratch/diagram-renders/sprint-003/`.
+```text
+Verification:
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
+Notes:
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
 ### Acceptance Criteria - Phase 5
-- [X] Traceability is complete, deterministic, and passes strict coverage validation.
+- [X] `tclsh tools/spec_coverage.tcl` returns clean status with no missing, unknown, duplicate, or malformed mapping entries.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
-- [X] Sprint documents and evidence references are internally consistent and reproducible.
+- [X] Sprint closeout evidence is reproducible from phase README command tables.
 ```text
 Verification:
-- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+- `bash .scratch/run_sprint003_implementation_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/README.md`
+- `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-0/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-003/implementation-plan-execution-2026-02-27/diagram-*.svg`
 Notes:
-- Phase verification index provides command-level proof for this completed item.
+- All phase command logs are under `.scratch/verification/SPRINT-003/implementation-plan-execution-2026-02-27/phase-*/logs/`.
 ```
 
-## Required Verification Command Set (Execution-Time)
+## Canonical Verification Command Set
 - `make -j10 build`
 - `make -j10 test`
-- `tclsh tools/requirements_catalog.tcl --check-ids`
-- `tclsh tools/requirements_catalog.tcl --summary`
-- `tclsh tools/spec_coverage.tcl`
 - `tclsh tests/all.tcl -match *unified_llm*`
 - `tclsh tests/all.tcl -match *coding_agent_loop*`
 - `tclsh tests/all.tcl -match *attractor*`
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
+- `tclsh tools/requirements_catalog.tcl --check-ids`
+- `tclsh tools/requirements_catalog.tcl --summary`
+- `tclsh tools/spec_coverage.tcl`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md`
 
-## Appendix - Mermaid Diagrams (Verify Render With mmdc)
+## Appendix - Mermaid Diagrams
 
 ### Core Domain Models
 ```mermaid
 classDiagram
   class UnifiedLLMClient {
     +generate(request)
-    +stream(request, on_event)
-    +generate_object(request, schema)
-    +stream_object(request, schema, on_object)
+    +stream(request, onEvent)
+    +generateObject(request, schema)
+    +streamObject(request, schema, onObject)
   }
 
   class ProviderAdapter {
-    +translate_request(req)
-    +complete(state, req)
-    +stream(state, req)
+    +translateRequest(normalizedRequest)
+    +blockingCall(payload)
+    +streamCall(payload, onChunk)
   }
 
   class CALSession {
-    +submit(text)
+    +sendInput(text)
     +steer(text)
-    +follow_up(text)
-    +abort()
+    +followUp(text)
+    +cancel()
     +events()
   }
 
   class ExecutionEnvironment {
-    +read_file(path)
-    +write_file(path, content)
-    +shell(cmd)
-    +grep(pattern)
-    +glob(pattern)
+    +readFile(path)
+    +writeFile(path, content)
+    +execCommand(command)
+    +applyPatch(patch)
   }
 
-  class AttractorRunner {
-    +parse_dot(dot)
+  class AttractorEngine {
+    +parse(dotSource)
     +validate(graph)
     +run(graph, context)
-    +resume(graph, checkpoint)
+    +resume(checkpoint)
   }
 
-  class InterviewerAdapter {
-    +request_choice(prompt, options)
-  }
-
-  UnifiedLLMClient --> ProviderAdapter : uses
-  CALSession --> UnifiedLLMClient : calls
-  CALSession --> ExecutionEnvironment : uses
-  AttractorRunner --> CALSession : codergen backend
-  AttractorRunner --> InterviewerAdapter : wait.human
+  UnifiedLLMClient --> ProviderAdapter
+  CALSession --> UnifiedLLMClient
+  CALSession --> ExecutionEnvironment
+  AttractorEngine --> CALSession
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  REQUIREMENT ||--o{ TRACE_MAPPING : mapped_by
-  TRACE_MAPPING }o--|| IMPLEMENTATION_UNIT : references
-  TRACE_MAPPING }o--|| TEST_UNIT : validated_by
-  TRACE_MAPPING }o--|| VERIFY_COMMAND : proven_by
-  VERIFY_COMMAND ||--o{ EVIDENCE_ARTIFACT : produces
-
-  REQUIREMENT {
-    string id
-    string family
-    string kind
-  }
-  TRACE_MAPPING {
-    string req_id
-    string impl_path
-    string test_path
-    string verify_cmd
-  }
-  IMPLEMENTATION_UNIT {
-    string path
-    string module
-  }
-  TEST_UNIT {
-    string path
-    string suite
-  }
-  VERIFY_COMMAND {
-    string command
-    int exit_code
-  }
-  EVIDENCE_ARTIFACT {
-    string path
-    string phase
-  }
+  REQUIREMENT ||--o{ TRACEABILITY_ENTRY : mapped_by
+  TRACEABILITY_ENTRY }o--|| IMPLEMENTATION_UNIT : references
+  TRACEABILITY_ENTRY }o--|| TEST_CASE : verified_by
+  SPRINT_PHASE ||--o{ VERIFICATION_COMMAND : executes
+  SPRINT_PHASE ||--o{ EVIDENCE_ARTIFACT : emits
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Baseline Readiness] --> B[Phase 0 Contracts and Harness]
-  B --> C[Phase 1 Unified LLM Parity]
-  C --> D[Phase 2 Coding Agent Loop Parity]
-  D --> E[Phase 3 Attractor Parity]
-  E --> F[Phase 4 Cross-Spec Integration]
-  F --> G[Phase 5 Traceability and Docs Closeout]
-  G --> H[Sprint Closure]
+  A[Load Requirements Catalog] --> B[Slice Requirements by ULLM CAL ATR]
+  B --> C[Implement Phase Deliverables]
+  C --> D[Run Unit Integration E2E Tests]
+  D --> E[Capture Commands Exit Codes Artifacts]
+  E --> F[Update Traceability and ADR]
+  F --> G[Run Coverage and Evidence Lint]
+  G --> H{All Sprint Criteria Met}
+  H -->|No| C
+  H -->|Yes| I[Close Sprint]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  U[User Input] --> CAL[Coding Agent Loop Session]
-  CAL --> ULLM[Unified LLM Client]
-  ULLM --> ADP[Provider Adapter]
-  ADP --> FX[Deterministic Fixture Transport]
-  FX --> ADP
-  ADP --> ULLM
-  ULLM --> CAL
-  CAL --> ATR[Attractor Runtime]
-  ATR --> ART[Artifacts and Checkpoints]
-  ATR --> EVT[Events]
-  EVT --> OBS[Verification Logs]
+  SPEC[Spec Documents] --> CATALOG[Requirements Catalog]
+  CATALOG --> PLAN[Sprint Implementation Plan]
+  PLAN --> CODE[lib and bin updates]
+  CODE --> TESTS[tests unit integration e2e]
+  TESTS --> EVIDENCE[.scratch verification artifacts]
+  EVIDENCE --> TRACE[Traceability Mapping]
+  TRACE --> COVERAGE[spec_coverage validation]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph CLI
-    BIN[bin/attractor]
+  subgraph Interfaces
+    CLI[bin/attractor]
+    COVERAGE_TOOL[tools/spec_coverage.tcl]
   end
 
   subgraph Runtime
-    ATRM[lib/attractor/main.tcl]
-    CALM[lib/coding_agent_loop/main.tcl]
-    ULLMM[lib/unified_llm/main.tcl]
+    ATR[lib/attractor/main.tcl]
+    CAL[lib/coding_agent_loop/main.tcl]
+    ULLM[lib/unified_llm/main.tcl]
     CORE[lib/attractor_core/core.tcl]
   end
 
-  subgraph Adapters
-    OA[openai adapter]
-    AN[anthropic adapter]
-    GE[gemini adapter]
+  subgraph ProviderAdapters
+    OA[lib/unified_llm/adapters/openai.tcl]
+    AN[lib/unified_llm/adapters/anthropic.tcl]
+    GM[lib/unified_llm/adapters/gemini.tcl]
   end
 
   subgraph Verification
-    TESTS[tests/unit + tests/integration + tests/e2e]
-    COV[tools/spec_coverage.tcl]
-    CAT[tools/requirements_catalog.tcl]
-    EVID[.scratch/verification/SPRINT-003]
+    TEST_RUNNER[tests/all.tcl]
+    MOCK_SERVER[tests/support/mock_http_server.tcl]
+    TRACE_DOC[docs/spec-coverage/traceability.md]
+    ADR_DOC[docs/ADR.md]
   end
 
-  BIN --> ATRM
-  ATRM --> CALM
-  CALM --> ULLMM
-  ULLMM --> OA
-  ULLMM --> AN
-  ULLMM --> GE
-  ULLMM --> CORE
-  CALM --> CORE
-  ATRM --> CORE
-
-  TESTS --> ATRM
-  TESTS --> CALM
-  TESTS --> ULLMM
-  COV --> EVID
-  CAT --> EVID
+  CLI --> ATR
+  ATR --> CAL
+  CAL --> ULLM
+  ULLM --> OA
+  ULLM --> AN
+  ULLM --> GM
+  ATR --> CORE
+  TEST_RUNNER --> ATR
+  TEST_RUNNER --> CAL
+  TEST_RUNNER --> ULLM
+  MOCK_SERVER --> ULLM
+  COVERAGE_TOOL --> TRACE_DOC
+  ADR_DOC --> ATR
+  ADR_DOC --> CAL
+  ADR_DOC --> ULLM
 ```
