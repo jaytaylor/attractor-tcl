@@ -120,27 +120,63 @@ Contract to define (must be documented in Phase 5):
 ```
 
 ## Phase 1 - Live HTTPS Transport + Redaction
-- [ ] Implement a provider-agnostic HTTPS JSON transport callable via `client_new -transport ...`.
+- [ ] Implement a provider-agnostic HTTPS JSON transport (Tcl `http` + `tls`) callable via `client_new -transport ...`.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
-Details to cover:
-- POST JSON requests
-- returning `{status_code, headers, body}` in the same shape tests already expect
-- base URL selection per provider (with override support)
+Implementation notes (be explicit in ADR + code comments where appropriate):
+- Recommended location: `lib/unified_llm/transports/https_json.tcl`
+- Recommended entrypoint proc: `::unified_llm::transports::https_json::call`
+- Transport input dict (passed by `::unified_llm::adapters::__invoke_transport`):
+  - `provider` (one of `openai|anthropic|gemini`)
+  - `base_url` (optional; may be empty)
+  - `endpoint` (starts with `/`)
+  - `payload` (dict; transport JSON-encodes it)
+  - `headers` (dict; transport converts to header list)
+- Transport output dict (must match existing tests’ expectations):
+  - `status_code` (integer)
+  - `headers` (dict; keys lower-cased)
+  - `body` (string; raw response body)
+- HTTPS support:
+  - Ensure `https://` requests work by registering TLS socket once: `http::register https 443 ::tls::socket`
+- Base URL resolution order (highest precedence first):
+  - request `base_url` (from client `-base_url`, if provided)
+  - provider env var override (`OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `GEMINI_BASE_URL`)
+  - provider default:
+    - OpenAI: `https://api.openai.com`
+    - Anthropic: `https://api.anthropic.com`
+    - Gemini: `https://generativelanguage.googleapis.com`
+- Error handling contract (needed for deterministic negative live tests):
+  - Non-2xx HTTP responses must raise a Tcl error with `-errorcode` shaped like:
+    - `UNIFIED_LLM TRANSPORT HTTP <provider> <status_code>`
+  - Network/TLS failures must raise a Tcl error with `-errorcode` shaped like:
+    - `UNIFIED_LLM TRANSPORT NETWORK <provider>`
+  - Error messages must not include API keys or auth header values.
 
-- [ ] Ensure request/response logging redacts secrets.
+- [ ] Ensure request/response logging redacts secrets (including in error surfaces and in any structured artifacts).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
 Details to cover:
 - never log `Authorization`, `x-api-key`, `x-goog-api-key`
 - never log raw env var values for API keys
+- Ensure `unified_llm` response dicts do not carry raw secrets (especially the `response.request.headers` field, since tcltest failure output may print dicts).
+  - Preferred approach: store a redacted copy of request headers in the returned response dict and keep raw secrets only in-memory for the actual HTTP call.
 
 - [ ] Add deterministic unit/integration tests for the transport layer using a local in-process HTTP server fixture (no real provider calls).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+Details to cover:
+- Server fixture:
+  - Implement a minimal HTTP server using `socket -server` in `tests/support/` (or inline in the transport test file if preferred).
+  - Capture the full request line + headers + body so tests can assert:
+    - JSON body matches expected payload
+    - `Content-Type` header is correct
+    - Secret headers are present in the *wire* request but redacted in *logs/artifacts*
+- Transport tests:
+  - Happy path: transport posts JSON and returns `{status_code, headers, body}` with headers normalized to lower-case keys
+  - Negative path: server returns a non-2xx status and transport raises the correct errorcode without secrets in the message
 
 ### Acceptance Criteria - Phase 1
 - [ ] The live transport can successfully reach a local server, send JSON, and receive JSON, with redaction proven by tests.
@@ -153,41 +189,55 @@ Details to cover:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+Details to cover:
+- The harness performs pre-flight selection + validation:
+  - Determine configured providers from env (API keys + `E2E_LIVE_PROVIDERS`)
+  - If zero providers are selected, print a descriptive message and exit non-zero
+- The harness prints a clear run summary (selected providers, selected components, artifact root path).
+
 - [ ] Implement OpenAI live smoke tests (requires `OPENAI_API_KEY`).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
 Details to cover:
-- blocking generation returns non-empty text
-- streaming path (if implemented) emits start/delta/finish and produces non-empty text
+- Use a short, low-variance prompt (example: “Say hello in one sentence.”) and assert:
+  - blocking generation returns non-empty text
+  - response has a provider-generated `response_id` (not the synthetic default)
+  - response `usage.input_tokens > 0` and `usage.output_tokens > 0`
+  - response `request.headers` (if present) is redacted (no bearer token)
 
 - [ ] Implement Anthropic live smoke tests (requires `ANTHROPIC_API_KEY`).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
 Details to cover:
-- blocking generation returns non-empty text
-- streaming path (if implemented) emits start/delta/finish and produces non-empty text
+- Use a short, low-variance prompt and assert:
+  - blocking generation returns non-empty text
+  - response has a provider-generated `response_id` (not the synthetic default)
+  - response `usage.input_tokens > 0` and `usage.output_tokens > 0`
+  - response `request.headers` (if present) is redacted (no raw `x-api-key`)
 
 - [ ] Implement Gemini live smoke tests (requires `GEMINI_API_KEY`).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
 Details to cover:
-- blocking generation returns non-empty text
-- streaming path (if implemented) emits start/delta/finish and produces non-empty text
+- Use a short, low-variance prompt and assert:
+  - blocking generation returns non-empty text
+  - response `raw.candidates` exists (to distinguish live responses from the offline transport stub)
+  - response `usage.input_tokens > 0` and `usage.output_tokens > 0`
+  - response `request.headers` (if present) is redacted (no raw `x-goog-api-key`)
 
 ### Test Matrix - Phase 2 (Explicit)
 Positive cases (must be implemented):
 - OpenAI: simple prompt -> non-empty response
 - Anthropic: simple prompt -> non-empty response
 - Gemini: simple prompt -> non-empty response
-- If streaming is supported: at least one delta event occurs and the concatenation is non-empty
 
 Negative cases (must be implemented):
 - No provider keys configured at all: the harness fails fast with a descriptive error message (and does not attempt any network calls)
 - Explicit provider requested but missing key: the harness fails fast with a descriptive error message (and does not attempt any network calls)
-- Invalid key: provider returns an auth error; test asserts a deterministic failure surface (exit code + error classification or message pattern)
+- Invalid key: provider returns an auth error; test asserts a deterministic failure surface (exit code + error classification or message pattern) and confirms no secrets appear in failure output
 
 ### Acceptance Criteria - Phase 2
 - [ ] `make test-e2e` can run the Unified LLM live suite for at least one configured provider and produces an auditable log under `.scratch/verification/SPRINT-004/unified_llm/`.
