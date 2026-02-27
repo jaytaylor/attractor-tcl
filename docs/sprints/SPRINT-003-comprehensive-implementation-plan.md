@@ -153,37 +153,87 @@ Notes:
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [ ] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
+- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Provider resolution behavior is verified through ULLM parity and full-suite integration coverage.
 ```
-- [ ] Implement complete normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
+- [X] Implement complete normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Content-part normalization and validation are exercised in provider parity fixtures.
 ```
-- [ ] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming behavior.
+- [X] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-test.log`
+Notes:
+- OpenAI, Anthropic, and Gemini adapter translation and response normalization are validated together.
 ```
-- [ ] Enforce deterministic streaming event ordering and event payload visibility for downstream CAL consumers.
+- [X] Enforce deterministic streaming event ordering and event payload visibility for downstream CAL consumers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Streaming parity scenarios validate deterministic event sequencing and payload visibility contracts.
 ```
-- [ ] Implement tool-call continuation semantics including batched tool-result forwarding.
+- [X] Implement tool-call continuation semantics including batched tool-result forwarding.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Tool-call continuation behavior is covered by ULLM parity tests and integrated flow execution.
 ```
-- [ ] Implement structured output parity for `generate_object` and `stream_object`, including deterministic parse and schema failures.
+- [X] Implement structured output parity for `generate_object` and `stream_object`, including deterministic parse and schema failures.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Structured output success and deterministic failure modes are exercised in blocking and streaming cases.
 ```
-- [ ] Normalize usage, reasoning, and caching metadata across provider adapters.
+- [X] Normalize usage, reasoning, and caching metadata across provider adapters.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Adapter metadata normalization checks are included in parity fixture assertions.
 ```
-- [ ] Expand ULLM unit and integration parity tests to cover all requirement slices and provider paths.
+- [X] Expand ULLM unit and integration parity tests to cover all requirement slices and provider paths.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- ULLM unit + integration parity suites remain green after phase verification run.
 ```
 
 ### Test Matrix - Phase 1
@@ -204,13 +254,26 @@ Negative cases:
 - Invalid provider option shape fails validation before adapter invocation.
 
 ### Acceptance Criteria - Phase 1
-- [ ] ULLM parity tests pass for OpenAI, Anthropic, and Gemini in blocking and streaming modes.
+- [X] ULLM parity tests pass for OpenAI, Anthropic, and Gemini in blocking and streaming modes.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-ullm.log`
+Notes:
+- Provider parity coverage includes blocking and streaming paths for all supported adapters.
 ```
-- [ ] Every ULLM requirement ID maps to implementation, tests, and verification evidence.
+- [X] Every ULLM requirement ID maps to implementation, tests, and verification evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-1/logs/p1-spec-coverage.log`
+- `docs/spec-coverage/traceability.md`
+Notes:
+- Coverage check confirmed no missing/unknown IDs while traceability links ULLM IDs to implementation and tests.
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
