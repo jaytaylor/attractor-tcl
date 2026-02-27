@@ -52,6 +52,11 @@ Live baseline snapshot (2026-02-27):
 - Coverage baseline: `missing=0`, `duplicates=0`, `bad_paths=0`, `bad_verify=0`, `malformed_blocks=0`, `unknown_catalog=0`
 - Test baseline: `tests/all.tcl` passed (`86/86`)
 
+Execution run summary:
+- Run ID: `full-implementation-2026-02-27`
+- Gate status: `make -j10 build` (exit code 0), `make -j10 test` (exit code 0)
+- Evidence index: `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+
 ## Implementation Scope
 In scope:
 - ULLM provider resolution, normalized request/response model, streaming semantics, tool continuation, structured output, and typed failures.
