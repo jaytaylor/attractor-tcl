@@ -1,0 +1,142 @@
+namespace eval ::unified_llm::transports {}
+namespace eval ::unified_llm::transports::https_json {
+    variable https_registered 0
+}
+
+package require Tcl 8.5
+package require http
+package require attractor_core
+
+proc ::unified_llm::transports::https_json::__default_base_url {provider} {
+    switch -- $provider {
+        openai { return "https://api.openai.com" }
+        anthropic { return "https://api.anthropic.com" }
+        gemini { return "https://generativelanguage.googleapis.com" }
+        default { return "" }
+    }
+}
+
+proc ::unified_llm::transports::https_json::__provider_base_url_env {provider} {
+    switch -- $provider {
+        openai { return OPENAI_BASE_URL }
+        anthropic { return ANTHROPIC_BASE_URL }
+        gemini { return GEMINI_BASE_URL }
+        default { return "" }
+    }
+}
+
+proc ::unified_llm::transports::https_json::__resolve_base_url {request} {
+    set provider [dict get $request provider]
+
+    if {[dict exists $request base_url] && [dict get $request base_url] ne ""} {
+        return [dict get $request base_url]
+    }
+
+    set envVar [::unified_llm::transports::https_json::__provider_base_url_env $provider]
+    if {$envVar ne "" && [info exists ::env($envVar)] && [string trim $::env($envVar)] ne ""} {
+        return [string trim $::env($envVar)]
+    }
+
+    return [::unified_llm::transports::https_json::__default_base_url $provider]
+}
+
+proc ::unified_llm::transports::https_json::__join_url {baseUrl endpoint} {
+    set normalizedBase [string trimright [string trim $baseUrl] "/"]
+    return "${normalizedBase}${endpoint}"
+}
+
+proc ::unified_llm::transports::https_json::__headers_to_list {headers} {
+    set out {}
+    foreach key [dict keys $headers] {
+        lappend out $key [dict get $headers $key]
+    }
+    return $out
+}
+
+proc ::unified_llm::transports::https_json::__normalize_headers {meta} {
+    set out {}
+    foreach {k v} $meta {
+        dict set out [string tolower $k] $v
+    }
+    return $out
+}
+
+proc ::unified_llm::transports::https_json::__ensure_https_registered {provider} {
+    variable https_registered
+
+    if {$https_registered} {
+        return
+    }
+
+    if {[catch {package require tls} tlsErr]} {
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "https transport unavailable for provider $provider"
+    }
+
+    if {[catch {::http::register https 443 ::tls::socket} regErr]} {
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "failed to initialize https transport for provider $provider"
+    }
+
+    set https_registered 1
+}
+
+proc ::unified_llm::transports::https_json::call {request} {
+    foreach key {provider endpoint payload headers} {
+        if {![dict exists $request $key]} {
+            return -code error -errorcode [list UNIFIED_LLM TRANSPORT INPUT MISSING_FIELD] "transport request missing required field: $key"
+        }
+    }
+
+    set provider [dict get $request provider]
+    set endpoint [dict get $request endpoint]
+    if {![string match "/*" $endpoint]} {
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT INPUT INVALID_ENDPOINT] "transport endpoint must start with /"
+    }
+
+    set baseUrl [::unified_llm::transports::https_json::__resolve_base_url $request]
+    if {$baseUrl eq ""} {
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT INPUT MISSING_BASE_URL $provider] "no base URL configured for provider $provider"
+    }
+
+    set url [::unified_llm::transports::https_json::__join_url $baseUrl $endpoint]
+    if {[string match "https://*" [string tolower $url]]} {
+        ::unified_llm::transports::https_json::__ensure_https_registered $provider
+    }
+
+    set timeoutMs 60000
+    if {[dict exists $request timeout_ms] && [string is integer -strict [dict get $request timeout_ms]]} {
+        set timeoutMs [dict get $request timeout_ms]
+    }
+
+    set headerList [::unified_llm::transports::https_json::__headers_to_list [dict get $request headers]]
+    set payloadBody [::attractor_core::json_encode [dict get $request payload]]
+    set token ""
+    set status 0
+    set responseBody ""
+    set responseHeaders {}
+
+    set code [catch {
+        set token [::http::geturl $url \
+            -method POST \
+            -type "application/json" \
+            -headers $headerList \
+            -query $payloadBody \
+            -timeout $timeoutMs]
+        set status [::http::ncode $token]
+        set responseBody [::http::data $token]
+        set responseHeaders [::unified_llm::transports::https_json::__normalize_headers [::http::meta $token]]
+    } err opts]
+
+    if {$token ne ""} {
+        ::http::cleanup $token
+    }
+
+    if {$code} {
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "network request failed for provider $provider"
+    }
+
+    if {$status < 200 || $status >= 300} {
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT HTTP $provider $status] "http request failed for provider $provider with status $status"
+    }
+
+    return [dict create status_code $status headers $responseHeaders body $responseBody]
+}

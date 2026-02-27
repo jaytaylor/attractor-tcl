@@ -193,7 +193,7 @@ proc ::unified_llm::adapters::gemini::complete {state request} {
         usage [::unified_llm::adapters::gemini::__translate_usage $decoded] \
         metadata $metadata \
         raw $decoded \
-        request [dict create endpoint $endpoint payload $payload headers $headers]]
+        request [dict create endpoint $endpoint payload $payload headers [::unified_llm::adapters::__redact_headers $headers]]]
 }
 
 proc ::unified_llm::adapters::gemini::stream {state request} {

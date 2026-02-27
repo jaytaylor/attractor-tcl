@@ -103,8 +103,13 @@ proc ::unified_llm::adapters::__http_invoke {state provider endpoint payload hea
 proc ::unified_llm::adapters::__invoke_transport {state provider endpoint payload headers} {
     if {[dict exists $state transport] && [dict get $state transport] ne ""} {
         set cmd [dict get $state transport]
+        set baseUrl ""
+        if {[dict exists $state base_url]} {
+            set baseUrl [dict get $state base_url]
+        }
         return [{*}$cmd [dict create \
             provider $provider \
+            base_url $baseUrl \
             endpoint $endpoint \
             payload $payload \
             headers $headers]]
@@ -115,6 +120,19 @@ proc ::unified_llm::adapters::__invoke_transport {state provider endpoint payloa
     }
 
     return [::unified_llm::adapters::__http_invoke $state $provider $endpoint $payload $headers]
+}
+
+proc ::unified_llm::adapters::__redact_headers {headers} {
+    set out {}
+    foreach key [dict keys $headers] {
+        set lowerKey [string tolower $key]
+        set value [dict get $headers $key]
+        if {$lowerKey in {authorization x-api-key x-goog-api-key proxy-authorization}} {
+            set value "<redacted>"
+        }
+        dict set out $key $value
+    }
+    return $out
 }
 
 proc ::unified_llm::adapters::__chunk_text {text chunkSize} {
@@ -291,7 +309,7 @@ proc ::unified_llm::adapters::openai::complete {state request} {
         usage [::unified_llm::adapters::openai::__translate_usage $decoded] \
         metadata $metadata \
         raw $decoded \
-        request [dict create endpoint $endpoint payload $payload headers $headers]]
+        request [dict create endpoint $endpoint payload $payload headers [::unified_llm::adapters::__redact_headers $headers]]]
 }
 
 proc ::unified_llm::adapters::openai::stream {state request} {

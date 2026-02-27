@@ -13,6 +13,7 @@ package require attractor_core
 source [file join $::unified_llm::package_dir adapters openai.tcl]
 source [file join $::unified_llm::package_dir adapters anthropic.tcl]
 source [file join $::unified_llm::package_dir adapters gemini.tcl]
+source [file join $::unified_llm::package_dir transports https_json.tcl]
 
 proc ::unified_llm::set_default_client {client_cmd} {
     variable default_client
