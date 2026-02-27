@@ -2,55 +2,119 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #003 - Close Full Spec Parity (Tcl) Implementation Plan
 
-## Review Findings Applied
-- The prior version of this document was execution-log-heavy and marked many items complete, which made current implementation status hard to audit.
-- This revision converts the sprint into an implementation-first plan with all work items explicitly incomplete and verification placeholders attached to each checklist item.
-- Phase-level acceptance criteria, explicit positive and negative test scopes, and implementation ownership are now aligned to requirement-family execution.
-
 ## Executive Summary
-Sprint #003 delivers full parity for Tcl runtime behavior against:
-- `unified-llm-spec.md`
-- `coding-agent-loop-spec.md`
-- `attractor-spec.md`
-
-The execution model is requirement-driven: every requirement in scope must resolve to implementation code, automated tests, and reproducible verification evidence.
+This sprint closes full Tcl parity against the three source specifications by implementing and verifying all requirement IDs across Unified LLM (ULLM), Coding Agent Loop (CAL), and Attractor (ATR). The plan is execution-ready, requirement-driven, and evidence-backed.
 
 ## Sprint Objective
-Deliver deterministic, offline-verifiable parity across Unified LLM (ULLM), Coding Agent Loop (CAL), and Attractor (ATR), and close traceability for all Sprint #003 requirement IDs.
+Implement complete, deterministic, offline-verifiable parity for all Sprint #003 requirements with strict traceability from requirement ID to code, tests, and verification evidence.
 
 ## Requirement Baseline
-Source of truth: `docs/spec-coverage/requirements.md`
-- Total requirements: 263
-- ULLM: 109
-- CAL: 66
-- ATR: 88
+- Source of truth: `docs/spec-coverage/requirements.md`
+- Total requirements: `263`
+- ULLM requirements: `109`
+- CAL requirements: `66`
+- ATR requirements: `88`
 
 ## In Scope
-- ULLM provider resolution, request/response normalization, streaming parity, tool-call continuation semantics, structured output parity, typed failures.
-- CAL lifecycle semantics, tool-dispatch contracts, event-schema parity, profile parity, subagent lifecycle behavior.
-- ATR parser/validator/runtime traversal parity, built-in handler parity, interviewer parity, CLI `validate`/`run`/`resume` contract parity.
-- Cross-runtime integration scenarios spanning ATR + CAL + ULLM.
-- Traceability closure and architecture decision logging in `docs/ADR.md`.
+- ULLM parity: provider resolution, request/response normalization, streaming events, tool-call continuation, structured output validation, typed errors, usage accounting.
+- CAL parity: execution environment, tool dispatch semantics, lifecycle and terminal-state behavior, steering/follow-up behavior, event schema parity, subagent lifecycle and limits.
+- ATR parity: DOT parser/validator/runtime traversal parity, built-in handlers and interviewer implementations, CLI `validate`/`run`/`resume` behavior and artifacts.
+- Cross-runtime parity: ATR -> CAL -> ULLM integration behavior including success, recoverable failure, hard failure, and replay/resume determinism.
+- Full traceability and ADR closure in `docs/spec-coverage/traceability.md` and `docs/ADR.md`.
 
 ## Out of Scope
-- New product surfaces outside Sprint #003 requirement IDs.
-- Feature flags, staged rollouts, or compatibility shims.
-- Legacy behavior preservation.
+- New features not tied to Sprint #003 requirement IDs.
+- Feature flags, gating, compatibility shims, or legacy behavior preservation.
+- Non-parity UX enhancements and unrelated refactors.
 
-## Implementation Controls
-- Requirement IDs are the primary execution and verification unit.
-- No checklist item is marked complete until implementation, tests, and evidence are all present.
-- Evidence root: `.scratch/verification/SPRINT-003/`.
-- Diagram render artifacts root: `.scratch/diagram-renders/sprint-003/`.
-- Significant architecture choices must be logged in `docs/ADR.md` when introduced.
+## Sprint TODO Status
+- [X] Baseline/gap ledger created and reviewed.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
+Notes:
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
+```
+- [X] ULLM parity implementation and tests complete.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
+Notes:
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
+```
+- [X] CAL parity implementation and tests complete.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
+Notes:
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
+```
+- [X] ATR parity implementation and tests complete.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
+Notes:
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
+```
+- [X] Cross-runtime integration coverage complete.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
+Notes:
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
+```
+- [X] Traceability/ADR/evidence closeout complete.
+```text
+Verification:
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
+Notes:
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
+```
+
+## Working Agreements
+- Requirement ID is the smallest execution unit.
+- No checkbox is marked complete until implementation, tests, and evidence are all present.
+- Evidence directory: `.scratch/verification/SPRINT-003/close-spec-parity-plan/`.
+- Mermaid render artifacts: `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/`.
+- Significant architecture decisions are added to `docs/ADR.md` at decision time.
 
 ## Workstream Map
 - ULLM runtime: `lib/unified_llm/main.tcl`, `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, `lib/unified_llm/adapters/gemini.tcl`
 - CAL runtime: `lib/coding_agent_loop/main.tcl`, `lib/coding_agent_loop/tools/core.tcl`, `lib/coding_agent_loop/profiles/openai.tcl`, `lib/coding_agent_loop/profiles/anthropic.tcl`, `lib/coding_agent_loop/profiles/gemini.tcl`
 - ATR runtime: `lib/attractor/main.tcl`, `lib/attractor_core/core.tcl`, `bin/attractor`
 - Tests: `tests/unit/*.test`, `tests/integration/*.test`, `tests/e2e/attractor_cli_e2e.test`, `tests/support/mock_http_server.tcl`
-- Verification tooling: `tools/requirements_catalog.tcl`, `tools/spec_coverage.tcl`, `tools/evidence_lint.sh`, `tools/build_check.tcl`
-- Traceability artifacts: `docs/spec-coverage/traceability.md`, `docs/spec-coverage/requirements.md`, `docs/ADR.md`
+- Coverage tooling: `tools/requirements_catalog.tcl`, `tools/spec_coverage.tcl`, `tools/evidence_lint.sh`, `tools/build_check.tcl`
+- Traceability and architecture: `docs/spec-coverage/traceability.md`, `docs/spec-coverage/requirements.md`, `docs/ADR.md`
 
 ## Phase Execution Order
 1. Phase 0: Baseline and harness hardening
@@ -58,1193 +122,459 @@ Source of truth: `docs/spec-coverage/requirements.md`
 3. Phase 2: Coding Agent Loop parity closure
 4. Phase 3: Attractor parity closure
 5. Phase 4: Cross-runtime integration closure
-6. Phase 5: Traceability and closeout
+6. Phase 5: Traceability and sprint closeout
 
 ## Phase 0 - Baseline and Harness Hardening
 ### Deliverables
-- [X] Capture baseline outputs for `make -j10 build`, `make -j10 test`, requirement catalog checks, and spec coverage checks.
+- [X] Capture baseline results for build/test/catalog/spec coverage and persist command + exit-code ledger.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Build a requirement-family gap ledger (ULLM/CAL/ATR) with implementation owner and test owner per requirement slice.
+- [X] Build a requirement-family gap ledger (ULLM/CAL/ATR) with owner and test-owner assignment for every requirement slice.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Harden `tests/support/mock_http_server.tcl` contracts for deterministic blocking and streaming replay behavior.
+- [X] Harden `tests/support/mock_http_server.tcl` for deterministic blocking and streaming replay behavior.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Standardize fixture schema and naming conventions used by provider parity tests.
+- [X] Standardize fixture schema and naming used by provider parity tests.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Create per-phase evidence directories and index files under `.scratch/verification/SPRINT-003/`.
+- [X] Create per-phase evidence index files under `.scratch/verification/SPRINT-003/close-spec-parity-plan/`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Record baseline architecture constraints and assumptions in `docs/ADR.md`.
+- [X] Record baseline architecture assumptions and constraints in `docs/ADR.md`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ### Test Plan - Positive Cases
-- Requirement catalog generation returns stable total/family counts and deterministic ordering.
-- `make -j10 build` completes from a clean checkout and from a dirty checkout containing only unrelated files.
-- `make -j10 test` runs unit, integration, and e2e suites without nondeterministic failures.
-- Mock provider harness replays deterministic request/response payloads for OpenAI, Anthropic, and Gemini blocking flows.
-- Mock provider harness replays deterministic stream event sequences with stable ordering and termination markers.
-- Fixture validator accepts canonical request and response bundles with complete required keys.
+- Baseline build executes successfully and produces deterministic package load behavior.
+- Baseline test sweep executes unit, integration, and e2e suites in a single reproducible run.
+- Requirements catalog summary reports stable total/family/kind counts (`263/109/66/88`).
+- Spec coverage check reports exact set-equality between catalog and traceability IDs.
+- Mock HTTP harness replays deterministic blocking request/response fixtures for each provider.
+- Mock HTTP harness replays deterministic stream event order and completion boundaries.
+- Fixture validator accepts canonical fixture shape for requests, responses, and stream events.
+- Gap ledger includes all requirement IDs with non-empty owner, implementation target, and test target.
 
 ### Test Plan - Negative Cases
-- Missing fixture keys fail with deterministic diagnostics that identify exact missing keys.
-- Unknown endpoint, HTTP method mismatch, or required header mismatch fails deterministically.
-- Malformed stream events fail with deterministic parser diagnostics.
-- Duplicate requirement IDs fail requirement catalog checks.
-- Unknown requirement IDs in traceability fail spec coverage checks.
-- Malformed traceability blocks fail with explicit diagnostics.
+- Missing fixture keys fail with deterministic diagnostics identifying missing keys.
+- Header/method/path mismatch in mock server fails before adapter logic executes.
+- Malformed stream event payload fails with deterministic parse diagnostics.
+- Duplicate requirement IDs fail catalog checks.
+- Unknown traceability IDs fail coverage checks.
+- Missing traceability IDs fail coverage checks.
+- Malformed traceability blocks fail with explicit malformed-block diagnostics.
+- Missing evidence index file for a phase fails evidence lint checks.
 
 ### Acceptance Criteria - Phase 0
-- [X] Gap ledger has no unowned requirement IDs.
+- [X] Gap ledger has zero unowned requirement IDs.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Baseline evidence index includes command, exit-code, and artifact references for reproducibility.
+- [X] Baseline evidence index contains command, exit code, artifact path, and timestamp for each gate command.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Harness and fixture standards are documented and linked from the phase evidence index.
+- [X] Harness and fixture contract standards are documented and linked from phase evidence index.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
+- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, environment defaults, and deterministic ambiguity failures.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Complete request validation and normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Complete adapter request translation parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
+- [X] Complete request translation parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Complete adapter response normalization parity for blocking and streaming responses.
+- [X] Complete response normalization parity for blocking and streaming provider responses.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Implement tool-call continuation semantics with deterministic round ceilings and stable error surfaces.
+- [X] Implement tool-call continuation semantics with deterministic loop ceilings and typed failure propagation.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Implement structured output parity for `generate_object` and `stream_object`, including deterministic `INVALID_JSON` and `SCHEMA_MISMATCH` failures.
+- [X] Implement structured-output parity for `generate_object` and `stream_object` with deterministic `INVALID_JSON` and `SCHEMA_MISMATCH` failures.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Validate and normalize `provider_options` (headers, provider-specific options, and unsupported-option rejection).
+- [X] Validate and normalize `provider_options` including provider-specific option acceptance and unsupported-option rejection.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Normalize usage accounting fields including input/output/reasoning/cache metrics where emitted by providers.
+- [X] Normalize usage accounting fields including input/output/reasoning/cache token families when emitted by providers.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ### Test Plan - Positive Cases
-- Prompt-only generation succeeds and returns normalized response envelope.
-- Messages-only generation succeeds and preserves message ordering and role semantics.
-- Multimodal request paths (`image_url`, `image_base64`, `image_path`) normalize and translate correctly across providers.
-- Tool call request/response flows continue until terminal assistant text or terminal tool cycle completion.
-- Blocking response content equals stream-assembled content for equivalent fixtures.
-- Structured output generation returns schema-valid objects for valid provider payloads.
-- Provider-specific options pass validation and are included in translated provider payloads.
-- Usage normalization surfaces consistent numeric fields across provider adapters.
+- Explicit provider selection resolves to expected adapter for OpenAI/Anthropic/Gemini.
+- Environment-based provider selection resolves deterministically when exactly one provider key is configured.
+- Prompt-only and messages-only requests produce normalized response envelopes.
+- Multimodal messages (text + image URL/base64/path) normalize and translate correctly.
+- Blocking and streaming paths converge on equivalent final output payload content.
+- Tool-call loop executes deterministic continuation rounds and exits on model final response.
+- `generate_object` succeeds with valid JSON matching schema and returns normalized object payload.
+- `stream_object` emits deterministic object event stream and completes with valid final object.
+- Provider options pass through only valid keys with provider-specific normalization.
+- Usage accounting fields are normalized for all providers with available usage metadata.
 
 ### Test Plan - Negative Cases
-- Supplying both `prompt` and `messages` fails with deterministic validation error.
-- Missing provider configuration fails with deterministic provider selection error.
-- Ambiguous multi-provider environment fails with deterministic ambiguity error.
-- Invalid content-part shape fails with deterministic input validation error.
-- Invalid tool schema or malformed tool-result payload fails validation deterministically.
-- Invalid streamed JSON chunks fail parser path with stable typed error.
-- Schema mismatch in structured output fails with deterministic mismatch diagnostics.
-- Unsupported provider option keys fail with deterministic option validation error.
+- Ambiguous environment provider configuration fails with deterministic error code and message.
+- Missing provider configuration fails with deterministic configuration error.
+- Request with both prompt and messages fails validation deterministically.
+- Invalid content-part type fails validation before provider dispatch.
+- Invalid tool-call argument payload fails deterministic argument validation.
+- Structured-output invalid JSON fails with `INVALID_JSON`.
+- Structured-output schema mismatch fails with `SCHEMA_MISMATCH`.
+- Unsupported provider option fails with deterministic unsupported-option error.
+- Stream interruption yields deterministic transport/provider failure classification.
+- Missing required provider API key fails before network dispatch.
 
 ### Acceptance Criteria - Phase 1
-- [X] ULLM unit and integration suites pass for OpenAI, Anthropic, and Gemini parity paths.
+- [X] ULLM unit and integration suites are green across OpenAI, Anthropic, and Gemini parity paths.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] ULLM requirement IDs map to implementation files, tests, and verification artifacts without gaps.
+- [X] All ULLM requirement IDs in traceability map to implementation files, tests, and verification commands.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Stream and blocking normalization semantics are equivalent for fixture-matched scenarios.
+- [X] Blocking and streaming normalization semantics are equivalent for fixture-matched scenarios.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [X] Align `ExecutionEnvironment` and `LocalExecutionEnvironment` contract behavior in `lib/coding_agent_loop/tools/core.tcl`.
+- [X] Align `ExecutionEnvironment` and `LocalExecutionEnvironment` behavior in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align session lifecycle semantics in `lib/coding_agent_loop/main.tcl` (open, progress, completion, cancellation, terminal states).
+- [X] Align session lifecycle semantics in `lib/coding_agent_loop/main.tcl` for open/progress/completion/cancellation and terminal states.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Implement deterministic truncation marker behavior while preserving complete terminal tool output payloads.
+- [X] Implement deterministic truncation-marker behavior while preserving full terminal tool output payloads.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align `steer` and `follow_up` queue semantics for next-turn model request mutation.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align required event-kind schema and event ordering guarantees for loop execution.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align profile prompt and project-document discovery behavior in `lib/coding_agent_loop/profiles/*.tcl`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align subagent lifecycle behavior (`spawn`, `send_input`, `wait`, `close`) including depth controls and shared-environment constraints.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align loop-warning semantics for repeated tool-signature scenarios.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ### Test Plan - Positive Cases
-- Sessions move through expected lifecycle states with deterministic event emission.
-- Tool execution via `ExecutionEnvironment` returns normalized stdout/stderr/exit status envelopes.
-- Steering directives are consumed on the immediate next model request and then cleared.
-- Follow-up messages are queued and delivered in deterministic order.
-- Event stream includes required event kinds and stable fields for each kind.
-- Profile assembly includes expected instruction layers and discovered project docs.
-- Subagent sessions inherit shared execution environment while maintaining independent conversation state.
-- Subagent depth controls allow legal nesting and reject over-depth requests deterministically.
+- Session progresses through deterministic lifecycle transitions for simple prompt completion.
+- Tool execution through local environment returns deterministic stdout/stderr/exit metadata.
+- Long tool output applies truncation marker while retaining complete terminal payload artifact.
+- `steer` mutation appears in exactly the next model request and not subsequent turns unless re-queued.
+- `follow_up` injection appends deterministic user-turn content for next model request.
+- Event stream contains required event kinds in required ordering for nominal loop.
+- Profile resolution picks expected profile prompt and project document content deterministically.
+- Subagent creation, input, waiting, and close behave deterministically under shared environment constraints.
+- Loop-warning event appears for repeated tool-signature scenarios and includes deterministic signature payload.
 
 ### Test Plan - Negative Cases
-- Unknown or disabled tool dispatch fails with deterministic typed tool error.
-- Session cancellation during tool execution emits deterministic cancellation terminal event.
-- Malformed steer payload fails validation before dispatch.
-- Malformed follow-up payload fails validation before queueing.
-- Missing required event fields fail schema assertions in integration tests.
-- Profile lookup of missing project documents emits deterministic fallback behavior.
-- Subagent wait/close on unknown handle fails with deterministic session error.
-- Loop-warning conditions emit warnings without mutating successful terminal behavior.
+- Tool dispatch for unknown tool name fails with deterministic typed error.
+- Invalid execution environment contract implementation fails contract checks before runtime usage.
+- Cancellation during tool execution transitions session to deterministic terminal cancellation state.
+- Subagent depth-limit breach fails with deterministic depth error and no leaked session handles.
+- Malformed steering payload fails deterministic validation.
+- Event-emitter schema violation fails test harness contract checks.
+- Profile lookup with missing project documentation files falls back deterministically per profile rules.
+- Repeated invalid follow-up injection attempts fail without corrupting session state.
+- Parallel subagent closure race results in deterministic final state and no duplicate terminal events.
 
 ### Acceptance Criteria - Phase 2
-- [X] CAL unit and integration suites pass for lifecycle, tooling, events, profiles, and subagent coverage.
+- [X] CAL unit and integration suites are green for lifecycle, tooling, events, profiles, and subagent coverage.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] CAL requirement IDs map to implementation files, tests, and verification artifacts without gaps.
+- [X] All CAL requirement IDs in traceability map to implementation files, tests, and verification commands.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Session event ordering and terminal-state semantics are deterministic across reruns.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ## Phase 3 - Attractor Parity Closure
@@ -1252,1079 +582,413 @@ Notes:
 - [X] Align DOT parser behavior in `lib/attractor/main.tcl` for supported syntax, comments, quoting, chained edges, defaults, and subgraph flattening.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align validator behavior for start/exit invariants, reachability diagnostics, edge reference validity, and rule/severity metadata.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align runtime traversal behavior: start resolution, handler invocation contract, edge selection priority, and terminal semantics.
+- [X] Align runtime traversal behavior for start resolution, handler invocation contract, edge selection priority, and terminal semantics.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align built-in handlers: `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, `stack.manager_loop`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align interviewer implementations and routing behavior: `AutoApprove`, `Console`, `Callback`, and `Queue`.
+- [X] Align interviewer implementations and routing behavior: `autoapprove`, `console`, `callback`, `queue`.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align CLI contracts in `bin/attractor` for `validate`, `run`, and `resume` including structured output and exit code behavior.
+- [X] Align CLI contracts in `bin/attractor` for `validate`, `run`, and `resume` including output payload and exit-code behavior.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align runtime artifact contract for stage directories and status files under execution logs root.
+- [X] Align runtime artifact contract for stage directories, status files, and replay/resume metadata.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ### Test Plan - Positive Cases
-- Parser accepts supported DOT subset and produces normalized graph model.
-- Validator returns deterministic diagnostics for warning-level conditions without preventing valid execution flows.
-- Engine starts at the single valid start node and advances deterministically by edge selection contract.
-- Built-in handlers produce expected outcome shapes and stage artifacts.
-- Human-gate handlers route options through configured interviewer implementation.
-- `validate` reports diagnostics and succeeds for warning-only graphs.
-- `run` executes full pipeline and writes expected logs/status artifacts.
-- `resume` picks up from checkpoint artifact and reaches equivalent final outcome compared with uninterrupted run.
+- DOT parser accepts supported graph/node/edge attribute forms and quoted/unquoted values.
+- Chained edges produce expected individual edge records.
+- Node/edge defaults apply deterministically to subsequent declarations.
+- Validation returns warning diagnostics for reachable-warning scenarios while remaining runnable.
+- Runtime traversal starts at single start node and terminates at single exit node deterministically.
+- `conditional`, `parallel`, and `fan-in` handlers route deterministically for fixture-defined outcomes.
+- `wait.human` integrates with each interviewer type and resumes correctly.
+- CLI `validate` emits expected diagnostics and success exit code for warning-only graphs.
+- CLI `run` and `resume` create and consume deterministic artifacts under execution root.
 
 ### Test Plan - Negative Cases
-- Missing start node, multiple start nodes, missing exit node, or multiple exit nodes fail validation deterministically.
-- Invalid node IDs, malformed attribute blocks, or malformed edge declarations fail parse/validate with stable diagnostics.
-- Edges referencing undefined nodes fail validation with explicit rule metadata.
-- Invalid condition expressions fail evaluation with deterministic failure events.
-- Unknown handler type fails at resolution with deterministic typed error.
-- Interviewer callback errors are captured and transformed into deterministic fail outcomes.
-- `run` on validation-error graphs fails before traversal begins.
-- `resume` with missing or malformed checkpoint artifacts fails with deterministic diagnostics.
+- Parser rejects malformed DOT syntax with deterministic parse diagnostics.
+- Missing/duplicate start node fails validation with deterministic rule code.
+- Missing/duplicate exit node fails validation with deterministic rule code.
+- Edge referencing unknown node fails validation deterministically.
+- Handler exception is captured and converted to deterministic fail outcome.
+- Invalid interviewer configuration fails before runtime traversal begins.
+- CLI `validate` returns failing exit code when error-severity diagnostics exist.
+- CLI `resume` fails deterministically for missing or corrupted checkpoint artifacts.
+- Goal-gate failure path returns deterministic non-success terminal status.
 
 ### Acceptance Criteria - Phase 3
-- [X] ATR unit, integration, and CLI e2e suites pass for parser, validator, runtime traversal, handlers, and interviewer paths.
+- [X] ATR unit, integration, and CLI e2e suites are green for parser, validator, runtime traversal, handlers, and interviewer paths.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] ATR requirement IDs map to implementation files, tests, and verification artifacts without gaps.
+- [X] All ATR requirement IDs in traceability map to implementation files, tests, and verification commands.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] `validate`/`run`/`resume` contracts are deterministic and reproducible across reruns.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [X] Build end-to-end fixtures that exercise ATR-driven orchestration through CAL sessions into ULLM provider adapters.
+- [X] Build end-to-end fixtures that exercise ATR orchestration through CAL sessions into ULLM provider adapters.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align cross-runtime error propagation and typed-failure boundaries (ULLM -> CAL -> ATR and ATR -> CAL -> ULLM).
+- [X] Align cross-runtime error propagation and typed-failure boundaries (`ULLM -> CAL -> ATR` and `ATR -> CAL -> ULLM`).
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Align resume and replay behavior for interrupted integrated flows to ensure deterministic final outcomes.
+- [X] Align resume and replay behavior for interrupted integrated flows to guarantee deterministic final outcomes.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Align integrated artifact layout for run logs, node status files, tool traces, and model interaction records.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Expand integration tests to cover mixed success/failure branches and deterministic branch-selection outcomes.
+- [X] Expand integration tests for mixed success/failure branches and deterministic branch selection.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Expand CLI e2e tests for integrated `validate`/`run`/`resume` flows with representative graphs and fixtures.
+- [X] Expand CLI e2e coverage for integrated `validate`/`run`/`resume` flows with representative graphs and fixtures.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ### Test Plan - Positive Cases
-- ATR codergen/tool nodes invoke CAL and ULLM paths with expected normalized outputs.
-- Integrated run completes successfully when all required node outcomes satisfy goal gates.
-- Integrated run with recoverable path failures reaches successful completion via valid alternate branches.
-- Integrated resume from mid-run checkpoint yields identical final status and artifacts to uninterrupted run.
-- Integration fixtures produce deterministic event and artifact ordering across reruns.
+- Full ATR -> CAL -> ULLM success path completes deterministically and emits expected artifacts.
+- Integration flow with recoverable tool error retries along graph-defined recovery path and completes deterministically.
+- Resume from mid-graph checkpoint produces identical terminal output as uninterrupted run.
+- Cross-runtime logs include stable correlation IDs across graph node, session, and model interactions.
+- CLI integrated validate/run/resume sequence works end-to-end with deterministic outputs.
+- Multi-branch graph with conditions selects expected branch for deterministic fixture inputs.
 
 ### Test Plan - Negative Cases
-- Provider failure in ULLM propagates as typed CAL error and deterministic ATR node fail outcome.
-- CAL tool-dispatch failure propagates to ATR runtime without schema breakage.
-- ATR condition-evaluation failure in integrated runs produces deterministic branch rejection behavior.
-- Resume with mismatched graph/checkpoint artifacts fails safely with deterministic diagnostics.
-- Corrupted integrated artifact directory fails replay/analysis with explicit error messages.
+- ULLM adapter typed error propagates through CAL and ATR without loss of error classification.
+- CAL tool execution failure propagates to ATR node failure and triggers deterministic fallback branch.
+- Corrupted integration artifact structure fails replay/resume with deterministic diagnostics.
+- Missing intermediate checkpoint fails resume with deterministic not-found error class.
+- Event ordering mismatch across layers fails integration contract tests.
+- Non-deterministic artifact field drift across reruns fails determinism checks.
 
 ### Acceptance Criteria - Phase 4
 - [X] Cross-runtime integration tests are green for success, failure, and recovery scenarios.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Cross-runtime typed-error contracts remain stable and traceable across layers.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Integrated CLI e2e flows are reproducible with deterministic artifacts.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ## Phase 5 - Traceability, ADR, and Sprint Closeout
 ### Deliverables
-- [X] Update `docs/spec-coverage/traceability.md` so every catalog requirement ID in scope maps to implementation, tests, and verification commands.
+- [X] Update `docs/spec-coverage/traceability.md` so every in-scope requirement ID maps to implementation files, tests, and verification commands.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Verify strict ID-set equality between requirements catalog and traceability mapping outputs.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Update `docs/ADR.md` for every significant architecture decision made during execution.
+- [X] Add ADR entries in `docs/ADR.md` for each significant architecture decision introduced during execution.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Finalize evidence index under `.scratch/verification/SPRINT-003/` with per-phase command logs and exit codes.
+- [X] Finalize evidence index under `.scratch/verification/SPRINT-003/close-spec-parity-plan/` with per-phase command logs and exit codes.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Run final quality gates (`make -j10 build`, `make -j10 test`, requirement catalog checks, and spec coverage checks) and capture artifacts.
+- [X] Run final quality gates: build, tests, requirements catalog checks, and spec coverage checks.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
-- [X] Reconcile sprint checklist status to actual implementation and verification state.
+- [X] Reconcile sprint checklist status with actual implementation and verification state.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
 ### Test Plan - Positive Cases
-- Traceability file resolves all ULLM/CAL/ATR requirement IDs with valid file paths and verify commands.
-- Requirement catalog and traceability set-equality checks pass.
-- ADR entries clearly capture context, decision, consequences, and follow-up constraints.
-- Final command-status table includes every verification command and exit code.
+- Traceability contains complete one-to-one mapping coverage for all `263` requirement IDs.
+- Coverage command confirms zero missing, zero unknown, zero duplicate, and zero malformed mappings.
+- ADR includes entries for every significant architecture choice made during sprint execution.
+- Evidence index includes per-phase command ledger, artifact links, and deterministic rerun notes.
+- Final gate command suite passes from clean checkout and from checkout with unrelated changes.
 
 ### Test Plan - Negative Cases
-- Unknown requirement IDs in traceability fail set-equality checks.
-- Missing implementation/test file paths in traceability fail coverage checks.
-- Malformed mapping blocks fail parser checks.
-- Missing verify commands for mapped IDs fail coverage validation.
+- Missing implementation/test/verify fields in traceability entries fail lint checks.
+- Unknown requirement IDs in traceability fail coverage checks.
+- Duplicate traceability requirement IDs fail coverage checks.
+- Missing ADR entry for known architecture-impacting change fails closeout review.
+- Missing command status table or missing exit code entry fails evidence lint checks.
 
 ### Acceptance Criteria - Phase 5
 - [X] No missing, duplicate, unknown, or malformed requirement mappings remain.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] Final sprint evidence index is complete and reproducible from documented commands.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 - [X] ADR log reflects all significant design decisions introduced during Sprint #003 execution.
 ```text
 Verification:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-unified-llm*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-coding-agent-loop*` (exit code 0)
-- `tclsh tests/all.tcl -match *unit-attractor*` (exit code 0)
-- `tclsh tests/all.tcl -match *integration*` (exit code 0)
-- `tclsh tests/all.tcl -match *e2e*` (exit code 0)
-- `./.scratch/generate_sprint003_gap_ledger.sh .scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0` (exit code 0)
-- `./.scratch/run_sprint003_close_spec_full_impl_verification.sh` (exit code 0)
+- `timeout 180 ./.scratch/run_sprint003_close_spec_plan_execution.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/baseline/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/gap-ledger-summary.txt`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-0/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-1/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-2/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-3/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-4/command-status.tsv`
-- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/phase-5/command-status.tsv`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-01.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-02.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-03.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-04.svg`
-- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/diagram-05.svg`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/README.md`
+- `.scratch/diagram-renders/sprint-003/close-spec-parity-plan/execution-2026-02-27-pass-01/appendix-*.svg`
 Notes:
-- Requirement totals and traceability equality are green (`requirements=263`, `missing=0`, `unknown_catalog=0`, `duplicates=0`).
-- All targeted unit/integration/e2e suites and full build/test gates passed in this verification run.
+- Phase-specific command logs are recorded under `.scratch/verification/SPRINT-003/close-spec-parity-plan/execution-2026-02-27-pass-01/phase-*/logs/`.
 ```
 
-## Canonical Verification Commands
+## Canonical Verification Command Set
 - `make -j10 build`
 - `make -j10 test`
 - `tclsh tools/requirements_catalog.tcl --check-ids`
 - `tclsh tools/requirements_catalog.tcl --summary`
 - `tclsh tools/spec_coverage.tcl`
-- `tclsh tests/all.tcl -match *unified_llm*`
-- `tclsh tests/all.tcl -match *coding_agent_loop*`
-- `tclsh tests/all.tcl -match *attractor*`
+- `tclsh tests/all.tcl -match *unit-unified-llm*`
+- `tclsh tests/all.tcl -match *unit-coding-agent-loop*`
+- `tclsh tests/all.tcl -match *unit-attractor*`
 - `tclsh tests/all.tcl -match *integration*`
 - `tclsh tests/all.tcl -match *e2e*`
 
@@ -2333,177 +997,173 @@ Notes:
 ### Core Domain Models
 ```mermaid
 classDiagram
-  class Requirement {
-    +id: string
-    +family: enum(ULLM|CAL|ATR)
-    +kind: enum(NORMATIVE|DOD)
-    +spec_ref: string
-  }
-
-  class TraceMapping {
-    +id: string
-    +impl_paths: list
-    +test_paths: list
-    +verify_cmds: list
-  }
-
-  class EvidenceRecord {
-    +phase: string
-    +command: string
-    +exit_code: int
-    +artifact_paths: list
-  }
-
-  class ADR {
-    +adr_id: string
-    +context: text
-    +decision: text
-    +consequences: text
-  }
-
-  Requirement "1" --> "0..1" TraceMapping : mapped_by
-  TraceMapping "1" --> "0..*" EvidenceRecord : proven_by
-  Requirement "0..*" --> "0..*" ADR : influences
+    class Requirement {
+      +id: string
+      +family: enum(ULLM|CAL|ATR)
+      +kind: enum(DOD|NORMATIVE)
+      +source_spec: string
+    }
+    class TraceabilityMapping {
+      +id: string
+      +implement: list
+      +tests: list
+      +verify: list
+    }
+    class EvidenceRecord {
+      +phase: string
+      +command: string
+      +exit_code: int
+      +artifact_paths: list
+    }
+    class ADRDecision {
+      +adr_id: string
+      +context: text
+      +decision: text
+      +consequences: text
+    }
+    Requirement "1" --> "1" TraceabilityMapping : maps_to
+    TraceabilityMapping "1" --> "many" EvidenceRecord : proven_by
+    ADRDecision "many" ..> TraceabilityMapping : governs
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  REQUIREMENT ||--o| TRACE_MAPPING : maps_to
-  TRACE_MAPPING ||--o{ VERIFY_COMMAND : verified_by
-  TRACE_MAPPING ||--o{ EVIDENCE_ARTIFACT : produces
-  PHASE ||--o{ WORK_ITEM : contains
-  WORK_ITEM ||--o{ TEST_CASE : validated_by
-  ADR_ENTRY }o--o{ WORK_ITEM : records_decision_for
+    REQUIREMENT ||--|| TRACEABILITY_MAP : mapped_by
+    TRACEABILITY_MAP ||--o{ TEST_CASE : validated_by
+    TRACEABILITY_MAP ||--o{ VERIFY_COMMAND : executed_by
+    VERIFY_COMMAND ||--o{ EVIDENCE_ARTIFACT : emits
+    PHASE ||--o{ TRACEABILITY_MAP : implements
+    PHASE ||--o{ EVIDENCE_ARTIFACT : collects
+    ADR_ENTRY ||--o{ PHASE : influences
 
-  REQUIREMENT {
-    string id
-    string family
-    string kind
-    string spec_ref
-  }
-
-  TRACE_MAPPING {
-    string id
-    string impl_paths
-    string test_paths
-  }
-
-  VERIFY_COMMAND {
-    string id
-    string mapping_id
-    string command
-  }
-
-  EVIDENCE_ARTIFACT {
-    string id
-    string mapping_id
-    string path
-  }
-
-  PHASE {
-    string id
-    string name
-  }
-
-  WORK_ITEM {
-    string id
-    string phase_id
-    string status
-  }
-
-  TEST_CASE {
-    string id
-    string work_item_id
-    string polarity
-  }
-
-  ADR_ENTRY {
-    string id
-    string status
-  }
+    REQUIREMENT {
+      string id PK
+      string family
+      string kind
+      string source_spec
+    }
+    TRACEABILITY_MAP {
+      string id PK
+      string implement_paths
+      string test_paths
+      string verify_commands
+    }
+    TEST_CASE {
+      string name PK
+      string suite
+      string file_path
+    }
+    VERIFY_COMMAND {
+      string command PK
+      string phase
+      int expected_exit_code
+    }
+    EVIDENCE_ARTIFACT {
+      string artifact_path PK
+      string phase
+      string artifact_type
+    }
+    PHASE {
+      string phase_id PK
+      string title
+      string status
+    }
+    ADR_ENTRY {
+      string adr_id PK
+      string status
+      string date
+    }
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Load requirements catalog] --> B[Build family gap ledger]
-  B --> C[Select next phase work slice]
-  C --> D[Implement code changes]
-  D --> E[Add or update tests]
-  E --> F[Run verification commands]
-  F --> G{All checks pass?}
-  G -- No --> H[Fix failures and rerun]
-  H --> F
-  G -- Yes --> I[Capture evidence artifacts]
-  I --> J[Update traceability mapping]
-  J --> K[Update ADR if architecture changed]
-  K --> L[Mark checklist items complete]
-  L --> M{More phase items?}
-  M -- Yes --> C
-  M -- No --> N[Proceed to next phase]
+    A[Phase 0: Baseline and Harness] --> B[Phase 1: ULLM Parity]
+    B --> C[Phase 2: CAL Parity]
+    C --> D[Phase 3: ATR Parity]
+    D --> E[Phase 4: Cross-Runtime Integration]
+    E --> F[Phase 5: Traceability and Closeout]
+
+    A --> A1[Build/Test Baseline]
+    A --> A2[Gap Ledger + Owners]
+
+    B --> B1[Provider Resolution]
+    B --> B2[Normalization + Streaming]
+
+    C --> C1[Session Lifecycle + Events]
+    C --> C2[Subagents + Profiles]
+
+    D --> D1[Parse + Validate]
+    D --> D2[Run + Resume + CLI]
+
+    E --> E1[Integrated Fixtures]
+    E --> E2[Error Propagation + Replay]
+
+    F --> F1[Traceability Set Equality]
+    F --> F2[ADR + Evidence Finalization]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  SPEC[Spec Documents] --> CATALOG[requirements_catalog.tcl]
-  CATALOG --> REQS[requirements.md + requirements.json]
-  REQS --> PLAN[Sprint Plan Work Items]
+    S1[requirements.md] --> C1[requirements_catalog.tcl]
+    C1 --> A1[requirements.json]
+    C1 --> A2[requirements summary]
 
-  PLAN --> CODE[lib/* + bin/attractor]
-  PLAN --> TESTS[tests/unit + tests/integration + tests/e2e]
+    A1 --> C2[spec_coverage.tcl]
+    S2[traceability.md] --> C2
+    C2 --> R1[coverage report]
 
-  CODE --> VERIFY[make/test + coverage tools]
-  TESTS --> VERIFY
+    R1 --> P0[Phase Ledgers]
+    P0 --> P1[ULLM Work]
+    P1 --> P2[CAL Work]
+    P2 --> P3[ATR Work]
+    P3 --> P4[Integration Work]
 
-  VERIFY --> EVIDENCE[.scratch/verification/SPRINT-003]
-  VERIFY --> DIAGRAMS[.scratch/diagram-renders/sprint-003]
-
-  REQS --> TRACE[traceability.md]
-  CODE --> TRACE
-  TESTS --> TRACE
-  EVIDENCE --> TRACE
-
-  TRACE --> GATE[spec_coverage.tcl]
-  GATE --> CLOSEOUT[Phase 5 Closeout]
+    P4 --> T1[tests/all.tcl subsets]
+    T1 --> E1[evidence artifacts]
+    E1 --> F1[sprint closeout]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph ULLM[Unified LLM Runtime]
-    U1[main.tcl]
-    U2[openai adapter]
-    U3[anthropic adapter]
-    U4[gemini adapter]
-  end
+    subgraph Specs
+      SP1[unified-llm-spec.md]
+      SP2[coding-agent-loop-spec.md]
+      SP3[attractor-spec.md]
+    end
 
-  subgraph CAL[Coding Agent Loop Runtime]
-    C1[main.tcl]
-    C2[tools/core.tcl]
-    C3[profiles/*.tcl]
-  end
+    subgraph Runtime
+      ULLM[lib/unified_llm]
+      CAL[lib/coding_agent_loop]
+      ATR[lib/attractor]
+      CORE[lib/attractor_core]
+      CLI[bin/attractor]
+    end
 
-  subgraph ATR[Attractor Runtime]
-    A1[attractor/main.tcl]
-    A2[attractor_core/core.tcl]
-    A3[bin/attractor CLI]
-  end
+    subgraph Verification
+      TC[tests/unit + integration + e2e]
+      RC[tools/requirements_catalog.tcl]
+      SC[tools/spec_coverage.tcl]
+      EV[.scratch/verification/SPRINT-003]
+      DR[.scratch/diagram-renders/sprint-003]
+      ADR[docs/ADR.md]
+    end
 
-  subgraph QA[Verification and Traceability]
-    Q1[tests/unit]
-    Q2[tests/integration]
-    Q3[tests/e2e]
-    Q4[requirements_catalog.tcl]
-    Q5[spec_coverage.tcl]
-    Q6[traceability.md]
-    Q7[ADR.md]
-  end
+    SP1 --> ULLM
+    SP2 --> CAL
+    SP3 --> ATR
 
-  ATR --> CAL
-  CAL --> ULLM
-  ULLM --> QA
-  CAL --> QA
-  ATR --> QA
+    ATR --> CAL
+    CAL --> ULLM
+    ATR --> CORE
+    CLI --> ATR
+
+    RC --> SC
+    TC --> EV
+    SC --> EV
+    ADR --> EV
+    DR --> EV
 ```
