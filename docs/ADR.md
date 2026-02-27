@@ -121,3 +121,27 @@ Positive:
 Tradeoffs:
 - Tests and ad-hoc fixtures must now be strict JSON objects.
 - Guardrail expectations are stricter, increasing up-front discipline for doc updates.
+
+## ADR-005: Precommit Enforcement for Requirement-ID and Coverage Equality Gates
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+`make build` and `make test` depend on `precommit`, but `tools/build_check.tcl` previously verified only package loadability. This left requirement catalog ID integrity and traceability equality checks outside the default developer gate unless run manually.
+
+### Decision
+- Extend `tools/build_check.tcl` to run:
+  - `tclsh tools/requirements_catalog.tcl --check-ids`
+  - `tclsh tools/spec_coverage.tcl`
+- Keep package load checks as the first stage so runtime import failures remain visible.
+- Treat these checks as mandatory for all standard build/test paths through `make`.
+
+### Consequences
+Positive:
+- Prevents false-green local runs where code builds but spec mapping is stale.
+- Makes spec-traceability regressions fail fast during normal developer workflows.
+- Aligns local and CI behavior around a single precommit enforcement contract.
+
+Tradeoffs:
+- `make build` and `make test` now run additional validation and take slightly longer.
+- Contributors working only on non-spec areas still pay this validation cost.

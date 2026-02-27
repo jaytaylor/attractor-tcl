@@ -29,6 +29,7 @@ This directory contains spec-derived requirement artifacts and traceability mapp
 8. Run full build + test before merging:
 - `make build`
 - `make test`
+  - These commands run `precommit`, which now includes `requirements_catalog --check-ids` and `spec_coverage` enforcement.
 9. (Optional but recommended for sprint docs) lint checked evidence references:
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md`
 
