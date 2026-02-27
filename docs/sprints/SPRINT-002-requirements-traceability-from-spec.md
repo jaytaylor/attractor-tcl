@@ -20,7 +20,7 @@ This sprint removes that gap by making the requirement catalog a first-class, sp
 
 ## Evidence + Verification Logging Plan
 - Store all command outputs and generated artifacts referenced by checklist items under `.scratch/verification/SPRINT-002/<phase>/...`.
-- Prefer one subdirectory per phase (`baseline/`, `catalog/`, `coverage/`, `docs/`) and include a short `README.md` index with links to the artifacts.
+- Prefer one subdirectory per phase (`baseline/`, `catalog/`, `coverage/`, `docs/`, `rebaseline/`) and include a short `README.md` index with links to the artifacts.
 - Treat `docs/spec-coverage/requirements.json` and `docs/spec-coverage/requirements.md` as auditable outputs (reviewable diffs), even if they are generated.
 
 ## Current State Snapshot (Verified 2026-02-26)
@@ -102,6 +102,84 @@ Evidence:
 - `.scratch/verification/SPRINT-002/final/2026-02-27-make-test.log`
 Notes:
 - Full suite status on 2026-02-27: Total=71, Passed=71, Failed=0.
+```
+
+## Rebaseline Snapshot (Verified 2026-02-27, Refresh Run)
+- [X] A full revalidation command runner executed all sprint gates and recorded per-command exit codes.
+```text
+Verification:
+- `timeout 180 .scratch/verification/SPRINT-002/rebaseline/run_revalidation.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/rebaseline/command-status.tsv`
+- `.scratch/verification/SPRINT-002/rebaseline/README.md`
+Notes:
+- Command status table includes 21 commands; all exit codes are `0`.
+```
+- [X] Requirement catalog validation and deterministic regeneration checks passed in a two-run comparison.
+```text
+Verification:
+- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
+- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
+- `cmp -s .scratch/verification/SPRINT-002/rebaseline/requirements.run1.json .scratch/verification/SPRINT-002/rebaseline/requirements.run2.json` (exit code 0)
+- `cmp -s .scratch/verification/SPRINT-002/rebaseline/requirements.run1.md .scratch/verification/SPRINT-002/rebaseline/requirements.run2.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/rebaseline/req-check-ids.log`
+- `.scratch/verification/SPRINT-002/rebaseline/req-generate-1.log`
+- `.scratch/verification/SPRINT-002/rebaseline/req-generate-2.log`
+- `.scratch/verification/SPRINT-002/rebaseline/deterministic-json.log`
+- `.scratch/verification/SPRINT-002/rebaseline/deterministic-md.log`
+- `.scratch/verification/SPRINT-002/rebaseline/requirements-json-sha.log`
+- `.scratch/verification/SPRINT-002/rebaseline/requirements-md-sha.log`
+Notes:
+- Snapshot values: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
+```
+- [X] Coverage completeness, verify-pattern sanity, and evidence-lint checks passed with current artifacts.
+```text
+Verification:
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
+- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/rebaseline/spec-coverage.log`
+- `.scratch/verification/SPRINT-002/rebaseline/tests-reqcat.log`
+- `.scratch/verification/SPRINT-002/rebaseline/tests-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/rebaseline/tests-verify-sanity.log`
+- `.scratch/verification/SPRINT-002/rebaseline/tests-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/rebaseline/evidence-lint.log`
+Notes:
+- Coverage summary remained exact-match and clean: missing=0, duplicates=0, bad_paths=0, bad_verify=0.
+```
+- [X] Sprint appendix mermaid diagrams re-rendered successfully via `mmdc` during the refresh run.
+```text
+Verification:
+- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
+- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
+- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
+- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
+- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/rebaseline/mmdc-domain.log`
+- `.scratch/verification/SPRINT-002/rebaseline/mmdc-er.log`
+- `.scratch/verification/SPRINT-002/rebaseline/mmdc-workflow.log`
+- `.scratch/verification/SPRINT-002/rebaseline/mmdc-dataflow.log`
+- `.scratch/verification/SPRINT-002/rebaseline/mmdc-arch.log`
+Notes:
+- Diagram output targets were updated in place under `.scratch/diagram-renders/sprint-002/`.
+```
+- [X] Requested top-level project gates were rerun with timeout wrappers and stayed green.
+```text
+Verification:
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/rebaseline/make-build.log`
+- `.scratch/verification/SPRINT-002/rebaseline/make-test.log`
+Notes:
+- Full suite refresh status: Total=71, Passed=71, Skipped=0, Failed=0.
 ```
 
 ## Scope
