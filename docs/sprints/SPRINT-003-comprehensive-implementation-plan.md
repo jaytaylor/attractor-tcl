@@ -3,690 +3,1148 @@ Legend: [ ] Incomplete, [X] Complete
 # Sprint #003 Comprehensive Implementation Plan - Close Spec Parity (Tcl)
 
 ## Executive Summary
-This plan turns `docs/sprints/SPRINT-003-close-spec-parity-tcl.md` into an execution sequence that can be implemented and verified end-to-end. It is requirement-driven, test-first, and evidence-driven, with all work tracked by requirement family and phase gates.
+- [X] Convert `docs/sprints/SPRINT-003-close-spec-parity-tcl.md` into a phase-gated execution program with requirement-level implementation, testing, and evidence tracking.
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] Maintain strict traceability for all Sprint #003 requirement IDs across implementation files, tests, and reproducible verification artifacts.
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] Complete parity across Unified LLM (ULLM), Coding Agent Loop (CAL), and Attractor (ATR) without feature gating or legacy-compatibility shims.
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
 
-## Sprint Objective
-Implement and verify full parity across:
-- `unified-llm-spec.md`
-- `coding-agent-loop-spec.md`
-- `attractor-spec.md`
+## Source and Baseline
+Source sprint document reviewed:
+- `docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
 
-## Scope
+Live baseline snapshot (2026-02-27):
+- Requirement catalog totals: `requirements=263`, `ULLM=109`, `CAL=66`, `ATR=88`
+- Coverage baseline: `missing=0`, `duplicates=0`, `bad_paths=0`, `bad_verify=0`, `malformed_blocks=0`, `unknown_catalog=0`
+- Test baseline: `tests/all.tcl` passed (`86/86`)
+
+## Implementation Scope
 In scope:
-- Unified LLM parity for provider resolution, request/response normalization, streaming semantics, tool continuation, structured output, and typed failures.
-- Coding Agent Loop parity for lifecycle semantics, tool contracts, profile parity, event contracts, steering/follow-up behavior, and subagent behavior.
-- Attractor parity for parser, validator, runtime traversal, handlers, interviewer implementations, and CLI contracts.
-- Cross-runtime parity for ULLM + CAL + ATR end-to-end execution and failure propagation.
-- Traceability closure and architecture decision logging.
+- ULLM provider resolution, normalized request/response model, streaming semantics, tool continuation, structured output, and typed failures.
+- CAL execution environment contracts, session lifecycle semantics, steering/follow-up behavior, event model parity, and subagent lifecycle behavior.
+- ATR parser/validator/runtime parity, handler/interviewer behavior, and CLI `validate`/`run`/`resume` contract parity.
+- Cross-runtime error propagation and deterministic end-to-end integration.
+- Traceability and ADR closure for all Sprint #003 requirement slices.
 
 Out of scope:
-- New product surfaces not required by Sprint #003 requirements.
-- Feature flags or gated rollout behavior.
-- Legacy compatibility shims.
+- New product surfaces beyond the Sprint #003 requirement set.
+- Feature flags, rollout gates, or compatibility bridges.
+- Deferring evidence capture until after code completion.
 
-## Baseline Review Snapshot (2026-02-27)
-- Requirement catalog count: 263 (`ULLM=109`, `CAL=66`, `ATR=88`).
-- Coverage tool status: `missing=0`, `duplicates=0`, `unknown_catalog=0`, `bad_paths=0`, `bad_verify=0`.
-- Build and test baseline status: green.
+## Requirement-Family Work Breakdown
+### Unified LLM (109 requirements)
+- [X] ULLM-S1 Provider selection and client lifecycle slice (`lib/unified_llm/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ULLM-S2 Message/content-part normalization and validation slice (`lib/unified_llm/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ULLM-S3 Adapter translation parity slice (`lib/unified_llm/adapters/openai.tcl`, `anthropic.tcl`, `gemini.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ULLM-S4 Streaming event contract and ordering slice (ULLM runtime + adapter streaming paths).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ULLM-S5 Structured output and schema-failure semantics slice (`generate_object`, `stream_object`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
 
-## Requirement Slicing Strategy
-| Family | Count | Execution Slices | Primary Implementation Surfaces | Primary Tests |
-|---|---:|---|---|---|
-| ULLM | 109 | Provider resolution, request normalization, adapter parity, streaming parity, structured output parity, typed failures | `lib/unified_llm/main.tcl`, `lib/unified_llm/adapters/*.tcl` | `tests/unit/unified_llm.test`, `tests/integration/unified_llm_parity.test` |
-| CAL | 66 | Execution environment contracts, lifecycle transitions, event contracts, profile parity, steering/follow-up semantics, subagent lifecycle | `lib/coding_agent_loop/main.tcl`, `lib/coding_agent_loop/tools/core.tcl`, `lib/coding_agent_loop/profiles/*.tcl` | `tests/unit/coding_agent_loop.test`, `tests/integration/coding_agent_loop_integration.test` |
-| ATR | 88 | DOT parsing, validation rules, traversal and edge selection, handlers, interviewers, CLI validate/run/resume parity | `lib/attractor/main.tcl`, `lib/attractor_core/core.tcl`, `bin/attractor` | `tests/unit/attractor*.test`, `tests/integration/attractor_integration.test`, `tests/e2e/attractor_cli_e2e.test` |
+### Coding Agent Loop (66 requirements)
+- [X] CAL-S1 ExecutionEnvironment and LocalExecutionEnvironment contract slice (`lib/coding_agent_loop/tools/core.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] CAL-S2 Session lifecycle/limits/cancellation semantics slice (`lib/coding_agent_loop/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] CAL-S3 Steering/follow-up queue and event parity slice (`lib/coding_agent_loop/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] CAL-S4 Profile parity and context assembly slice (`lib/coding_agent_loop/profiles/*.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] CAL-S5 Subagent lifecycle/depth-control slice (`lib/coding_agent_loop/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
 
-## Global Delivery Rules
-- No checkbox is marked complete until verification evidence is captured.
-- Every completed checkbox must include command list, exit status, and artifact references under `.scratch/verification/SPRINT-003/`.
-- Significant architecture choices must be captured in `docs/ADR.md` before or during implementation.
-- Each phase must include explicit positive and negative test evidence.
-- Keep this document status synchronized with actual implementation state.
+### Attractor (88 requirements)
+- [X] ATR-S1 DOT parser parity slice (`lib/attractor/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ATR-S2 Validator rule and diagnostic parity slice (`lib/attractor/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ATR-S3 Runtime traversal/edge-selection/checkpoint slice (`lib/attractor_core/core.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ATR-S4 Handler + interviewer parity slice (`lib/attractor_core/core.tcl`, `lib/attractor/main.tcl`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] ATR-S5 CLI contract parity slice (`bin/attractor`).
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
 
-## Phase Execution Order
-1. Phase 0: Baseline and harness hardening
-2. Phase 1: Unified LLM parity closure
-3. Phase 2: Coding Agent Loop parity closure
-4. Phase 3: Attractor parity closure
-5. Phase 4: Cross-runtime integration closure
-6. Phase 5: Traceability and closeout
+## Evidence and Artifact Contract
+- [X] Use a run folder for this plan under `.scratch/verification/SPRINT-003/<run-id>/` with `phase-*/`, `logs/`, and per-phase command status tables.
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] Store diagram renders under `.scratch/diagram-renders/sprint-003/<run-id>/` and cross-reference them in acceptance evidence.
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
+- [X] Maintain an aggregate status table `command-status-all.tsv` that includes command, exit code, phase, and artifact path.
+```text
+Verification:
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
+```
 
 ## Phase 0 - Baseline and Harness Hardening
 ### Deliverables
-- [X] Establish a phase-indexed evidence directory structure under `.scratch/verification/SPRINT-003/` with per-phase command status tables.
+- [X] Regenerate and freeze requirement baseline (`requirements.json`, `requirements.md`) and confirm family/kind totals match source specs.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Generate a requirement-family gap ledger that groups all Sprint #003 requirements into ULLM/CAL/ATR implementation slices.
+- [X] Build a requirement-family gap ledger that groups all 263 requirement IDs into concrete implementation slices (ULLM-S*, CAL-S*, ATR-S*).
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Harden `tests/support/mock_http_server.tcl` for deterministic blocking and streaming replay behavior.
+- [X] Harden `tests/support/mock_http_server.tcl` determinism for blocking and streaming fixture replay (ordered events and stable mismatches).
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Normalize fixture schema naming and enforce fixture schema validation in test setup.
+- [X] Normalize provider fixture schema conventions and enforce schema validation in ULLM integration tests.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Record baseline architecture assumptions and execution boundaries in `docs/ADR.md`.
+- [X] Record any baseline architecture adjustments in `docs/ADR.md` before starting parity code changes.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
-### Test Matrix - Phase 0
-Positive cases:
-- Requirement catalog and spec coverage tools report expected counts and no integrity errors.
-- Baseline `make -j10 build` and `make -j10 test` succeed from a clean workspace.
-- Mock server fixture replay is deterministic for blocking and streaming runs.
-- Fixture schema validator accepts canonical fixture bundles for each provider.
+### Positive Test Cases
+- `tools/requirements_catalog.tcl --check-ids` returns no formatting or duplicate-ID violations.
+- `tools/requirements_catalog.tcl --summary` reports stable totals (`263`, family split `109/66/88`).
+- `tools/spec_coverage.tcl` reports zero missing/unknown/duplicate/malformed mappings.
+- `make -j10 build` passes from a clean dependency state.
+- `make -j10 test` passes and confirms harness stability.
+- Mock fixture replay reproduces deterministic stream ordering for OpenAI/Anthropic/Gemini paths.
 
-Negative cases:
-- Missing required fixture fields fail with deterministic diagnostics.
-- Unexpected request method/path/header values fail with deterministic mismatch output.
-- Malformed stream fixture events fail parser/stream validation deterministically.
-- Unknown or duplicate requirement IDs fail catalog and coverage checks.
+### Negative Test Cases
+- Intentionally malformed fixture payloads fail with deterministic key-level diagnostics.
+- Unexpected method/path/header combinations fail with deterministic mismatch messages.
+- Duplicate or invalid requirement IDs fail catalog checks.
+- Unknown traceability IDs fail coverage checks.
+- Malformed traceability mapping blocks fail with deterministic parser diagnostics.
 
-### Acceptance Criteria - Phase 0
-- [X] All Sprint #003 requirements are assigned to an implementation slice and test owner.
+### Acceptance Criteria
+- [X] Every requirement ID has an assigned implementation slice and planned verification path.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Baseline command index includes command, exit status, and artifact location for reproducibility.
+- [X] Baseline verification artifacts and command-status tables are reproducible from the phase index.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
+- [X] Implement deterministic provider selection and ambiguity errors in `lib/unified_llm/main.tcl`.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Implement complete normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
+- [X] Complete message/content-part normalization for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming behavior.
+- [X] Close request translation parity across `openai.tcl`, `anthropic.tcl`, and `gemini.tcl` adapters for blocking and streaming interfaces.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Enforce deterministic streaming event ordering and event payload visibility for downstream CAL consumers.
+- [X] Enforce deterministic streaming event sequence and payload visibility guarantees required by CAL consumers.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Implement tool-call continuation semantics including batched tool-result forwarding.
+- [X] Implement tool-call continuation semantics, including batched tool-result forwarding.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Implement structured output parity for `generate_object` and `stream_object`, including deterministic parse and schema failures.
+- [X] Complete `generate_object`/`stream_object` schema validation and deterministic parse-failure behavior.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Normalize usage, reasoning, and caching metadata across provider adapters.
+- [X] Normalize usage/reasoning/cache metadata fields consistently across adapters.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Expand ULLM unit and integration parity tests to cover all requirement slices and provider paths.
+- [X] Expand ULLM unit and integration tests to cover full provider matrix and error taxonomy.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
-### Test Matrix - Phase 1
-Positive cases:
-- Prompt-only and messages-only requests normalize to canonical internal payloads.
-- Single-provider default resolution works for OpenAI, Anthropic, and Gemini fixture paths.
-- Streaming event sequence reconstructs final output equivalent to blocking mode.
-- Multimodal image inputs are translated correctly for each provider adapter.
-- Multi-tool assistant turns forward complete tool results in continuation requests.
-- Structured output succeeds for schema-valid responses in blocking and streaming modes.
+### Positive Test Cases
+- Prompt-only and message-only inputs each produce canonical normalized request structures.
+- Single configured provider selects deterministically with no fallback ambiguity.
+- Streaming and blocking output equivalence holds for textual and tool-augmented responses.
+- Multimodal image inputs map correctly across all adapters.
+- Tool continuation includes all tool results in one follow-up model request.
+- Schema-valid structured outputs parse successfully in blocking and streaming paths.
 
-Negative cases:
-- Requests containing both `prompt` and `messages` fail before transport execution.
-- No configured provider fails with deterministic configuration error.
-- Ambiguous provider environment fails with deterministic ambiguity error.
-- Unknown tool names and invalid tool arguments fail with typed validation errors.
-- Invalid JSON or schema mismatches in structured output fail deterministically.
-- Invalid provider option shape fails validation before adapter invocation.
+### Negative Test Cases
+- Requests containing both `prompt` and `messages` fail before transport invocation.
+- Missing provider configuration fails with typed config error.
+- Multi-provider ambiguous env configuration fails with deterministic ambiguity error.
+- Unknown tool names and invalid arguments fail with typed validation errors.
+- Non-JSON model responses fail structured-output parsing deterministically.
+- Schema mismatch outputs fail with deterministic schema errors.
+- Unsupported adapter options fail pre-transport validation.
 
-### Acceptance Criteria - Phase 1
-- [X] ULLM parity tests pass for OpenAI, Anthropic, and Gemini in blocking and streaming modes.
+### Acceptance Criteria
+- [X] ULLM requirement slices (ULLM-S1..ULLM-S5) are implemented with passing unit/integration parity tests.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Every ULLM requirement ID maps to implementation, tests, and verification evidence.
+- [X] All ULLM requirement IDs map to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
+- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts with deterministic file/process behavior and typed failures.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, round limits, turn limits, and cancellation.
+- [X] Complete lifecycle semantics for completion, round/turn limits, cancellation, and terminal-state stability.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Align truncation behavior so surfaced summaries are bounded while events retain full payload.
+- [X] Align truncation behavior so external summaries are bounded while emitted event payloads remain complete.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request.
+- [X] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request only.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Implement lifecycle event-kind and payload parity, including deterministic loop-warning emission.
+- [X] Complete event-kind and payload parity, including deterministic repeated-tool-signature loop warnings.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl`, including environment and project-document context behavior.
+- [X] Complete profile parity for OpenAI/Anthropic/Gemini profiles with environment/project-doc context behavior.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete subagent lifecycle parity with shared execution environment and isolated histories.
+- [X] Complete subagent lifecycle behavior with shared execution environment and isolated session history.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Expand CAL unit and integration tests for lifecycle, tool execution, steering queue semantics, subagent depth, and terminal states.
+- [X] Expand CAL unit/integration tests for lifecycle, tools, steering queues, subagent depth, and terminal transitions.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
-### Test Matrix - Phase 2
-Positive cases:
-- Multi-turn sessions reach natural completion with deterministic event ordering.
-- `steer` modifies the next model request and then clears.
-- `follow_up` queues execute only after current input processing completes.
-- Truncation markers appear in surfaced output while full payload remains in emitted events.
-- Profile prompts include identity, tool context, environment context, and project docs.
-- Subagents complete scoped tasks and return deterministic results to parent sessions.
+### Positive Test Cases
+- Multi-turn sessions complete with deterministic event ordering.
+- `steer` mutation applies exactly once to the immediate next request then clears.
+- `follow_up` requests queue and execute after current turn finalization.
+- Profile rendering includes tools, constraints, environment, and project docs.
+- Subagent completion returns deterministic, scoped outputs to the parent session.
+- Loop warnings appear for repeated identical tool signatures while preserving session continuity.
 
-Negative cases:
-- Unknown tools produce deterministic tool errors without corrupting session state.
-- Invalid tool arguments produce deterministic validation failures.
-- Round/turn limit breaches produce deterministic terminal state transitions.
-- Explicit cancellation transitions to terminal state with no extra turns.
-- Repeated identical tool signatures produce deterministic loop warnings.
+### Negative Test Cases
+- Unknown tools fail with deterministic typed errors while preserving session health.
+- Invalid tool-argument shapes fail pre-execution validation.
+- Round-limit and turn-limit breaches produce deterministic terminal-limit events.
+- Cancellation transitions session to terminal state with no extra tool/model events.
 - Subagent depth overflow fails with deterministic depth-limit errors.
+- Nonexistent project-doc context paths fail with deterministic context diagnostics.
 
-### Acceptance Criteria - Phase 2
-- [X] CAL parity tests pass for lifecycle, tool contracts, steering/follow-up semantics, subagents, and event contracts.
+### Acceptance Criteria
+- [X] CAL requirement slices (CAL-S1..CAL-S5) are implemented with passing unit/integration parity tests.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Every CAL requirement ID maps to implementation, tests, and verification evidence.
+- [X] All CAL requirement IDs map to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
 ## Phase 3 - Attractor Parity Closure
 ### Deliverables
-- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for quoted/unquoted values, chained edges, defaults, comments, and supported attributes.
+- [X] Complete DOT parser parity for quoted/unquoted attributes, defaults, comments, chained edges, and subgraph flattening.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete validator parity for start/exit invariants, reachability diagnostics, edge validity, and deterministic rule metadata.
+- [X] Complete validator parity for start/exit invariants, declared-node edge validity, reachability diagnostics, and deterministic rule metadata.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete runtime traversal parity in `lib/attractor_core/core.tcl` for handler execution and deterministic edge-selection priority.
+- [X] Complete runtime traversal parity for handler dispatch and deterministic edge-selection precedence.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete checkpoint persistence and resume parity across interrupted and resumed runs.
+- [X] Complete checkpoint persistence/resume parity across interrupted runs and resumed execution.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 - [X] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 - [X] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, and `Queue` implementations.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete condition expression and stylesheet application parity.
+- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` behavior and output shapes.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` output shape and exit behavior.
+- [X] Expand ATR unit/integration/e2e tests for parser/validator/runtime/handler/interviewer/CLI coverage.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
-```
-- [X] Expand ATR unit, integration, and e2e tests for parser, validator, runtime, handler, interviewer, and CLI parity coverage.
-```text
-Verification:
-- `timeout 180 make -j10 test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
-### Test Matrix - Phase 3
-Positive cases:
-- Parser accepts supported DOT subset with chained edges and default attribute blocks.
-- Validator emits deterministic diagnostics with stable rule identifiers and severities.
-- Runtime traversal follows deterministic edge selection for equivalent outcomes.
-- Resume from valid checkpoints converges to expected terminal status and artifacts.
-- Built-in handlers and interviewer implementations produce expected outcomes.
-- CLI `validate`, `run`, and `resume` return expected output shape and success behavior.
+### Positive Test Cases
+- Valid DOT graphs parse into canonical in-memory graph structure.
+- Validator emits deterministic warning/error diagnostics with stable rule identifiers.
+- Runtime executes expected path with deterministic edge-selection when multiple edges qualify.
+- Valid checkpoints resume and converge to expected terminal statuses.
+- Built-in handlers and interviewers produce expected side effects and control-flow outcomes.
+- CLI `validate`, `run`, and `resume` succeed with expected output contracts for valid inputs.
 
-Negative cases:
-- Missing start node fails validation deterministically.
-- Missing exit node fails validation deterministically.
-- Edges targeting unknown nodes fail validation deterministically.
-- Invalid condition expressions fail deterministically.
-- Missing or incompatible checkpoints fail resume deterministically.
-- Unknown handler types or interviewer options fail with deterministic configuration errors.
+### Negative Test Cases
+- Missing `Mdiamond` start node fails validation deterministically.
+- Missing `Msquare` exit node fails validation deterministically.
+- Edge referencing undeclared nodes fails validation with stable diagnostic metadata.
+- Invalid conditional expressions fail deterministically before traversal continues.
+- Missing/corrupt checkpoints fail `resume` with deterministic errors.
+- Unknown handler/interviewer kinds fail with deterministic configuration errors.
+- Invalid CLI argument combinations return deterministic non-zero exits.
 
-### Acceptance Criteria - Phase 3
-- [X] ATR parity tests pass for parser, validator, runtime traversal, handlers, interviewer behavior, and CLI contracts.
+### Acceptance Criteria
+- [X] ATR requirement slices (ATR-S1..ATR-S5) are implemented with passing unit/integration/e2e parity tests.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Every ATR requirement ID maps to implementation, tests, and verification evidence.
+- [X] All ATR requirement IDs map to implementation, tests, and evidence artifacts.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [X] Add deterministic end-to-end scenarios spanning ATR traversal, CAL tool-loop behavior, and ULLM provider fixtures.
+- [X] Add deterministic end-to-end scenarios that traverse ATR workflow nodes, invoke CAL loop behavior, and consume ULLM provider fixtures.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 - [X] Add integration assertions for artifact layout, checkpoint integrity, and event-stream continuity across runtime boundaries.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Expand CLI e2e matrix to cover success and failure behavior for `validate`, `run`, and `resume`.
+- [X] Expand CLI e2e matrix for success/failure of `validate`, `run`, and `resume` with representative workflows.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Ensure integration suite runs OpenAI, Anthropic, and Gemini fixture paths end-to-end.
+- [X] Ensure OpenAI, Anthropic, and Gemini fixture paths execute end-to-end in integration coverage.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 - [X] Add cross-runtime failure-propagation tests for typed errors traversing ULLM -> CAL -> ATR surfaces.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
-### Test Matrix - Phase 4
-Positive cases:
-- Valid pipeline graphs execute end-to-end and produce expected artifacts.
-- Resume path from valid checkpoints reaches expected terminal status.
-- Each provider fixture path succeeds with canonical cross-runtime event ordering.
-- Cross-runtime event streams include required event kinds and correlation metadata.
+### Positive Test Cases
+- End-to-end workflow run exits successfully and emits expected artifacts.
+- Resume from valid checkpoint reaches expected final state and artifact completeness.
+- Provider fixture matrix (OpenAI/Anthropic/Gemini) passes with stable event ordering.
+- Cross-runtime event streams preserve correlation metadata across component boundaries.
 
-Negative cases:
-- Fixture transport failures propagate typed errors through CAL and ATR deterministically.
-- Invalid graphs fail fast with deterministic diagnostics and failure status.
-- Missing checkpoints fail resume with deterministic errors.
-- Corrupt checkpoints fail resume with deterministic errors.
-- Invalid CLI argument combinations fail deterministically with stable output.
+### Negative Test Cases
+- Provider transport failures propagate as typed errors through CAL and ATR without process crash.
+- Invalid workflow graphs fail fast with deterministic diagnostics.
+- Missing checkpoints fail resume deterministically.
+- Corrupt checkpoints fail resume deterministically.
+- Invalid CLI argument matrices fail with stable error output and non-zero exit.
 
-### Acceptance Criteria - Phase 4
-- [X] Integrated ULLM + CAL + ATR suites pass in deterministic offline mode.
+### Acceptance Criteria
+- [X] Cross-runtime integration suite passes in deterministic offline mode for all provider fixture paths.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Integration evidence index captures commands, exit statuses, and artifact references per scenario.
+- [X] Integration evidence indexes capture command, exit code, and artifact references per scenario.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
 ## Phase 5 - Traceability, ADR, and Closeout
 ### Deliverables
-- [X] Update `docs/spec-coverage/traceability.md` so every Sprint #003 requirement maps to implementation, tests, and evidence.
+- [X] Update `docs/spec-coverage/traceability.md` so every Sprint #003 requirement maps to implementation path, tests, and verify commands.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Refresh requirement catalog outputs and reconcile catalog versus traceability consistency.
+- [X] Regenerate requirement catalog outputs and reconcile strict catalog/traceability set equality.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Append architecture-significant decisions to `docs/ADR.md` with context and consequences.
+- [X] Append architecture-significant decisions and tradeoffs to `docs/ADR.md`.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Run sprint evidence lint and resolve checklist/evidence inconsistencies in this document.
+- [X] Run sprint evidence lint and resolve any checklist/evidence mismatches.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Finalize per-phase evidence indexes with command tables and stable artifact references.
+- [X] Finalize per-phase evidence indexes and aggregate status tables with stable artifact references.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Re-render all appendix Mermaid diagrams and store outputs under `.scratch/diagram-renders/sprint-003/`.
+- [X] Re-render appendix mermaid diagrams and store render artifacts under `.scratch/diagram-renders/sprint-003/<run-id>/`.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Produce final Sprint #003 closeout summary with unresolved risks and follow-up actions.
+- [X] Produce Sprint #003 closeout summary including unresolved risks and explicitly scoped follow-up actions.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
-### Test Matrix - Phase 5
-Positive cases:
-- Requirement catalog and spec coverage checks pass with no missing/unknown/duplicate/malformed mappings.
-- Evidence lint succeeds for checklist/evidence formatting and references.
-- Mermaid diagrams render successfully and outputs are readable.
-- Full build and test suite remains green at closeout.
+### Positive Test Cases
+- Catalog ID checks pass with no malformed or duplicate requirement IDs.
+- Coverage checks pass with zero missing/unknown/duplicate/malformed mappings.
+- Evidence lint validates all completed checklist items against existing artifact references.
+- Mermaid diagrams render successfully and outputs are inspectable.
 
-Negative cases:
-- Missing traceability blocks fail coverage checks.
-- Unknown requirement IDs in traceability fail coverage checks.
-- Completed checkboxes with missing evidence references fail evidence lint.
-- Broken Mermaid syntax fails render validation and blocks closeout.
+### Negative Test Cases
+- Missing/unknown traceability IDs fail coverage checks deterministically.
+- Completed checklist items without evidence references fail evidence lint.
+- Diagram syntax or renderer failures block closeout until corrected.
+- Missing verify-command test matches fail coverage verify-command checks.
 
-### Acceptance Criteria - Phase 5
-- [X] Requirement catalog and spec coverage checks pass with no missing, unknown, duplicate, or malformed mapping failures.
+### Acceptance Criteria
+- [X] Traceability, catalog, and coverage checks pass with zero integrity failures.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
-- [X] Sprint evidence is reproducible using only phase index files and referenced artifacts.
+- [X] Sprint closeout evidence is reproducible using only phase index files and artifact paths.
 ```text
 Verification:
-- `timeout 180 make -j10 test` (exit code 0)
+- `make -j10 build` (exit code 0)
+- `make -j10 test` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tests/all.tcl -match *integration*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/command-status-all.tsv`
-Notes:
-- Phase logs: `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-*/logs/`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/command-status-all.tsv`
+- `.scratch/verification/SPRINT-003/full-implementation-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/full-implementation-2026-02-27/`
 ```
 
 ## Canonical Verification Command Set
 - `make -j10 build`
 - `make -j10 test`
-- `tclsh tools/requirements_catalog.tcl --check-ids`
-- `tclsh tools/requirements_catalog.tcl --summary`
-- `tclsh tools/spec_coverage.tcl`
 - `tclsh tests/all.tcl -match *unified_llm*`
 - `tclsh tests/all.tcl -match *coding_agent_loop*`
 - `tclsh tests/all.tcl -match *attractor*`
+- `tclsh tests/all.tcl -match *integration*`
+- `tclsh tests/all.tcl -match *e2e*`
+- `tclsh tools/requirements_catalog.tcl --check-ids`
+- `tclsh tools/requirements_catalog.tcl --summary`
+- `tclsh tools/spec_coverage.tcl`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-comprehensive-implementation-plan.md`
 
-## Appendix - Mermaid Diagrams
-
-### Core Domain Models
+## Appendix
+### Core Domain Model Diagram
 ```mermaid
 classDiagram
   class UnifiedLLMClient {
     +generate(request)
-    +stream(request, onEvent)
-    +generateObject(request, schema)
-    +streamObject(request, schema, onObject)
+    +stream(request,onEvent)
+    +generateObject(request,schema)
+    +streamObject(request,schema,onObject)
   }
-
   class ProviderAdapter {
     +translateRequest(request)
     +invokeBlocking(request)
-    +invokeStreaming(request, onEvent)
+    +invokeStreaming(request,onEvent)
   }
-
   class CodingAgentSession {
     +submit(input)
     +steer(input)
@@ -694,21 +1152,18 @@ classDiagram
     +cancel()
     +events()
   }
-
   class ExecutionEnvironment {
     +readFile(path)
-    +writeFile(path, content)
-    +applyPatch(patch)
+    +writeFile(path,content)
+    +applyPatch(diff)
     +execCommand(command)
   }
-
   class AttractorEngine {
     +parse(dot)
     +validate(graph)
     +run(graph)
     +resume(checkpoint)
   }
-
   UnifiedLLMClient --> ProviderAdapter
   CodingAgentSession --> UnifiedLLMClient
   CodingAgentSession --> ExecutionEnvironment
@@ -718,78 +1173,74 @@ classDiagram
 ### E-R Diagram
 ```mermaid
 erDiagram
-  REQUIREMENT ||--o{ TRACEABILITY_ENTRY : mapped_by
-  TRACEABILITY_ENTRY }o--|| IMPLEMENTATION_UNIT : references
+  REQUIREMENT ||--o{ TRACEABILITY_ENTRY : maps_to
+  TRACEABILITY_ENTRY }o--|| IMPLEMENTATION_UNIT : implemented_by
   TRACEABILITY_ENTRY }o--|| TEST_CASE : verified_by
-  PHASE_RUN ||--o{ VERIFICATION_COMMAND : executes
-  PHASE_RUN ||--o{ EVIDENCE_ARTIFACT : produces
-  SPRINT_RUN ||--o{ PHASE_RUN : contains
+  PHASE ||--o{ VERIFICATION_COMMAND : executes
+  PHASE ||--o{ EVIDENCE_ARTIFACT : emits
+  SPRINT ||--o{ PHASE : contains
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Refresh requirements catalog] --> B[Build requirement-family gap ledger]
-  B --> C[Implement phase deliverables]
-  C --> D[Run unit, integration, and e2e tests]
-  D --> E[Capture command status and artifacts]
-  E --> F[Update traceability mappings]
-  F --> G[Run catalog and coverage checks]
-  G --> H{All mappings and tests green?}
+  A[Generate Requirement Catalog] --> B[Build Gap Ledger]
+  B --> C[Implement Phase Slice]
+  C --> D[Run Unit and Integration Tests]
+  D --> E[Capture Evidence Artifacts]
+  E --> F[Update Traceability]
+  F --> G[Run Coverage and Evidence Lint]
+  G --> H{All Gates Pass?}
   H -->|No| C
-  H -->|Yes| I[Close sprint]
+  H -->|Yes| I[Close Sprint]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  SPEC[Spec Documents] --> CATALOG[Requirements Catalog]
+  SPEC[Spec Documents] --> CATALOG[Requirement Catalog]
   CATALOG --> PLAN[Sprint Plan]
-  PLAN --> CODE[Implementation Files]
-  CODE --> TESTS[Automated Tests]
+  PLAN --> CODE[Implementation]
+  CODE --> TESTS[Test Suites]
   TESTS --> EVIDENCE[Verification Artifacts]
-  EVIDENCE --> TRACE[Traceability Mapping]
+  EVIDENCE --> TRACE[Traceability]
   TRACE --> COVERAGE[Coverage Validation]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph InterfaceLayer
+  subgraph Interface
     CLI[bin/attractor]
-    TOOLS[Coverage and Catalog Tools]
+    TOOLS[spec_coverage and requirements_catalog]
   end
-
-  subgraph RuntimeLayer
+  subgraph Runtime
     ATR[lib/attractor/main.tcl]
     CORE[lib/attractor_core/core.tcl]
     CAL[lib/coding_agent_loop/main.tcl]
     ULLM[lib/unified_llm/main.tcl]
   end
-
-  subgraph AdapterLayer
-    OPENAI[lib/unified_llm/adapters/openai.tcl]
-    ANTHROPIC[lib/unified_llm/adapters/anthropic.tcl]
-    GEMINI[lib/unified_llm/adapters/gemini.tcl]
+  subgraph Adapters
+    OA[openai adapter]
+    AN[anthropic adapter]
+    GM[gemini adapter]
   end
-
-  subgraph VerificationLayer
-    TESTS[tests/all.tcl]
+  subgraph Verification
+    TEST[tests/all.tcl]
     MOCK[tests/support/mock_http_server.tcl]
     TRACEFILE[docs/spec-coverage/traceability.md]
   end
-
   CLI --> ATR
   ATR --> CORE
   ATR --> CAL
   ATR --> ULLM
   CAL --> ULLM
-  ULLM --> OPENAI
-  ULLM --> ANTHROPIC
-  ULLM --> GEMINI
-  TESTS --> ATR
-  TESTS --> CAL
-  TESTS --> ULLM
+  ULLM --> OA
+  ULLM --> AN
+  ULLM --> GM
+  TEST --> ATR
+  TEST --> CAL
+  TEST --> ULLM
   MOCK --> ULLM
   TOOLS --> TRACEFILE
 ```
