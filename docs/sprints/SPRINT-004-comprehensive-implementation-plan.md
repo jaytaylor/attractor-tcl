@@ -63,37 +63,53 @@ Out of scope:
 
 ## Phase 0 - Baseline and Evidence Scaffolding
 ### Deliverables
-- [ ] Confirm offline baseline remains deterministic and isolated from live suites.
+- [X] Confirm offline baseline remains deterministic and isolated from live suites.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Confirm live harness is independently invocable and not sourced by `tests/all.tcl`.
+- [X] Confirm live harness is independently invocable and not sourced by `tests/all.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Establish implementation-plan evidence folders and command status ledgers.
+- [X] Establish implementation-plan evidence folders and command status ledgers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Record baseline assumptions and sprint-specific architecture decisions in `docs/ADR.md`.
+- [X] Record baseline assumptions and sprint-specific architecture decisions in `docs/ADR.md`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ### Positive Test Cases
@@ -106,64 +122,92 @@ Notes:
 - Live harness invocation with no providers selected fails before network usage.
 
 ### Acceptance Criteria - Phase 0
-- [ ] Baseline isolation is proven and reproducible from evidence artifacts.
+- [X] Baseline isolation is proven and reproducible from evidence artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Evidence scaffolding exists and is ready for phased execution logs.
+- [X] Evidence scaffolding exists and is ready for phased execution logs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ## Phase 1 - Live HTTPS Transport and Redaction
 ### Deliverables
-- [ ] Implement provider-agnostic HTTPS JSON transport callable through `client_new -transport`.
+- [X] Implement provider-agnostic HTTPS JSON transport callable through `client_new -transport`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Enforce base URL resolution precedence (request override, provider env override, provider default).
+- [X] Enforce base URL resolution precedence (request override, provider env override, provider default).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Implement deterministic errorcode shapes for HTTP and network failures.
+- [X] Implement deterministic errorcode shapes for HTTP and network failures.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Redact sensitive headers (`Authorization`, `x-api-key`, `x-goog-api-key`) in all logs and structured responses.
+- [X] Redact sensitive headers (`Authorization`, `x-api-key`, `x-goog-api-key`) in all logs and structured responses.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add deterministic transport integration tests with local HTTP fixture coverage for happy and failure paths.
+- [X] Add deterministic transport integration tests with local HTTP fixture coverage for happy and failure paths.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ### Positive Test Cases
@@ -177,72 +221,104 @@ Notes:
 - Error messages and artifacts never include raw key material.
 
 ### Acceptance Criteria - Phase 1
-- [ ] Transport contract passes deterministic integration tests.
+- [X] Transport contract passes deterministic integration tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Redaction behavior is proven in happy-path and error-path evidence.
+- [X] Redaction behavior is proven in happy-path and error-path evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ## Phase 2 - Live Harness and Unified LLM Provider Smokes
 ### Deliverables
-- [ ] Implement/validate live harness preflight for provider selection and fail-fast semantics.
+- [X] Implement/validate live harness preflight for provider selection and fail-fast semantics.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Create per-run artifacts root with unique run IDs and write `run.json` metadata.
+- [X] Create per-run artifacts root with unique run IDs and write `run.json` metadata.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Implement post-run secret leak scan and path-only leak reporting.
+- [X] Implement post-run secret leak scan and path-only leak reporting.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add OpenAI live smoke and invalid-key tests with deterministic assertions.
+- [X] Add OpenAI live smoke and invalid-key tests with deterministic assertions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add Anthropic live smoke and invalid-key tests with deterministic assertions.
+- [X] Add Anthropic live smoke and invalid-key tests with deterministic assertions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add Gemini live smoke and invalid-key tests with deterministic assertions.
+- [X] Add Gemini live smoke and invalid-key tests with deterministic assertions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ### Positive Test Cases
@@ -258,56 +334,80 @@ Notes:
 - Unknown provider in allowlist: deterministic validation failure.
 
 ### Acceptance Criteria - Phase 2
-- [ ] Unified LLM live smokes pass for at least one configured provider and generate auditable artifacts.
+- [X] Unified LLM live smokes pass for at least one configured provider and generate auditable artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] All negative-path provider-selection and invalid-key tests pass deterministically.
+- [X] All negative-path provider-selection and invalid-key tests pass deterministically.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ## Phase 3 - Coding Agent Loop Live Smokes
 ### Deliverables
-- [ ] Add/validate per-provider Coding Agent Loop live smoke coverage using explicit default client injection.
+- [X] Add/validate per-provider Coding Agent Loop live smoke coverage using explicit default client injection.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Enforce default client set/restore around each provider test to prevent cross-provider contamination.
+- [X] Enforce default client set/restore around each provider test to prevent cross-provider contamination.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Assert required live event contract (`SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`).
+- [X] Assert required live event contract (`SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add invalid-key tests that prove deterministic failure and no secret leakage.
+- [X] Add invalid-key tests that prove deterministic failure and no secret leakage.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ### Positive Test Cases
@@ -320,56 +420,80 @@ Notes:
 - Provider failure does not impact subsequent provider runs.
 
 ### Acceptance Criteria - Phase 3
-- [ ] Coding Agent Loop live tests pass for at least one configured provider and emit required events.
+- [X] Coding Agent Loop live tests pass for at least one configured provider and emit required events.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Per-provider Coding Agent Loop artifacts are present and auditable.
+- [X] Per-provider Coding Agent Loop artifacts are present and auditable.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ## Phase 4 - Attractor Live Smokes
 ### Deliverables
-- [ ] Implement/validate live codergen backend fixture for Attractor that delegates to Unified LLM live transport.
+- [X] Implement/validate live codergen backend fixture for Attractor that delegates to Unified LLM live transport.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add per-provider Attractor smoke tests for minimal pipeline (`start -> codergen -> exit`).
+- [X] Add per-provider Attractor smoke tests for minimal pipeline (`start -> codergen -> exit`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Assert artifact contract for each run (`checkpoint.json`, node `status.json`, `prompt.md`, `response.md`).
+- [X] Assert artifact contract for each run (`checkpoint.json`, node `status.json`, `prompt.md`, `response.md`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Add invalid-key negative coverage ensuring deterministic failure and retained failure artifacts.
+- [X] Add invalid-key negative coverage ensuring deterministic failure and retained failure artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ### Positive Test Cases
@@ -381,64 +505,92 @@ Notes:
 - Failure artifacts remain redacted and pass leak scan.
 
 ### Acceptance Criteria - Phase 4
-- [ ] Attractor live smokes pass for at least one configured provider.
+- [X] Attractor live smokes pass for at least one configured provider.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Attractor artifacts exist under `attractor/<provider>/` for all executed providers.
+- [X] Attractor artifacts exist under `attractor/<provider>/` for all executed providers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ## Phase 5 - Make Target, Documentation, ADR, and Closeout
 ### Deliverables
-- [ ] Ensure `Makefile` contains `test-e2e: precommit` and runs only the live harness entrypoint.
+- [X] Ensure `Makefile` contains `test-e2e: precommit` and runs only the live harness entrypoint.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Finalize `docs/howto/live-e2e.md` with prerequisites, env vars, examples, artifact map, and secret-safety guidance.
+- [X] Finalize `docs/howto/live-e2e.md` with prerequisites, env vars, examples, artifact map, and secret-safety guidance.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Update `docs/ADR.md` with final architecture decisions and consequences from Sprint #004 execution.
+- [X] Update `docs/ADR.md` with final architecture decisions and consequences from Sprint #004 execution.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Render and validate appendix Mermaid diagrams with `mmdc`, storing outputs under `.scratch/diagram-renders/sprint-004/`.
+- [X] Render and validate appendix Mermaid diagrams with `mmdc`, storing outputs under `.scratch/diagram-renders/sprint-004/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Execute final closeout matrix: no-key fail-fast, single-provider pass, multi-provider pass, secret-leak scan pass.
+- [X] Execute final closeout matrix: no-key fail-fast, single-provider pass, multi-provider pass, secret-leak scan pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ### Positive Test Cases
@@ -452,38 +604,50 @@ Notes:
 - Injected synthetic leak triggers scanner failure with path-only reporting.
 
 ### Acceptance Criteria - Phase 5
-- [ ] `make test-e2e` behavior is deterministic for both fail-fast and successful provider-selected runs.
+- [X] `make test-e2e` behavior is deterministic for both fail-fast and successful provider-selected runs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Secret redaction and leak-scan controls are proven by reproducible evidence.
+- [X] Secret redaction and leak-scan controls are proven by reproducible evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
-- [ ] Sprint document status, evidence references, and closeout notes are synchronized with observed results.
+- [X] Sprint document status, evidence references, and closeout notes are synchronized with observed results.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
-Command(s):
-Exit code(s):
-Evidence path(s):
+Verification:
+- `timeout 180 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
+- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/command-status-all.tsv`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/summary.md`
+- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130127Z/live-run-paths.txt`
 Notes:
+- Relevant command rows and per-command logs/exitcode files are recorded in the ledger above.
 ```
 
 ## Cross-Provider and Cross-Component Verification Matrix
 | Case | OpenAI | Anthropic | Gemini |
 | --- | --- | --- | --- |
-| Unified LLM live smoke (non-empty response and usage) | [ ] | [ ] | [ ] |
-| Coding Agent Loop live smoke (required event contract) | [ ] | [ ] | [ ] |
-| Attractor live smoke (pipeline artifacts + checkpoint) | [ ] | [ ] | [ ] |
-| Invalid key deterministic failure + no secret leak | [ ] | [ ] | [ ] |
+| Unified LLM live smoke (non-empty response and usage) | [X] | [X] | [X] |
+| Coding Agent Loop live smoke (required event contract) | [X] | [X] | [X] |
+| Attractor live smoke (pipeline artifacts + checkpoint) | [X] | [X] | [X] |
+| Invalid key deterministic failure + no secret leak | [X] | [X] | [X] |
 
 ## Appendix - Mermaid Diagrams
 
