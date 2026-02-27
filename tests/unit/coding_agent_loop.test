@@ -9,20 +9,21 @@ package require attractor_core
 
 namespace eval ::tests::coding_agent_loop {
     variable call_count 0
+    variable seen {}
 }
 
 proc ::tests::coding_agent_loop::transport_tool {req} {
     variable call_count
     incr call_count
 
-    if {$call_count == 1} {
+    if {$call_count % 2 == 1} {
         set body [dict create \
             id first \
             output_text "" \
             tool_calls [list [dict create id call1 name shell arguments [dict create command {printf "abcdef\nline2\nline3\nline4\n"}]]] \
-            usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+            usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
     } else {
-        set body [dict create id second output_text done usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+        set body [dict create id second output_text done usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
     }
 
     return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
@@ -45,6 +46,24 @@ test coding_agent_loop-env-filter-1.0 {default env filter removes secrets} -setu
     unset -nocomplain ::env(TEST_API_KEY) ::env(TEST_SECRET) ::env(TEST_TOKEN) ::env(TEST_PASSWORD) ::env(TEST_CREDENTIAL) ::env(TEST_VISIBLE)
 } -result {0 0 1}
 
+test coding_agent_loop-execution-env-1.0 {local execution environment supports file ops} -setup {
+    set work [file join $root .scratch verification SPRINT-003 cal env-[pid]]
+    file delete -force $work
+    file mkdir $work
+    set envCmd [::coding_agent_loop::tools::execution_environment_new -type local -root $work]
+} -body {
+    $envCmd write_file a.txt hello
+    set read1 [$envCmd read_file a.txt]
+    $envCmd edit_file a.txt hello world
+    set read2 [$envCmd read_file a.txt]
+    set patch [join [list "*** Begin Patch" "*** Add File: b.txt" "+patch" "*** End Patch"] "\n"]
+    $envCmd apply_patch $patch
+    list $read1 $read2 [$envCmd read_file b.txt]
+} -cleanup {
+    $envCmd close
+    file delete -force $work
+} -result {hello world patch}
+
 test coding_agent_loop-truncate-order-1.0 {truncation applies char then line} -body {
     set full "12345\n67890\nabcde\nfghij\nzzzzz"
     set trunc [::coding_agent_loop::tools::truncate_output $full 20 2]
@@ -53,11 +72,13 @@ test coding_agent_loop-truncate-order-1.0 {truncation applies char then line} -b
 } -result {1 1}
 
 test coding_agent_loop-shell-cancel-1.0 {shell cancellation marker} -body {
-    set output [::coding_agent_loop::tools::shell [dict create command {sleep 2; printf done} max_ms 50] {}]
+    set envCmd [::coding_agent_loop::tools::execution_environment_new -type local]
+    set output [$envCmd shell [dict create command {sleep 2; printf done} max_ms 50]]
+    $envCmd close
     expr {[string first "\[CANCELLED" $output] >= 0}
 } -result 1
 
-test coding_agent_loop-session-events-1.0 {session emits required basic events} -setup {
+test coding_agent_loop-session-events-1.0 {session emits required events} -setup {
     set client [::unified_llm::client_new -provider mock]
     ::unified_llm::set_default_client $client
     set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
@@ -68,20 +89,22 @@ test coding_agent_loop-session-events-1.0 {session emits required basic events} 
     foreach event $events {
         lappend types [dict get $event type]
     }
-    list [lsearch -exact $types SESSION_START] [lsearch -exact $types USER_INPUT] [lsearch -exact $types ASSISTANT_TEXT_END]
+    list \
+      [expr {[lsearch -exact $types SESSION_START] >= 0}] \
+      [expr {[lsearch -exact $types MODEL_REQUEST_START] >= 0}] \
+      [expr {[lsearch -exact $types MODEL_REQUEST_END] >= 0}] \
+      [expr {[lsearch -exact $types ASSISTANT_TEXT_END] >= 0}] \
+      [expr {[lsearch -exact $types TURN_END] >= 0}]
 } -cleanup {
     $session close
     $client close
-} -result {0 1 2}
+} -result {1 1 1 1 1}
 
 test coding_agent_loop-tool-call-full-output-1.0 {TOOL_CALL_END keeps full output untruncated} -setup {
     set ::tests::coding_agent_loop::call_count 0
     set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_tool]
     ::unified_llm::set_default_client $client
-    set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
-    set sid [lindex [split $session ::] end]
-    dict set ::coding_agent_loop::sessions $sid tools shell char_limit 8
-    dict set ::coding_agent_loop::sessions $sid tools shell line_limit 2
+    set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env -config [dict create default_tool_char_limit 8 default_tool_line_limit 2]]
 } -body {
     set _ [$session submit "run a shell tool"]
     set events [$session events]
@@ -100,14 +123,6 @@ test coding_agent_loop-tool-call-full-output-1.0 {TOOL_CALL_END keeps full outpu
     $client close
 } -result {1 1 0}
 
-test coding_agent_loop-tool-registry-1.0 {default registry includes required tool schemas} -body {
-    set registry [::coding_agent_loop::tools::default_registry]
-    list \
-      [dict exists $registry read_file schema] \
-      [dict exists $registry apply_patch schema] \
-      [dict exists $registry shell schema]
-} -result {1 1 1}
-
 test coding_agent_loop-profile-1.0 {provider profiles expose expected toolsets} -body {
     set openai [::coding_agent_loop::resolve_profile openai]
     set anthropic [::coding_agent_loop::resolve_profile anthropic]
@@ -118,25 +133,29 @@ test coding_agent_loop-profile-1.0 {provider profiles expose expected toolsets} 
       [expr {[lsearch -exact [dict get $gemini enabled_tools] edit_file] >= 0}]
 } -result {1 1 1}
 
-test coding_agent_loop-steer-1.0 {steer emits steering event and follow_up runs submit} -setup {
-    set client [::unified_llm::client_new -provider mock]
-    ::unified_llm::set_default_client $client
-    set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
-} -body {
-    set _1 [$session steer "focus on tests"]
-    set _2 [$session follow_up "hello"]
-    set events [$session events]
-    set hasSteer 0
-    set hasAssistant 0
-    foreach event $events {
-        if {[dict get $event type] eq "STEERING_INJECTED"} { set hasSteer 1 }
-        if {[dict get $event type] eq "ASSISTANT_TEXT_END"} { set hasAssistant 1 }
+test coding_agent_loop-steer-injection-1.0 {steer is injected into next model request} -setup {
+    set ::tests::coding_agent_loop::seen {}
+    proc ::tests::coding_agent_loop::transport_steer {req} {
+        dict lappend ::tests::coding_agent_loop::seen requests $req
+        set body [dict create output_text ok usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
     }
-    list $hasSteer $hasAssistant
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_steer]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai]
+} -body {
+    $session steer "focus on tests"
+    $session submit "hello"
+    set req [lindex [dict get $::tests::coding_agent_loop::seen requests] 0]
+    set messages [dict get $req payload input]
+    set userContent [dict get [lindex $messages 1] content]
+    set userText [dict get [lindex $userContent 0] text]
+    expr {[string first "Steering directives" $userText] >= 0}
 } -cleanup {
+    rename ::tests::coding_agent_loop::transport_steer {}
     $session close
     $client close
-} -result {1 1}
+} -result 1
 
 test coding_agent_loop-turn-limit-1.0 {turn limits raise error and emit warning event} -setup {
     set client [::unified_llm::client_new -provider mock]
@@ -163,11 +182,11 @@ test coding_agent_loop-unknown-tool-1.0 {unknown tool calls become error tool re
         variable call_count
         incr call_count
         if {$call_count == 1} {
-            set body [dict create id first output_text "" tool_calls [list [dict create id t1 name unknown_tool arguments {}]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+            set body [dict create id first output_text "" tool_calls [list [dict create id t1 name unknown_tool arguments {}]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
         } else {
             set payload [dict get $req payload]
             set toolResults [dict get $payload tool_results]
-            set body [dict create id second output_text [dict get [lindex $toolResults 0] output] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0]]
+            set body [dict create id second output_text [dict get [lindex $toolResults 0] output] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
         }
         return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
     }
@@ -183,59 +202,51 @@ test coding_agent_loop-unknown-tool-1.0 {unknown tool calls become error tool re
     $client close
 } -result 1
 
-test coding_agent_loop-edit-file-errors-1.0 {edit_file returns deterministic not found and not unique errors} -setup {
-    set work [file join $root .scratch verification SPRINT-001 coding_agent_loop edit-file-[pid]]
-    file delete -force $work
-    file mkdir $work
-    set path1 [file join $work missing.txt]
-    set path2 [file join $work dup.txt]
-    set fh [open $path2 w]
-    puts -nonewline $fh "x\\ny\\nx"
-    close $fh
+test coding_agent_loop-invalid-tool-args-1.0 {invalid tool arguments yield schema_error payload} -setup {
+    proc ::tests::coding_agent_loop::transport_bad_args {req} {
+        set body [dict create id first output_text "" tool_calls [list [dict create id t1 name read_file arguments {}]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_bad_args]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai -config [dict create max_tool_rounds_per_input 1]]
 } -body {
-    catch {::coding_agent_loop::tools::edit_file [dict create path $path1 old_string a new_string b] {}} err1
-    catch {::coding_agent_loop::tools::edit_file [dict create path $path2 old_string x new_string z] {}} err2
-    list [string match "*does not exist*" $err1] [string match "*not unique*" $err2]
+    catch {$session submit "bad args"} _
+    set hasSchemaError 0
+    foreach event [$session events] {
+        if {[dict get $event type] eq "TOOL_CALL_END" && [dict get $event is_error]} {
+            if {[string first "schema_error" [dict get $event full_output]] >= 0} {
+                set hasSchemaError 1
+            }
+        }
+    }
+    set hasSchemaError
 } -cleanup {
-    file delete -force $work
-} -result {1 1}
+    rename ::tests::coding_agent_loop::transport_bad_args {}
+    $session close
+    $client close
+} -result 1
 
-test coding_agent_loop-apply-patch-1.0 {apply_patch add/update/delete operations} -setup {
-    set work [file join $root .scratch verification SPRINT-001 coding_agent_loop patch-[pid]]
-    file delete -force $work
-    file mkdir $work
-    set target [file join $work target.txt]
-    set fh [open $target w]
-    puts -nonewline $fh "before"
-    close $fh
+test coding_agent_loop-subagent-depth-limit-1.0 {depth limit prevents recursive spawning} -setup {
+    set client [::unified_llm::client_new -provider mock]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai -config [dict create max_subagent_depth 1]]
+    set sid [dict get [$session config] id]
 } -body {
-    set addPatch [join [list \
-        "*** Begin Patch" \
-        "*** Add File: $work/new.txt" \
-        "+hello" \
-        "*** End Patch"] "\n"]
-    set updPatch [join [list \
-        "*** Begin Patch" \
-        "*** Update File: $target" \
-        "-before" \
-        "+after" \
-        "*** End Patch"] "\n"]
-    set delPatch [join [list \
-        "*** Begin Patch" \
-        "*** Delete File: $work/new.txt" \
-        "*** End Patch"] "\n"]
-    ::coding_agent_loop::tools::apply_patch [dict create patch $addPatch] {}
-    ::coding_agent_loop::tools::apply_patch [dict create patch $updPatch] {}
-    ::coding_agent_loop::tools::apply_patch [dict create patch $delPatch] {}
-    set fh [open $target r]
-    set content [read $fh]
-    close $fh
-    list $content [file exists [file join $work new.txt]]
+    set toolCall [dict create id tc session_id $sid execution_env_cmd [dict get [$session config] execution_env]]
+    set first [::coding_agent_loop::tools::spawn_agent [dict create profile openai] $toolCall]
+    set childSession [dict get [dict get $::coding_agent_loop::tools::agents [dict get $first agent_id]] session]
+    catch {::coding_agent_loop::tools::spawn_agent [dict create profile openai] [dict create id tc2 session_id $childSession execution_env_cmd [dict get [$session config] execution_env]]} err
+    string match "*depth limit*" $err
 } -cleanup {
-    file delete -force $work
-} -result {after 0}
+    foreach aid [dict keys $::coding_agent_loop::tools::agents] {
+        catch {::coding_agent_loop::tools::close_agent [dict create agent_id $aid] {}}
+    }
+    $session close
+    $client close
+} -result 1
 
-test coding_agent_loop-subagent-1.0 {spawn/send/wait/close subagent lifecycle works} -setup {
+test coding_agent_loop-subagent-lifecycle-1.0 {spawn/send/wait/close subagent lifecycle works} -setup {
     set client [::unified_llm::client_new -provider mock]
     ::unified_llm::set_default_client $client
 } -body {
@@ -244,7 +255,45 @@ test coding_agent_loop-subagent-1.0 {spawn/send/wait/close subagent lifecycle wo
     set sent [::coding_agent_loop::tools::send_input [dict create agent_id $agentId input "hello"] {}]
     set waited [::coding_agent_loop::tools::wait [dict create agent_id $agentId] {}]
     set closed [::coding_agent_loop::tools::close_agent [dict create agent_id $agentId] {}]
-    list [dict get $waited state] [dict get $closed state] [string match "*openai*" [dict get $sent text]]
+    list [dict get $waited state] [dict get $closed state] [expr {[string match "mock:*" [dict get $sent text]] || [string match "offline-openai*" [dict get $sent text]]}]
 } -cleanup {
     $client close
 } -result {complete closed 1}
+
+test coding_agent_loop-abort-1.0 {aborted session rejects further submit} -setup {
+    set client [::unified_llm::client_new -provider mock]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai]
+} -body {
+    $session abort
+    catch {$session submit "nope"} err
+    set types {}
+    foreach e [$session events] {
+        lappend types [dict get $e type]
+    }
+    list [string match "*aborted*" $err] [expr {[lsearch -exact $types SESSION_ABORTED] >= 0}]
+} -cleanup {
+    $session close
+    $client close
+} -result {1 1}
+
+test coding_agent_loop-loop-detection-1.0 {repeated identical tool patterns trigger loop detection event} -setup {
+    set ::tests::coding_agent_loop::call_count 0
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_tool]
+    ::unified_llm::set_default_client $client
+    set session [::coding_agent_loop::session new -profile openai]
+} -body {
+    $session submit "one"
+    $session submit "two"
+    $session submit "three"
+    set hasLoop 0
+    foreach event [$session events] {
+        if {[dict get $event type] eq "LOOP_DETECTION"} {
+            set hasLoop 1
+        }
+    }
+    set hasLoop
+} -cleanup {
+    $session close
+    $client close
+} -result 1

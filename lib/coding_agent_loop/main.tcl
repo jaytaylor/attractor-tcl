@@ -41,6 +41,46 @@ proc ::coding_agent_loop::resolve_profile {profile} {
     }
 }
 
+proc ::coding_agent_loop::__collect_project_docs {} {
+    set docs {}
+    foreach path {AGENTS.md CLAUDE.md README.md} {
+        if {[file exists $path]} {
+            lappend docs $path
+        }
+    }
+    return $docs
+}
+
+proc ::coding_agent_loop::__build_system_prompt {state} {
+    set profile [dict get $state profile]
+    set identity "You are a coding agent."
+    if {[dict exists $profile identity]} {
+        set identity [dict get $profile identity]
+    }
+
+    set guidance "Use tools carefully and deterministically."
+    if {[dict exists $profile tool_guidance]} {
+        set guidance [dict get $profile tool_guidance]
+    }
+
+    set cwd [pwd]
+    set now [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%SZ" -gmt 1]
+    set platform "$::tcl_platform(os) $::tcl_platform(osVersion)"
+
+    set branch "unknown"
+    if {[catch {exec git rev-parse --abbrev-ref HEAD} branchOut] == 0} {
+        set branch [string trim $branchOut]
+    }
+
+    set docs [::coding_agent_loop::__collect_project_docs]
+    set docsLine "none"
+    if {[llength $docs] > 0} {
+        set docsLine [join $docs ", "]
+    }
+
+    return "$identity\n\n$guidance\n\nEnvironment:\n- cwd: $cwd\n- git branch: $branch\n- platform: $platform\n- utc_now: $now\n- project_docs: $docsLine"
+}
+
 proc ::coding_agent_loop::session {subcommand args} {
     switch -- $subcommand {
         new {
@@ -59,12 +99,45 @@ proc ::coding_agent_loop::session_new {args} {
     array set opts {
         -profile openai
         -env ::coding_agent_loop::default_env
+        -execution_env ""
         -config {}
     }
     array set opts $args
 
     set profile [::coding_agent_loop::resolve_profile $opts(-profile)]
-    set registry [::coding_agent_loop::tools::default_registry]
+
+    set defaultCharLimit 6000
+    set defaultLineLimit 200
+    set shellMaxMs 60000
+    set subagentDepth 0
+    set maxSubagentDepth 2
+
+    if {[dict exists $opts(-config) default_tool_char_limit]} {
+        set defaultCharLimit [dict get $opts(-config) default_tool_char_limit]
+    }
+    if {[dict exists $opts(-config) default_tool_line_limit]} {
+        set defaultLineLimit [dict get $opts(-config) default_tool_line_limit]
+    }
+    if {[dict exists $opts(-config) shell_max_ms]} {
+        set shellMaxMs [dict get $opts(-config) shell_max_ms]
+    }
+    if {[dict exists $opts(-config) subagent_depth]} {
+        set subagentDepth [dict get $opts(-config) subagent_depth]
+    }
+    if {[dict exists $opts(-config) max_subagent_depth]} {
+        set maxSubagentDepth [dict get $opts(-config) max_subagent_depth]
+    }
+
+    set executionEnv $opts(-execution_env)
+    if {$executionEnv eq ""} {
+        set executionEnv [::coding_agent_loop::tools::execution_environment_new -type local -shell_max_ms $shellMaxMs]
+    }
+
+    set registry [::coding_agent_loop::tools::default_registry \
+        -execution_env $executionEnv \
+        -char_limit $defaultCharLimit \
+        -line_limit $defaultLineLimit \
+        -shell_max_ms $shellMaxMs]
 
     set allowedTools {}
     foreach name [dict get $profile enabled_tools] {
@@ -81,6 +154,7 @@ proc ::coding_agent_loop::session_new {args} {
         id $id \
         profile $profile \
         env_cmd $opts(-env) \
+        execution_env $executionEnv \
         config $opts(-config) \
         history {} \
         events {} \
@@ -89,6 +163,12 @@ proc ::coding_agent_loop::session_new {args} {
         max_turns 64 \
         max_tool_rounds_per_input 8 \
         tools $allowedTools \
+        steering_queue {} \
+        current_tool_signature {} \
+        recent_tool_signatures {} \
+        aborted 0 \
+        subagent_depth $subagentDepth \
+        max_subagent_depth $maxSubagentDepth \
         closed 0]
 
     if {[dict exists $opts(-config) max_turns]} {
@@ -127,6 +207,9 @@ proc ::coding_agent_loop::__session_dispatch {id method args} {
                 return -code error "usage: \$session follow_up text"
             }
             return [::coding_agent_loop::__session_follow_up $id [lindex $args 0]]
+        }
+        abort {
+            return [::coding_agent_loop::__session_abort $id]
         }
         events {
             return [::coding_agent_loop::__session_events $id {*}$args]
@@ -190,16 +273,26 @@ proc ::coding_agent_loop::__tool_wrapper {sessionId toolName rawArgs toolCall} {
 
     set callId [dict get $toolCall id]
 
+    set augmentedToolCall $toolCall
+    dict set augmentedToolCall session_id $sessionId
+    dict set augmentedToolCall execution_env_cmd [dict get $sessions $sessionId execution_env]
+
     ::coding_agent_loop::__emit $sessionId [dict create type TOOL_CALL_START id $callId name $toolName arguments $rawArgs]
 
     if {[catch {::coding_agent_loop::tools::validate_args $toolName $schema $rawArgs} validArgs]} {
-        set fullOutput [dict create error $validArgs]
+        set fullOutput [dict create type schema_error error $validArgs]
         set trunc [::coding_agent_loop::tools::truncate_output [format %s $fullOutput] $charLimit $lineLimit]
         ::coding_agent_loop::__emit $sessionId [dict create type TOOL_CALL_END id $callId name $toolName output [dict get $trunc display] full_output [dict get $trunc full] is_error 1]
         return [dict create id $callId name $toolName is_error 1 output $fullOutput]
     }
 
-    if {[catch {{*}$command $validArgs $toolCall} rawOutput]} {
+    if {$toolName eq "shell" && ![dict exists $validArgs max_ms] && [dict exists $tool default_shell_max_ms]} {
+        dict set validArgs max_ms [dict get $tool default_shell_max_ms]
+    }
+
+    dict lappend sessions $sessionId current_tool_signature [dict create name $toolName args $validArgs]
+
+    if {[catch {{*}$command $validArgs $augmentedToolCall} rawOutput]} {
         set fullOutput $rawOutput
         set trunc [::coding_agent_loop::tools::truncate_output [format %s $fullOutput] $charLimit $lineLimit]
         ::coding_agent_loop::__emit $sessionId [dict create type TOOL_CALL_END id $callId name $toolName output [dict get $trunc display] full_output [dict get $trunc full] is_error 1]
@@ -216,8 +309,13 @@ proc ::coding_agent_loop::__tool_wrapper {sessionId toolName rawArgs toolCall} {
 proc ::coding_agent_loop::__session_submit {id text} {
     variable sessions
 
-    set turns [dict get $sessions $id turns]
-    set maxTurns [dict get $sessions $id max_turns]
+    set state [dict get $sessions $id]
+    if {[dict get $state aborted]} {
+        return -code error "session aborted"
+    }
+
+    set turns [dict get $state turns]
+    set maxTurns [dict get $state max_turns]
     if {$turns >= $maxTurns} {
         ::coding_agent_loop::__emit $id [dict create type TURN_LIMIT turns $turns max_turns $maxTurns]
         return -code error "turn limit reached"
@@ -227,39 +325,72 @@ proc ::coding_agent_loop::__session_submit {id text} {
         ::coding_agent_loop::__emit $id [dict create type SESSION_START session_id $id]
     }
 
-    set history [dict get $sessions $id history]
-    if {[llength $history] >= 2} {
-        set a [lindex $history end]
-        set b [lindex $history end-1]
-        if {[dict get $a text] eq $text && [dict get $b text] eq $text} {
-            ::coding_agent_loop::__emit $id [dict create type LOOP_DETECTION input $text]
-        }
-    }
-
     ::coding_agent_loop::__emit $id [dict create type USER_INPUT text $text]
 
+    set state [dict get $sessions $id]
+    set steeringQueue [dict get $state steering_queue]
+    set userInput $text
+    if {[llength $steeringQueue] > 0} {
+        set userInput "Steering directives:\n[join $steeringQueue \n]\n\nUser input:\n$text"
+        dict set state steering_queue {}
+        dict set sessions $id $state
+        ::coding_agent_loop::__emit $id [dict create type STEERING_APPLIED directives $steeringQueue]
+    }
+
+    set state [dict get $sessions $id]
+    set systemPrompt [::coding_agent_loop::__build_system_prompt $state]
+    set messages [list \
+        [::unified_llm::message system $systemPrompt] \
+        [::unified_llm::message user $userInput]]
+
     set toolDefs {}
-    foreach toolName [dict keys [dict get $sessions $id tools]] {
+    foreach toolName [dict keys [dict get $state tools]] {
         dict set toolDefs $toolName [list ::coding_agent_loop::__tool_wrapper $id $toolName]
     }
 
-    set profileName [dict get [dict get $sessions $id profile] name]
-    set maxToolRounds [dict get $sessions $id max_tool_rounds_per_input]
+    dict set state current_tool_signature {}
+    dict set sessions $id $state
 
+    set profileName [dict get [dict get $state profile] name]
+    set maxToolRounds [dict get $state max_tool_rounds_per_input]
+
+    ::coding_agent_loop::__emit $id [dict create type MODEL_REQUEST_START provider $profileName]
     set response [::unified_llm::generate \
-        -prompt $text \
+        -messages $messages \
         -provider $profileName \
         -tools $toolDefs \
         -max_tool_rounds $maxToolRounds]
+    ::coding_agent_loop::__emit $id [dict create type MODEL_REQUEST_END provider $profileName usage [dict get $response usage]]
 
     set state [dict get $sessions $id]
     set history [dict get $state history]
     lappend history [dict create role user text $text]
     lappend history [dict create role assistant text [dict get $response text]]
     dict set state history $history
+
+    set signature [dict get $state current_tool_signature]
+    set loopDetected 0
+    if {[llength $signature] > 0} {
+        set recent [dict get $state recent_tool_signatures]
+        lappend recent $signature
+        if {[llength $recent] > 3} {
+            set recent [lrange $recent end-2 end]
+        }
+        dict set state recent_tool_signatures $recent
+
+        if {[llength $recent] == 3 && [lindex $recent 0] eq [lindex $recent 1] && [lindex $recent 1] eq [lindex $recent 2]} {
+            set loopDetected 1
+        }
+    }
+
     dict set sessions $id $state
+    if {$loopDetected} {
+        ::coding_agent_loop::__emit $id [dict create type LOOP_DETECTION signature $signature]
+        ::coding_agent_loop::__emit $id [dict create type STEERING_INJECTED text "Repeated identical tool pattern detected; choose a different strategy."]
+    }
 
     ::coding_agent_loop::__emit $id [dict create type ASSISTANT_TEXT_END text [dict get $response text]]
+    ::coding_agent_loop::__emit $id [dict create type TURN_END status natural_completion turn_index $turns]
 
     set turns [dict get $sessions $id turns]
     dict set sessions $id turns [expr {$turns + 1}]
@@ -267,12 +398,21 @@ proc ::coding_agent_loop::__session_submit {id text} {
 }
 
 proc ::coding_agent_loop::__session_steer {id text} {
+    variable sessions
+    dict lappend sessions $id steering_queue $text
     ::coding_agent_loop::__emit $id [dict create type STEERING_INJECTED text $text]
-    return [dict create status ok]
+    return [dict create status ok queued 1]
 }
 
 proc ::coding_agent_loop::__session_follow_up {id text} {
     return [::coding_agent_loop::__session_submit $id $text]
+}
+
+proc ::coding_agent_loop::__session_abort {id} {
+    variable sessions
+    dict set sessions $id aborted 1
+    ::coding_agent_loop::__emit $id [dict create type SESSION_ABORTED session_id $id]
+    return [dict create status aborted]
 }
 
 package provide coding_agent_loop $::coding_agent_loop::version
