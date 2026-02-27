@@ -45,18 +45,26 @@ proc parse_traceability {path} {
 
     set blocks [split [string map [list "\n---\n" "\u001f"] $text] "\u001f"]
     set parsed {}
+    set errors {}
+    set blockNum 0
     foreach block $blocks {
+        incr blockNum
         set block [string trim $block]
         if {$block eq ""} {
             continue
         }
         array unset fields
+        set sawKeyValue 0
         foreach line [split $block "\n"] {
             if {[regexp {^([a-z_]+):\s*(.*)$} [string trim $line] -> key value]} {
                 set fields($key) [string trim $value]
+                set sawKeyValue 1
             }
         }
         if {![info exists fields(id)] || $fields(id) eq ""} {
+            if {$sawKeyValue} {
+                lappend errors "MALFORMED_BLOCK block=$blockNum missing id"
+            }
             continue
         }
         set one [dict create id $fields(id)]
@@ -67,7 +75,7 @@ proc parse_traceability {path} {
         }
         lappend parsed $one
     }
-    return $parsed
+    return [dict create mappings $parsed errors $errors]
 }
 
 proc parse_catalog_ids {path} {
@@ -192,7 +200,9 @@ while {$idx < $argc} {
     incr idx
 }
 
-set mappings [parse_traceability $tracePath]
+set parsedTraceability [parse_traceability $tracePath]
+set mappings [dict get $parsedTraceability mappings]
+set parseErrors [dict get $parsedTraceability errors]
 set catalogIds [parse_catalog_ids $requirementsPath]
 
 set total 0
@@ -202,12 +212,18 @@ set badPaths 0
 set badVerify 0
 set missingCatalog 0
 set unknownCatalog 0
+set malformedBlocks 0
 array set seen {}
 array set familyCount {}
 
 set testNames {}
 if {$verifySanity} {
     set testNames [collect_test_names]
+}
+
+foreach err $parseErrors {
+    puts $err
+    incr malformedBlocks
 }
 
 foreach mapping $mappings {
@@ -295,6 +311,7 @@ puts "missing=$missing"
 puts "duplicates=$duplicates"
 puts "bad_paths=$badPaths"
 puts "bad_verify=$badVerify"
+puts "malformed_blocks=$malformedBlocks"
 puts "missing_catalog=$missingCatalog"
 puts "unknown_catalog=$unknownCatalog"
 
@@ -302,7 +319,7 @@ foreach family [lsort [array names familyCount]] {
     puts "family_${family}=$familyCount($family)"
 }
 
-if {$missing > 0 || $duplicates > 0 || $badPaths > 0 || $badVerify > 0 || $missingCatalog > 0 || $unknownCatalog > 0 || $total == 0} {
+if {$missing > 0 || $duplicates > 0 || $badPaths > 0 || $badVerify > 0 || $malformedBlocks > 0 || $missingCatalog > 0 || $unknownCatalog > 0 || $total == 0} {
     exit 1
 }
 exit 0

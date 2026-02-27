@@ -242,3 +242,29 @@ test integration-spec-coverage-tool-catalog-duplicate-ids-2.0 {fails when requir
 } -cleanup {
     file delete -force $dir
 } -result 1
+
+test integration-spec-coverage-tool-malformed-block-missing-id-2.0 {fails when a non-empty mapping block is missing id} -setup {
+    set dir [::tests::integration::spec_cov::tmpdir]
+    set reqPath [file join $dir requirements.json]
+    set tracePath [file join $dir traceability.md]
+    ::tests::integration::spec_cov::write_file $reqPath [::tests::integration::spec_cov::requirements_json [list ULLM-DOD-8.1-CORE-CLIENT]]
+    ::tests::integration::spec_cov::write_file $tracePath [join [list \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+"---" \
+"id: ULLM-DOD-8.1-CORE-CLIENT" \
+"spec: unified-llm-spec.md#section-8" \
+"impl: lib/unified_llm/main.tcl" \
+"tests: tests/unit/unified_llm.test" \
+"verify: `tclsh tests/all.tcl -match *`" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --trace $tracePath --requirements $reqPath} out
+    list \
+        [expr {[string first "MALFORMED_BLOCK block=1 missing id" $out] >= 0}] \
+        [expr {[string first "malformed_blocks=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}

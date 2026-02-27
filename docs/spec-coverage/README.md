@@ -38,5 +38,6 @@ This directory contains spec-derived requirement artifacts and traceability mapp
 - `BAD_REQ_ID_FORMAT`: ID does not match scheme.
 - `MISSING_REQUIREMENT`: catalog contains ID missing from traceability.
 - `UNKNOWN_REQUIREMENT`: traceability contains ID not present in catalog.
+- `MALFORMED_BLOCK`: non-empty traceability mapping block is missing `id`.
 - `BAD_VERIFY_PATTERN`: verify command pattern does not match any real test name.
 - `requirements catalog parse error`: generated/fixture catalog JSON is not a valid top-level object with a `requirements` array.
