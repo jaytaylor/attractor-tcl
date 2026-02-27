@@ -3,1719 +3,852 @@ Legend: [ ] Incomplete, [X] Complete
 # Sprint #003 Implementation Plan - Close Full Spec Parity (Tcl)
 
 ## Goal
-Implement full parity with:
+Implement full behavioral parity with:
 - `unified-llm-spec.md`
 - `coding-agent-loop-spec.md`
 - `attractor-spec.md`
 
-Sprint completion definition:
+Completion for this sprint is achieved only when:
 - `make -j10 test` passes in deterministic offline mode.
-- `tclsh tools/spec_coverage.tcl` is green with no missing or unknown requirement mappings.
-- `docs/spec-coverage/traceability.md` maps every Sprint 003 requirement to implementation, tests, and verification commands.
+- `tclsh tools/spec_coverage.tcl` reports no missing or unknown requirement mappings.
+- `docs/spec-coverage/traceability.md` maps every Sprint 003 requirement to implementation, tests, and verification evidence.
 
 ## Inputs Reviewed
 - `docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
-- `docs/sprints/SPRINT-002-requirements-traceability-from-spec.md`
+- `docs/spec-coverage/requirements.md`
+- `docs/spec-coverage/traceability.md`
 - `docs/ADR.md`
+- Current implementation and tests under `lib/`, `tests/`, `tools/`, and `bin/`
 
-## Execution Rules
-- All sprint TODOs stay in this sprint document.
-- Keep evidence under `.scratch/verification/SPRINT-003/` grouped by phase.
-- Keep deterministic provider mocks as default for test execution.
-- Keep all checkboxes synchronized with real implementation state.
+## Scope Boundaries
+In scope:
+- Required parity work for Unified LLM, Coding Agent Loop, Attractor runtime, CLI contracts, and traceability evidence.
+- Deterministic offline verification and fixture-driven tests.
+
+Out of scope:
+- UI/TUI/IDE frontends.
+- Legacy behavior preservation or compatibility shims.
+
+## Dependency Gate
+- Sprint #002 outputs must remain available and green because Sprint #003 closure depends on spec-derived requirement catalog integrity.
+
+## Phase Sequence
+1. Baseline readiness and gap slicing.
+2. Phase 0: contracts, ADR alignment, and harness hardening.
+3. Phase 1: Unified LLM parity implementation.
+4. Phase 2: Coding Agent Loop parity implementation.
+5. Phase 3: Attractor parity implementation.
+6. Phase 4: Cross-spec integration and end-to-end closure.
+7. Phase 5: documentation, traceability, and final closeout.
 
 ## Baseline Readiness
-- [X] Confirm baseline deterministic test status and capture logs.
+- [X] Capture current baseline status for build, deterministic tests, and spec-coverage validation.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Confirm baseline traceability coverage status and capture logs.
+- [X] Generate a requirement-family gap ledger (ULLM/CAL/ATR) with implementation/test ownership and unresolved deltas.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Produce refreshed parity gap audit describing unresolved required behaviors by subsystem.
+- [X] Create `.scratch/verification/SPRINT-003/baseline/README.md` indexing commands, exit codes, and produced artifacts.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Acceptance Criteria - Baseline Readiness
-- [X] Baseline artifacts exist and identify precise implementation deltas for Unified LLM, Coding Agent Loop, Attractor, and integration paths.
+- [X] Baseline artifacts identify all remaining parity gaps with no unlabeled requirements.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
+```
+- [X] Baseline command/evidence index is reproducible and complete.
+```text
+Verification:
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/baseline/README.md`
+Notes:
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ## Phase 0 - Contracts, ADR Alignment, and Harness Hardening
-Deliverables:
-- [X] Add ADR entries for any new architecture decisions required before parity implementation starts.
+### Deliverables
+- [X] Add ADR entry/entries in `docs/ADR.md` for any new architecture decision required before parity coding starts.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Define canonical provider mock protocol for blocking and streaming transport behaviors.
+- [X] Define canonical provider harness contracts for blocking and streaming transports in `.scratch/verification/SPRINT-003/harness/contract.md`.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement reusable test fixtures for provider request/response capture (endpoint, headers, payload, status).
+- [X] Standardize fixture format and naming for request/response capture artifacts (provider, endpoint, headers, payload, status, stream events).
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Establish deterministic fixture naming and artifact layout for phase-level verification evidence.
+- [X] Add harness validation tests that fail deterministically on malformed fixtures and contract drift.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Add harness-level integration tests that fail fast on malformed fixture payloads.
+- [X] Add/update `.scratch` verification scripts to run phase-specific checks and write evidence indexes with exit codes.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Test Matrix - Phase 0
 Positive cases:
-- Harness replays scripted responses for OpenAI, Anthropic, and Gemini transports.
-- Harness captures endpoint path, method, required headers, and payload body.
-- Harness supports multi-turn continuation fixtures for tool-call loops.
+- Harness replays deterministic request/response fixtures for OpenAI, Anthropic, and Gemini paths.
+- Harness captures endpoint, method, required headers, and payload body for every provider call.
+- Harness emits deterministic stream event sequences for start/delta/end/finish flows.
 
 Negative cases:
-- Empty response script returns deterministic harness error.
-- Unexpected endpoint or required-header mismatch fails deterministically.
-- Invalid JSON fixture body fails with deterministic parse classification.
+- Empty fixture script fails with deterministic harness error classification.
+- Unexpected endpoint or missing required header fails with deterministic mismatch diagnostics.
+- Invalid JSON fixture bodies fail parsing with deterministic error code and message.
 
 ### Acceptance Criteria - Phase 0
-- [X] Harness contracts are stable, test-covered, and used by all parity tests.
+- [X] Harness contracts are stable, test-covered, and consumed by all parity tests.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] ADR log is current for all material design decisions introduced in this phase.
+- [X] ADR log is current for every material architecture decision introduced in this phase.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-0/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
-## Phase 1 - Unified LLM Full Parity
-Deliverables:
-- [X] Implement complete unified message/content model parity (`text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, `tool_result`).
+## Phase 1 - Unified LLM Parity
+### Deliverables
+- [X] Normalize message/content-part model parity in `lib/unified_llm/main.tcl` for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, and `tool_result` parts.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Enforce deterministic provider selection behavior for explicit provider, default provider, missing provider, and ambiguous environment states.
+- [X] Implement deterministic provider selection and configuration error handling (`from_env`, default client resolution, provider override) with explicit ambiguity failures.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Align OpenAI adapter to native `/v1/responses` request and response semantics.
+- [X] Complete provider request/response translation parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl`.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Align Anthropic adapter to native `/v1/messages` request and response semantics, including required headers.
+- [X] Implement streaming-first behavior (`STREAM_START`, delta events, `TOOL_CALL_END`, `FINISH`) and middleware visibility guarantees.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Align Gemini adapter to native `/v1beta/models/*:generateContent` request and response semantics.
+- [X] Implement tool-call loop semantics: active tool execution, passive tool surfacing, batched continuation payloads, and max tool rounds enforcement.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement first-class streaming events with deterministic `STREAM_START`, delta events, tool events, and terminal `FINISH`.
+- [X] Implement structured output parity (`generate_object`, `stream_object`) with schema validation, deterministic invalid JSON handling, and deterministic schema-mismatch handling.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement tool-calling parity for active/passive policies, max tool rounds, and batched continuation payloads.
+- [X] Implement usage/reasoning/caching normalization parity and provider option validation (`provider_options`) without leaking provider internals into the public API.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement structured output parity for `generate_object` and `stream_object` with deterministic schema validation failures.
+- [X] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` to cover all required positive and negative paths.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Map reasoning and cache usage counters into unified usage fields when provider payloads include them.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Implement provider option validation and typed error translation without leaking provider-specific details into unified APIs.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Test Matrix - Phase 1
 Positive cases:
-- `generate` with prompt-only input per provider.
-- `generate` with messages-only input per provider.
-- Provider omission with configured default routes deterministically.
-- Streaming output concatenation matches blocking output for equivalent fixture.
-- Multimodal input with URL, base64, and local-path image payloads maps correctly.
-- Tool loop supports single and multi-tool turns with batched continuation.
-- Structured output succeeds for valid JSON that matches schema.
-- Provider-specific options reach adapter payload as expected.
+- Native endpoint routing is correct: OpenAI `/v1/responses`, Anthropic `/v1/messages`, Gemini `:generateContent`.
+- Cross-provider text output parity works for equivalent prompts.
+- Multimodal parts normalize and translate correctly per provider.
+- Streaming emits required event order and payload shape.
+- Tool loops execute and return batched `tool_results` continuation in deterministic order.
+- Structured object generation succeeds for valid JSON matching schema.
+- Reasoning/usage/caching fields are normalized and aggregated correctly.
 
 Negative cases:
-- Simultaneous prompt and messages input fails with deterministic input error.
-- Missing provider configuration fails with deterministic configuration error.
-- Ambiguous multi-key environment fails with deterministic configuration error.
-- Unknown tool call returns tool error result object instead of uncaught exception.
-- Tool handler exception returns tool error result object with deterministic shape.
-- Invalid JSON for structured output fails with deterministic object-generation error.
-- Schema mismatch fails with deterministic object-generation error.
-- Invalid provider options fail before transport execution.
+- No configured provider and ambiguous multi-key environment both fail with deterministic config errors.
+- Unsupported content part/provider combination returns deterministic unsupported error.
+- Provider transport failures are translated to typed errors (auth, retryable, provider response failures).
+- Invalid tool schema or missing tool definitions return deterministic argument/tool errors.
+- Structured output invalid JSON returns `INVALID_JSON`.
+- Structured output schema mismatch returns `SCHEMA_MISMATCH`.
+- Invalid provider options are rejected before transport execution.
 
 ### Acceptance Criteria - Phase 1
-- [X] Unified LLM parity suite passes for all providers with deterministic native endpoint assertions.
+- [X] Unified LLM parity tests demonstrate required behavior coverage across OpenAI/Anthropic/Gemini adapters.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Unified LLM traceability mappings are complete for all Sprint 003 requirement IDs in scope.
+- [X] All Unified LLM requirement mappings in `docs/spec-coverage/traceability.md` resolve to implementation, tests, and verification commands.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-1/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
-## Phase 2 - Coding Agent Loop Full Parity
-Deliverables:
-- [X] Implement explicit `ExecutionEnvironment` interface and `LocalExecutionEnvironment` reference implementation.
+## Phase 2 - Coding Agent Loop Parity
+### Deliverables
+- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contract in `lib/coding_agent_loop/tools/core.tcl` for file/process/search/tool operations.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Route all core tools through `ExecutionEnvironment` with deterministic truncation markers and full-output retention semantics.
+- [X] Align session state-machine behavior in `lib/coding_agent_loop/main.tcl` for natural completion, per-input tool round limits, turn limits, and deterministic cancellation handling.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Align shell execution cancellation behavior and per-call override semantics to spec-required session behavior.
+- [X] Align tool truncation defaults/markers and per-session overrides through `SessionConfig`.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement session state machine parity for natural completion, tool-round limits, turn limits, and abort handling.
+- [X] Implement steering semantics parity (`steer`, `follow_up`) as next-request injection/queue behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement steering queue semantics so `steer` and `follow_up` alter subsequent model requests.
+- [X] Implement required event parity (`MODEL_REQUEST_*`, `TOOL_CALL_*`, warnings) and ensure `TOOL_CALL_END` carries complete output payload.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement full required event parity and payload fields, including complete tool-output retention in end events.
+- [X] Implement deterministic loop detection for repeated tool-call signatures and emit required warning/steering events.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement repeated tool-call signature detection and deterministic warning/steering behavior.
+- [X] Implement profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl` and ensure project-doc discovery is injected correctly.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement subagent lifecycle parity with depth limits, isolated history, and shared execution environment.
+- [X] Implement subagent parity: depth limit enforcement, independent histories, and shared execution environment behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Align provider profile prompt assembly (identity, tool guidance, environment context, project docs discovery).
+- [X] Expand `tests/unit/coding_agent_loop.test` and `tests/integration/coding_agent_loop_integration.test` for all required positive and negative paths.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Test Matrix - Phase 2
 Positive cases:
-- Session completes simple file operation flow per provider profile using mocked Unified LLM.
-- Tool truncation marker is shown while full output remains available in terminal event payload.
-- Shell cancellation emits deterministic marker and event order.
-- Steering changes next model request payload content.
-- Subagent spawn, input, wait, and close lifecycle is deterministic.
-- Loop detection warning appears after repeated identical tool signatures.
+- Session submits run to natural completion with expected tool-call lifecycle events.
+- `steer` and `follow_up` modify the next model request in order.
+- Output truncation preserves deterministic truncation markers and limits.
+- Profile-specific prompt templates include identity, tool guidance, and discovered project docs.
+- Subagents execute under shared environment and return independent transcript state.
 
 Negative cases:
-- Unknown tool name returns deterministic tool error and loop continues.
-- Invalid tool schema arguments return deterministic schema error payload.
-- Turn-limit breach emits deterministic limit event and halts cleanly.
-- Tool-round-limit breach emits deterministic limit event and halts current turn cleanly.
-- Recursive subagent depth breach returns deterministic depth-limit error.
+- Exceeding per-input tool rounds returns deterministic session/tool-limit failure.
+- Session abort during tool or model step emits deterministic abort terminal state.
+- Invalid tool arguments fail validation with deterministic schema error.
+- Loop detector emits warning events on repeated signatures.
+- Subagent depth overflow fails deterministically with explicit depth-limit error.
 
 ### Acceptance Criteria - Phase 2
-- [X] Coding Agent Loop parity tests pass across supported profiles with deterministic event and lifecycle semantics.
+- [X] Coding Agent Loop parity tests cover all required session lifecycle, tool, steering, and subagent semantics.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Coding Agent Loop traceability mappings are complete for all Sprint 003 requirement IDs in scope.
+- [X] CAL requirement mappings are complete and verifiable in traceability docs.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-2/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
-## Phase 3 - Attractor Full Parity
-Deliverables:
-- [X] Implement parser parity for supported DOT subset including chained edges, multiline attributes, defaults, quoting, and comments.
+## Phase 3 - Attractor Parity
+### Deliverables
+- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for supported syntax, multi-line attributes, chained edges, defaults, quoting, and comment stripping.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement validation parity with one-start/one-exit invariants, reachability diagnostics, and edge validity checks.
+- [X] Complete lint/validation parity (start/exit invariants, reachability, edge validity, condition parsing, severity/rule metadata).
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement execution parity for handler dispatch, edge selection priority, goal-gate routing, and retry behavior.
+- [X] Complete execution engine parity (shape-to-handler mapping, edge selection priority, goal-gate routing, retry semantics, checkpoint/resume equivalence).
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement checkpoint/resume parity and ensure resumed outcome equivalence with uninterrupted execution.
+- [X] Complete handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, `stack.manager_loop`.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement full handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
+- [X] Complete interviewer parity (`AutoApprove`, `Console`, `Callback`, `Queue`) and ensure `wait.human` presents outgoing labels/options correctly.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement interviewer interface and built-ins (autoapprove, queue, callback, console) with deterministic behavior in tests.
+- [X] Complete condition-expression parity (`=`, `!=`, `&&`, `outcome`, `preferred_label`, `context.*`) and stylesheet specificity/override behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement condition language parity for `=`, `!=`, `&&`, `outcome`, `preferred_label`, and `context.*` semantics.
+- [X] Complete transform/extensibility parity (AST transforms and custom handler registration lifecycle).
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement stylesheet parsing/specificity and override application across shape/class/id selectors.
+- [X] Complete CLI parity in `bin/attractor` for `validate`, `run`, and `resume` command contracts and artifact output layout.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Implement transform and custom-handler extensibility hooks required by spec.
+- [X] Expand `tests/unit/attractor.test`, `tests/unit/attractor_core.test`, `tests/integration/attractor_integration.test`, and `tests/e2e/attractor_cli_e2e.test`.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Ensure CLI parity for `validate`, `run`, and `resume` including deterministic artifact layout and exit-code behavior.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Test Matrix - Phase 3
 Positive cases:
-- Parse valid linear and chained DOT graphs with multiline attributes.
-- Validate graph with one start and one exit and no invalid edges.
-- Run graph and emit deterministic artifacts (`manifest`, checkpoint, node outputs).
-- Goal-gate routing blocks or advances according to evaluated predicates.
-- Resume from checkpoint produces equivalent final outcome and artifacts.
-- `wait.human` presents edge labels and routes according to interviewer choice.
-- Stylesheet overrides apply with correct selector precedence.
+- Parser accepts supported DOT examples including multi-line attributes and chained edges.
+- Validator returns expected warning/error diagnostics with rule and severity metadata.
+- Engine traverses deterministically using condition/preference/weight/lexical ordering rules.
+- Goal-gate routing enforces successful required gates before terminal completion.
+- Checkpoint/resume produce equivalent final outcomes and artifacts.
+- Every built-in handler executes expected behavior and writes expected stage artifacts.
+- `wait.human` interacts correctly with all interviewer implementations.
+- CLI `validate`, `run`, and `resume` produce expected output contracts and exit codes.
 
 Negative cases:
-- Missing start node fails validation with deterministic error metadata.
-- Missing exit node fails validation with deterministic error metadata.
-- Multiple starts or exits fail validation deterministically.
-- Unreachable node emits warning diagnostics with deterministic rule metadata.
-- Unknown edge target fails validation deterministically.
-- Invalid condition expression fails validation deterministically.
-- Unsupported handler type fails execution deterministically.
-- Corrupted checkpoint fails resume deterministically.
+- Invalid DOT tokens/attribute blocks fail parsing deterministically.
+- Missing/extra start or exit node fails validation.
+- Unknown node references in edges fail validation.
+- Invalid condition expressions fail with deterministic diagnostics.
+- Corrupted checkpoint fails resume with deterministic error classification.
+- Invalid interviewer response selection fails deterministically.
+- Unsupported handler registration/use fails deterministically.
 
 ### Acceptance Criteria - Phase 3
-- [X] Attractor parity suite passes for parser, validation, runtime handlers, routing, and resume-equivalence behavior.
+- [X] Attractor parity tests cover parser, validator, execution, handlers, interviewer, transforms, and CLI contracts.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Attractor traceability mappings are complete for all Sprint 003 requirement IDs in scope.
+- [X] ATR requirement mappings are complete and verified in traceability docs.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-3/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
-## Phase 4 - Cross-Spec Integration and End-to-End Closure
-Deliverables:
-- [X] Build deterministic end-to-end path: Attractor traversal -> codergen handler -> Coding Agent Loop -> Unified LLM provider mocks.
+## Phase 4 - Cross-Spec Integration and E2E Closure
+### Deliverables
+- [X] Add deterministic end-to-end flow that exercises Attractor traversal, codergen via Coding Agent Loop, and Unified LLM provider mocks in one pipeline.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Add CLI end-to-end tests for `validate`, `run`, and `resume` with exit-code and artifact assertions.
+- [X] Verify pipeline artifacts/events/checkpoints are emitted in required on-disk layout under `.scratch/verification/SPRINT-003/integration/`.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Add interrupted-vs-resumed equivalence tests that compare final outputs and artifacts.
+- [X] Expand CLI e2e coverage for `validate`, `run`, and `resume` to include explicit success and failure exit-code assertions.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Validate cross-spec event contracts remain deterministic through complete workflow execution.
+- [X] Add integration assertions that prove provider parity, tool-call lifecycle parity, and graph runtime parity are all exercised together.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Test Matrix - Phase 4
 Positive cases:
-- Full stack run completes with deterministic artifacts and expected event sequence.
-- CLI `validate` succeeds for valid graph with exit code 0.
-- CLI `run` succeeds with correct on-disk artifact layout.
-- CLI `resume` succeeds from valid checkpoint and matches expected completion outcome.
+- Single pipeline run validates graph, executes codergen nodes, emits tool/model events, and exits successfully.
+- Resume from valid checkpoint reproduces expected terminal result and artifacts.
+- Provider mocks for OpenAI/Anthropic/Gemini can all be used in integration harness paths.
 
 Negative cases:
-- CLI `validate` fails for invalid graph with deterministic diagnostics and non-zero exit code.
-- CLI `run` fails deterministically when validation fails.
-- CLI `resume` fails deterministically with malformed checkpoint.
-- Endpoint mismatch fixture fails integration deterministically.
+- Intentional provider failure fixture surfaces typed failure through Coding Agent Loop and Attractor runtime.
+- Invalid pipeline/graph fails fast with deterministic validation output.
+- Resume with missing/corrupt checkpoint fails deterministically with non-zero exit path.
 
 ### Acceptance Criteria - Phase 4
-- [X] Deterministic offline integration/e2e tests prove cross-spec parity behavior.
+- [X] `make -j10 test` is sufficient to prove offline spec parity for integrated behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] `make -j10 test` alone is sufficient offline proof for parity closure.
+- [X] Integration evidence artifacts clearly demonstrate cross-runtime parity behavior.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-4/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
-## Phase 5 - Traceability, Documentation, and Sprint Closeout
-Deliverables:
-- [X] Update `docs/spec-coverage/traceability.md` for every closed Sprint 003 requirement ID.
+## Phase 5 - Documentation, Traceability, and Closeout
+### Deliverables
+- [X] Update `docs/spec-coverage/traceability.md` so every Sprint 003 requirement ID maps to implementation, tests, and verify command evidence.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Update `docs/ADR.md` with final architecture decisions and consequences discovered during implementation.
+- [X] Regenerate and validate requirement catalog artifacts (`requirements.json`, `requirements.md`) and ensure strict set equality checks remain green.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Update `docs/sprints/SPRINT-003-close-spec-parity-tcl.md` completion status with concrete evidence links.
+- [X] Update `docs/ADR.md` with any final implementation decisions introduced during Sprint 003 execution.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Verify sprint documentation evidence references resolve and contain explicit commands with exit codes.
+- [X] Produce phase-level evidence indexes under `.scratch/verification/SPRINT-003/phase-*/README.md` including commands, exit codes, and artifact references.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
-- [X] Archive phase summaries under `.scratch/verification/SPRINT-003/` with command index files per phase.
+- [X] Run evidence lint and docs checks against sprint documents and traceability outputs.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
 ```
 
 ### Acceptance Criteria - Phase 5
-- [X] All Sprint 003 docs are auditable, synchronized, and traceability-complete.
+- [X] Traceability is complete, deterministic, and passes strict coverage validation.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
 Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
+- Phase verification index provides command-level proof for this completed item.
+```
+- [X] Sprint documents and evidence references are internally consistent and reproducible.
+```text
+Verification:
+- `timeout 180 bash .scratch/run_sprint003_phase_verification.sh` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/phase-5/README.md`
+Notes:
+- Phase verification index provides command-level proof for this completed item.
 ```
 
-## Workstream Breakdown
-### Unified LLM Workstream
-- [X] Complete content normalization and provider translation implementation tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete streaming and tool-loop behavior implementation tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete structured output, usage mapping, and error typing implementation tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-
-### Coding Agent Loop Workstream
-- [X] Complete `ExecutionEnvironment` abstraction and tool routing tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete session state machine, event parity, and steering semantics tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete subagent lifecycle and loop-detection implementation tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-
-### Attractor Workstream
-- [X] Complete parser and validator parity implementation tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete runtime handler, interviewer, and condition-language parity tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete checkpoint/resume, CLI parity, and extensibility tasks.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-
-### Integration and Documentation Workstream
-- [X] Complete cross-spec end-to-end scenarios and deterministic fixture coverage.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-- [X] Complete final traceability, ADR, and sprint closeout synchronization.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `bash .scratch/verify_sprint_003_plan.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/06-make-build.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/07-make-test.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/08-spec-coverage.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/01-mmdc-domain.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/02-mmdc-er.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/03-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/04-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-003/plan-refresh-2026-02-27/05-mmdc-architecture.log`
-Notes:
-- Build, tests, coverage, evidence lint, and diagram renders are green for this synchronization pass.
-```
-
-## Verification Command Set
+## Required Verification Command Set (Execution-Time)
+- `make -j10 build`
 - `make -j10 test`
-- `tclsh tools/spec_coverage.tcl`
+- `tclsh tools/requirements_catalog.tcl --check-ids`
 - `tclsh tools/requirements_catalog.tcl --summary`
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md`
+- `tclsh tools/spec_coverage.tcl`
+- `tclsh tests/all.tcl -match *unified_llm*`
+- `tclsh tests/all.tcl -match *coding_agent_loop*`
+- `tclsh tests/all.tcl -match *attractor*`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-003-implementation-plan.md`
 
-## Planned File Touch Map
-Implementation targets:
-- `lib/unified_llm/main.tcl`
-- `lib/unified_llm/adapters/openai.tcl`
-- `lib/unified_llm/adapters/anthropic.tcl`
-- `lib/unified_llm/adapters/gemini.tcl`
-- `lib/coding_agent_loop/main.tcl`
-- `lib/coding_agent_loop/tools/core.tcl`
-- `lib/coding_agent_loop/profiles/openai.tcl`
-- `lib/coding_agent_loop/profiles/anthropic.tcl`
-- `lib/coding_agent_loop/profiles/gemini.tcl`
-- `lib/attractor/main.tcl`
-- `lib/attractor_core/core.tcl`
-- `bin/attractor`
-
-Verification and documentation targets:
-- `tests/unit/unified_llm.test`
-- `tests/integration/unified_llm_parity.test`
-- `tests/unit/coding_agent_loop.test`
-- `tests/integration/coding_agent_loop_integration.test`
-- `tests/unit/attractor.test`
-- `tests/integration/attractor_integration.test`
-- `tests/e2e/attractor_cli_e2e.test`
-- `docs/spec-coverage/traceability.md`
-- `docs/ADR.md`
-- `docs/sprints/SPRINT-003-close-spec-parity-tcl.md`
-
-## Appendix - Mermaid Diagrams (Render With `mmdc`)
+## Appendix - Mermaid Diagrams (Verify Render With mmdc)
 
 ### Core Domain Models
 ```mermaid
 classDiagram
   class UnifiedLLMClient {
-    +generate()
-    +stream()
-    +generate_object()
-    +stream_object()
+    +generate(request)
+    +stream(request, on_event)
+    +generate_object(request, schema)
+    +stream_object(request, schema, on_object)
   }
 
   class ProviderAdapter {
-    +translate_request()
-    +translate_response()
-    +stream_events()
+    +translate_request(req)
+    +complete(state, req)
+    +stream(state, req)
   }
 
   class CALSession {
-    +submit_input()
-    +steer()
-    +follow_up()
-    +spawn_subagent()
+    +submit(text)
+    +steer(text)
+    +follow_up(text)
+    +abort()
+    +events()
   }
 
   class ExecutionEnvironment {
-    +read_file()
-    +write_file()
-    +edit_file()
-    +apply_patch()
-    +shell()
+    +read_file(path)
+    +write_file(path, content)
+    +shell(cmd)
+    +grep(pattern)
+    +glob(pattern)
   }
 
-  class AttractorEngine {
-    +parse_dot()
-    +validate()
-    +run()
-    +resume()
+  class AttractorRunner {
+    +parse_dot(dot)
+    +validate(graph)
+    +run(graph, context)
+    +resume(graph, checkpoint)
   }
 
-  UnifiedLLMClient --> ProviderAdapter
-  CALSession --> UnifiedLLMClient
-  CALSession --> ExecutionEnvironment
-  AttractorEngine --> CALSession
+  class InterviewerAdapter {
+    +request_choice(prompt, options)
+  }
+
+  UnifiedLLMClient --> ProviderAdapter : uses
+  CALSession --> UnifiedLLMClient : calls
+  CALSession --> ExecutionEnvironment : uses
+  AttractorRunner --> CALSession : codergen backend
+  AttractorRunner --> InterviewerAdapter : wait.human
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  RUN ||--o{ NODE_RUN : contains
-  RUN ||--|| CHECKPOINT : snapshots
-  NODE_RUN ||--o{ ARTIFACT : writes
-  CAL_SESSION ||--o{ TURN : contains
-  TURN ||--o{ TOOL_CALL : invokes
-  TOOL_CALL ||--|| TOOL_RESULT : returns
-  RUN ||--o{ EVENT : emits
+  REQUIREMENT ||--o{ TRACE_MAPPING : mapped_by
+  TRACE_MAPPING }o--|| IMPLEMENTATION_UNIT : references
+  TRACE_MAPPING }o--|| TEST_UNIT : validated_by
+  TRACE_MAPPING }o--|| VERIFY_COMMAND : proven_by
+  VERIFY_COMMAND ||--o{ EVIDENCE_ARTIFACT : produces
+
+  REQUIREMENT {
+    string id
+    string family
+    string kind
+  }
+  TRACE_MAPPING {
+    string req_id
+    string impl_path
+    string test_path
+    string verify_cmd
+  }
+  IMPLEMENTATION_UNIT {
+    string path
+    string module
+  }
+  TEST_UNIT {
+    string path
+    string suite
+  }
+  VERIFY_COMMAND {
+    string command
+    int exit_code
+  }
+  EVIDENCE_ARTIFACT {
+    string path
+    string phase
+  }
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Parse DOT] --> B[Validate Graph]
-  B -->|errors| C[Stop With Diagnostics]
-  B -->|valid| D[Execute Node]
-  D -->|codergen| E[Coding Agent Loop]
-  E --> F[Unified LLM]
-  F --> E
-  D --> G[Persist Artifacts]
-  G --> H[Persist Checkpoint]
-  H --> I{More Nodes?}
-  I -->|yes| D
-  I -->|no| J[Finish Run]
+  A[Baseline Readiness] --> B[Phase 0 Contracts and Harness]
+  B --> C[Phase 1 Unified LLM Parity]
+  C --> D[Phase 2 Coding Agent Loop Parity]
+  D --> E[Phase 3 Attractor Parity]
+  E --> F[Phase 4 Cross-Spec Integration]
+  F --> G[Phase 5 Traceability and Docs Closeout]
+  G --> H[Sprint Closure]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  U[User Input + Graph] --> ATR[Attractor Engine]
-  ATR --> CAL[Coding Agent Loop]
-  CAL --> ULLM[Unified LLM]
+  U[User Input] --> CAL[Coding Agent Loop Session]
+  CAL --> ULLM[Unified LLM Client]
+  ULLM --> ADP[Provider Adapter]
+  ADP --> FX[Deterministic Fixture Transport]
+  FX --> ADP
+  ADP --> ULLM
   ULLM --> CAL
-  ATR --> ARTS[Artifacts]
-  ATR --> CKPT[Checkpoints]
-  ATR --> DIAG[Diagnostics]
-  ATR --> EVT[Event Stream]
+  CAL --> ATR[Attractor Runtime]
+  ATR --> ART[Artifacts and Checkpoints]
+  ATR --> EVT[Events]
+  EVT --> OBS[Verification Logs]
 ```
 
 ### Architecture Diagram
@@ -1726,26 +859,38 @@ flowchart TB
   end
 
   subgraph Runtime
-    ATR[lib/attractor]
-    CORE[lib/attractor_core]
-    CAL[lib/coding_agent_loop]
-    ULLM[lib/unified_llm]
+    ATRM[lib/attractor/main.tcl]
+    CALM[lib/coding_agent_loop/main.tcl]
+    ULLMM[lib/unified_llm/main.tcl]
+    CORE[lib/attractor_core/core.tcl]
+  end
+
+  subgraph Adapters
+    OA[openai adapter]
+    AN[anthropic adapter]
+    GE[gemini adapter]
   end
 
   subgraph Verification
-    TESTS[tests/all.tcl]
-    MOCK[tests/support/mock_http_server.tcl]
-    COVER[tools/spec_coverage.tcl]
+    TESTS[tests/unit + tests/integration + tests/e2e]
+    COV[tools/spec_coverage.tcl]
+    CAT[tools/requirements_catalog.tcl]
+    EVID[.scratch/verification/SPRINT-003]
   end
 
-  BIN --> ATR
-  ATR --> CORE
-  ATR --> CAL
-  CAL --> ULLM
-  ULLM --> CORE
-  TESTS --> ATR
-  TESTS --> CAL
-  TESTS --> ULLM
-  MOCK --> ULLM
-  COVER --> TESTS
+  BIN --> ATRM
+  ATRM --> CALM
+  CALM --> ULLMM
+  ULLMM --> OA
+  ULLMM --> AN
+  ULLMM --> GE
+  ULLMM --> CORE
+  CALM --> CORE
+  ATRM --> CORE
+
+  TESTS --> ATRM
+  TESTS --> CALM
+  TESTS --> ULLMM
+  COV --> EVID
+  CAT --> EVID
 ```
