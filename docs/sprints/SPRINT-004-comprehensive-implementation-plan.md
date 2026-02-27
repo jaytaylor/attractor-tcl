@@ -2,885 +2,1199 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #004 Comprehensive Implementation Plan - Live E2E Smoke Suite (`make test-e2e`)
 
-## Source Review Summary
-- [X] Reviewed `docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md` and extracted implementation requirements into this execution plan.
-```text
-Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
-```
-- [X] Confirmed this plan keeps all Sprint #004 work opt-in and isolated from offline tests.
-```text
-Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
-```
-
 ## Executive Summary
-- [X] Deliver a live, opt-in E2E smoke suite behind `make test-e2e` that validates real OpenAI, Anthropic, and Gemini provider integrations.
+This plan implements an opt-in live E2E suite that validates real provider integrations for `unified_llm`, `coding_agent_loop`, and `attractor` while preserving deterministic offline tests.
+
+- [X] Confirm and document Sprint #004 requirements from `docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md` as the implementation source-of-truth.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Preserve deterministic offline behavior for `make -j10 test` with no ambient-key network side effects.
+- [X] Keep offline suite behavior unchanged (`make -j10 test` stays deterministic and non-networked by default).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Produce auditable, redacted artifacts for every run under `.scratch/verification/SPRINT-004/live/<run_id>/`.
+- [X] Deliver `make test-e2e` as an explicit live suite entrypoint with fail-fast environment validation.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ## Scope
 In scope:
-- Live transport injection via `client_new -transport`.
-- Standalone live harness (`tests/e2e_live.tcl`, `tests/e2e_live/*.test`).
-- Unified LLM, Coding Agent Loop, and Attractor live smoke coverage.
-- Secret redaction and post-run secret leak scan.
-- `make test-e2e`, docs, ADR updates, and closeout evidence.
+- Live HTTPS transport injected explicitly via `client_new -transport ...`.
+- Standalone live harness that is separate from `tests/all.tcl`.
+- Live smoke tests for Unified LLM, Coding Agent Loop, and Attractor.
+- Redaction and automated secret-leak scanning of all live artifacts.
+- Documentation and ADR updates for operation, rationale, and consequences.
 
 Out of scope:
 - Running live tests by default in CI.
-- Streaming behavior redesign beyond current ULLM behavior.
-- Legacy compatibility shims, flags, or gated dual-path rollouts.
+- Streaming protocol redesign beyond current blocking semantics.
+- Legacy compatibility preservation, migration shims, or feature gating.
 
-## Implementation Constraints
-- No feature flags.
-- No legacy compatibility requirements.
-- Live suite must fail fast when no providers are selected.
-- Live suite must never print API keys or auth header values.
-- Live suite must not be sourced by `tests/all.tcl`.
+## Implementation Principles
+- Live suite must be opt-in and isolated.
+- Provider selection must be deterministic and explicit.
+- Secrets must never appear in logs, artifacts, errors, or summaries.
+- Every implementation task must have executable verification evidence in `.scratch/verification/SPRINT-004/`.
 
-## Workstream File Map
-- Unified LLM runtime and transport:
-  - `lib/unified_llm/main.tcl`
-  - `lib/unified_llm/adapters/openai.tcl`
-  - `lib/unified_llm/adapters/anthropic.tcl`
-  - `lib/unified_llm/adapters/gemini.tcl`
-  - `lib/unified_llm/transports/https_json.tcl`
-- Live test harness and support:
-  - `tests/e2e_live.tcl`
-  - `tests/e2e_live/*.test`
-  - `tests/support/e2e_live_support.tcl`
-  - `tests/support/http_fixture_server.tcl`
-- Build and docs:
-  - `Makefile`
-  - `docs/howto/live-e2e.md`
-  - `docs/ADR.md`
+## Work Breakdown Structure
 
-## Phase Sequence
-1. Phase 0 - Baseline and design lock
-2. Phase 1 - HTTPS transport and redaction safety
-3. Phase 2 - Live harness and Unified LLM provider smokes
-4. Phase 3 - Coding Agent Loop live smokes
-5. Phase 4 - Attractor live smokes
-6. Phase 5 - Make target, docs, ADR, closeout verification
-
-## Phase 0 - Baseline And Design Lock
+## Phase 0 - Baseline, Contract, and ADR Lock
 ### Deliverables
-- [X] Capture clean baseline evidence for `make -j10 test`, `tests/all.tcl`, and current absence/presence behavior of `make test-e2e`.
+- [X] Capture baseline results for offline test behavior and current live-entry behavior.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Define canonical live-suite environment contract (`E2E_LIVE_PROVIDERS`, provider keys, model overrides, base URL overrides, artifact root override).
+- [X] Define and document the live-suite environment contract (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `E2E_LIVE_PROVIDERS`, `OPENAI_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_MODEL`, `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `GEMINI_BASE_URL`, `E2E_LIVE_ARTIFACT_ROOT`).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Record architecture decision in `docs/ADR.md` for explicit transport injection and mandatory secret scan.
+- [X] Record ADR entries in `docs/ADR.md` describing explicit transport injection, redaction invariants, and mandatory post-run secret scanning.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
-```
-- [X] Create planned evidence tree under `.scratch/verification/SPRINT-004/implementation-plan/<execution_id>/`.
-```text
-Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ### Positive Test Cases
-- Offline suite passes without provider keys.
-- Live harness can list or initialize without being sourced by default test harness.
-- Provider contract parsing handles one-provider and multi-provider selection.
+1. Offline suite runs with no provider keys and no live network calls.
+2. Live harness enumerates test list independently from offline harness.
+3. Environment parsing supports one-provider and multi-provider selection.
 
 ### Negative Test Cases
-- No keys and no explicit providers triggers deterministic fail-fast before network calls.
-- Explicit provider requested with missing key fails before network calls.
-- Unknown provider token in `E2E_LIVE_PROVIDERS` fails with deterministic message.
+1. No provider selected results in deterministic preflight failure.
+2. Explicitly requested provider with missing key fails before any network call.
+3. Unknown provider in `E2E_LIVE_PROVIDERS` fails with a deterministic error classification.
 
 ### Acceptance Criteria - Phase 0
-- [X] Baseline proves offline and live test paths are isolated.
+- [X] Contributors can determine exactly how to run live tests and why they are isolated from offline tests.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Live-suite environment contract is documented and testable.
+- [X] ADR and how-to documentation provide complete and consistent contract details.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
-## Phase 1 - HTTPS Transport And Redaction Safety
+## Phase 1 - Live HTTPS Transport and Secret Redaction
 ### Deliverables
 - [X] Implement provider-agnostic HTTPS JSON transport in `lib/unified_llm/transports/https_json.tcl`.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Register TLS transport for HTTPS once and enforce stable request/response dict contract.
+- [X] Enforce request resolution precedence: client `base_url` override, provider env override, provider default.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Enforce base URL resolution precedence: client override, provider env override, provider default.
+- [X] Enforce deterministic transport error taxonomy (`UNIFIED_LLM TRANSPORT HTTP <provider> <status_code>` and `UNIFIED_LLM TRANSPORT NETWORK <provider>`).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Enforce deterministic errorcode taxonomy for HTTP failures and network/TLS failures.
+- [X] Redact sensitive headers (`Authorization`, `x-api-key`, `x-goog-api-key`) everywhere except wire transmission.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Redact sensitive headers (`Authorization`, `x-api-key`, `x-goog-api-key`) in all logs/artifacts/errors.
+- [X] Add deterministic integration coverage with local HTTP fixture server in `tests/support/http_fixture_server.tcl`.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
-```
-- [X] Add deterministic integration coverage with local HTTP fixture server for happy and failure paths.
-```text
-Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ### Positive Test Cases
-- Transport posts JSON payload and receives JSON from local fixture.
-- Response headers are normalized to lowercase dict keys.
-- Redacted header copies are persisted while wire request keeps required auth.
+1. Transport sends valid JSON payload and receives valid JSON response.
+2. Response contract includes `status_code`, normalized `headers`, and raw `body`.
+3. Redacted request headers are preserved in response metadata for safe assertion surfaces.
 
 ### Negative Test Cases
-- 4xx/5xx responses raise deterministic HTTP transport errorcodes.
-- Network/TLS failures raise deterministic network transport errorcodes.
-- Failure output contains no raw key material.
+1. 4xx/5xx responses raise deterministic HTTP transport errorcodes.
+2. TLS/network errors raise deterministic NETWORK transport errorcodes.
+3. Failure outputs contain no key material and no auth header values.
 
 ### Acceptance Criteria - Phase 1
-- [X] Transport contract passes deterministic integration tests.
+- [X] Transport contract is covered by deterministic integration tests and passes locally.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Redaction invariants are proven in both success and failure paths.
+- [X] Redaction invariants are proven on happy-path and failure-path cases.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
-## Phase 2 - Live Harness And Unified LLM Provider Smokes
+## Phase 2 - Live Harness and Unified LLM Provider Smoke Coverage
 ### Deliverables
-- [X] Implement standalone live harness entrypoint in `tests/e2e_live.tcl` sourcing only `tests/e2e_live/*.test`.
+- [X] Implement standalone live harness entrypoint `tests/e2e_live.tcl` sourcing `tests/e2e_live/*.test` only.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Implement provider selection and fail-fast preflight logic with explicit provider clients.
+- [X] Implement provider preflight selection logic (auto-select configured providers, enforce explicit requests).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Implement run artifact root creation and `run.json` metadata emission.
+- [X] Create run-scoped artifact root `.scratch/verification/SPRINT-004/live/<run_id>/` with `run.json` metadata.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Implement post-run secret leak scanner with path-only leak reporting.
+- [X] Implement post-run secret leak scanner against all artifact files using loaded key values.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Add OpenAI live smoke and invalid-key tests.
+- [X] Implement per-provider Unified LLM smoke tests for OpenAI, Anthropic, and Gemini.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Add Anthropic live smoke and invalid-key tests.
+- [X] Implement per-provider invalid-key tests with deterministic failure assertions and leak-free outputs.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
-```
-- [X] Add Gemini live smoke and invalid-key tests.
-```text
-Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ### Positive Test Cases
-- OpenAI: non-empty text, provider response id, positive usage counters, redacted headers.
-- Anthropic: non-empty text, provider response id, positive usage counters, redacted headers.
-- Gemini: non-empty text, `raw.candidates` present, positive usage counters, redacted headers.
-- Multi-provider run executes each selected provider independently.
+1. OpenAI smoke: non-empty text, non-synthetic `response_id`, positive input/output token usage, redacted request headers.
+2. Anthropic smoke: non-empty text, non-synthetic `response_id`, positive input/output token usage, redacted request headers.
+3. Gemini smoke: non-empty text, live-specific payload traits (for example `raw.candidates`), positive token usage, redacted request headers.
+4. Partial key set: configured providers run; unconfigured non-requested providers are skipped with clear summary.
 
 ### Negative Test Cases
-- Zero providers selected fails immediately with descriptive diagnostics.
-- Explicit provider missing key fails immediately with deterministic diagnostics.
-- Invalid key surfaces deterministic auth failure class with no secret leakage.
+1. No keys configured and no explicit selection: fail fast before any live call.
+2. Explicit provider requested with missing key: fail fast before any live call.
+3. Invalid key per provider: deterministic auth failure classification and no secret leakage.
+4. Invalid provider token list (malformed/unknown): deterministic preflight failure.
 
 ### Acceptance Criteria - Phase 2
-- [X] Unified LLM live smokes pass for at least one configured provider and emit auditable artifacts.
+- [X] `make test-e2e` executes Unified LLM live tests for selected providers and writes auditable artifacts under `.../unified_llm/<provider>/`.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Provider selection and invalid-key negative coverage are deterministic and reproducible.
+- [X] Run summaries clearly indicate provider outcomes (`passed`, `failed`, `skipped`) and reasons.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
-## Phase 3 - Coding Agent Loop Live Smokes
+## Phase 3 - Coding Agent Loop Live E2E
 ### Deliverables
-- [X] Add per-provider Coding Agent Loop live smoke tests using `::unified_llm::set_default_client` set/restore discipline.
+- [X] Implement provider-specific Coding Agent Loop live smoke tests using temporary default-client injection.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Assert required event contract for natural completion path (`SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`).
+- [X] Ensure each test restores previous default client to avoid cross-test contamination.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Add per-provider invalid-key negative tests with deterministic failure assertions.
+- [X] Assert minimal required event contract for successful runs (`SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Persist per-provider Coding Agent Loop artifacts under `coding_agent_loop/<provider>/`.
+- [X] Add invalid-key failure tests per provider ensuring deterministic failure surfaces and redaction.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ### Positive Test Cases
-- Session submit completes with non-empty assistant output for selected providers.
-- Required events are emitted in expected order.
-- Provider-scoped artifacts and logs are written for each run.
+1. Session submission produces non-empty assistant output for each selected provider.
+2. Required event sequence is emitted and persisted in provider artifact logs.
+3. Artifact logs include run metadata and redacted request context.
 
 ### Negative Test Cases
-- Invalid key fails deterministically and does not leak secrets.
-- Provider failure does not contaminate default client state for subsequent providers.
+1. Invalid key causes deterministic session failure classification.
+2. Default-client restoration failures are explicitly asserted as test failures.
+3. Failure logs do not include auth secrets or API key values.
 
 ### Acceptance Criteria - Phase 3
-- [X] Coding Agent Loop live smokes pass for at least one configured provider with required event contract.
+- [X] Coding Agent Loop live tests run under `make test-e2e` and store provider logs under `.../coding_agent_loop/<provider>/`.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Artifact and redaction guarantees hold across all executed providers.
+- [X] Event contract assertions are deterministic and provider-agnostic.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
-## Phase 4 - Attractor Live Smokes
+## Phase 4 - Attractor Live E2E
 ### Deliverables
-- [X] Implement live codergen backend fixture for Attractor delegating to explicit Unified LLM live clients.
+- [X] Implement a live codergen backend for tests that calls `unified_llm` via explicit live transport.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Add per-provider minimal pipeline smoke (`start -> codergen -> exit`).
+- [X] Implement per-provider Attractor smoke tests for minimal pipeline (`start -> codergen -> exit`).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Validate expected run artifacts (`checkpoint.json`, node `status.json`, `prompt.md`, `response.md`).
+- [X] Assert expected run artifacts exist per provider (`checkpoint.json`, per-node `status.json`, `prompt.md`, `response.md`).
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Add invalid-key negative coverage with deterministic failure and preserved failure artifacts.
+- [X] Add invalid-key Attractor tests with deterministic failure assertions and leak-free evidence.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ### Positive Test Cases
-- Attractor minimal pipeline completes per selected provider.
-- Required artifacts exist and are structurally valid.
-- Provider-specific output directories are isolated and auditable.
+1. Minimal pipeline completes successfully with each selected provider.
+2. Node artifacts are produced and structurally valid JSON/Markdown.
+3. Checkpoint reflects successful node progression and final exit state.
 
 ### Negative Test Cases
-- Invalid key fails deterministically with failure artifacts retained.
-- Failure output remains redacted and is caught by secret scan if leakage occurs.
+1. Invalid key causes deterministic backend failure classification.
+2. Pipeline failure still writes structured failure artifact logs.
+3. Failure artifacts remain redacted and pass secret-leak scan.
 
 ### Acceptance Criteria - Phase 4
-- [X] Attractor live smokes pass for at least one configured provider.
+- [X] Attractor live tests run under `make test-e2e` and artifacts are written under `.../attractor/<provider>/`.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Attractor provider artifact contract is satisfied for all executed providers.
+- [X] Attractor failure-path behavior is deterministic, diagnosable, and leak-free.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
-## Phase 5 - Make Target, Documentation, ADR, Closeout
+## Phase 5 - Make Target, Docs, Closeout Verification
 ### Deliverables
-- [X] Add or verify `test-e2e: precommit` in `Makefile` and ensure it runs only `tests/e2e_live.tcl`.
+- [X] Ensure `Makefile` includes `test-e2e: precommit` and executes only live harness tests.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Finalize `docs/howto/live-e2e.md` with prerequisites, env vars, examples, artifact map, and secret-safety checklist.
+- [X] Add/refresh `docs/howto/live-e2e.md` with prerequisites, environment contract, run examples, and artifact map.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Finalize `docs/ADR.md` entry capturing context, decision, and consequences.
+- [X] Add a redaction checklist and operator verification guide for leak scanning outcomes.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Run closeout matrix: no-key fail-fast, single-provider pass, multi-provider pass, invalid-key deterministic failure, secret scan pass.
+- [X] Execute full verification matrix and persist command logs, exit codes, and artifact pointers.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
-```
-- [X] Synchronize this plan and source sprint document status and evidence references.
-```text
-Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
-Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
 ### Positive Test Cases
-- `make test-e2e` succeeds with at least one configured valid provider.
-- One-provider and multi-provider modes both produce full artifact trees.
-- Docs are sufficient for a new contributor to run the suite.
+1. With at least one valid provider key, `make test-e2e` passes and records complete artifacts.
+2. With multiple valid provider keys, suite runs all selected providers and summarizes outcomes correctly.
+3. Artifacts include per-component provider folders plus top-level run summary and leak scan result.
 
 ### Negative Test Cases
-- `make test-e2e` fails fast with no keys or invalid explicit provider selection.
-- Invalid-key runs fail deterministically and remain secret-safe.
-- Secret scan fails on injected synthetic leak and reports file paths only.
+1. No provider keys available: `make test-e2e` fails fast with descriptive preflight output.
+2. Explicit provider missing key: deterministic preflight failure.
+3. Secret leak scan detects injected synthetic secret and fails run while printing only file paths.
 
 ### Acceptance Criteria - Phase 5
-- [X] `make test-e2e` behavior is deterministic for success and fail-fast modes.
+- [X] `make test-e2e` demonstrates both expected pass and expected fail-fast behavior based on environment setup.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Secret redaction and leak scan controls are reproducibly proven.
+- [X] Leak-scan enforcement blocks secret exposure and emits auditable, redacted failure reports.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
-- [X] Sprint closeout evidence is complete, indexed, and auditable.
+
+## Cross-Provider Execution Matrix
+| Component | OpenAI | Anthropic | Gemini | Notes |
+| --- | --- | --- | --- | --- |
+| Unified LLM smoke | [X] | [X] | [X] | Non-empty text, usage, redaction assertions |
+| Unified LLM invalid key | [X] | [X] | [X] | Deterministic auth-failure contract |
+| Coding Agent Loop smoke | [X] | [X] | [X] | Required event sequence present |
+| Coding Agent Loop invalid key | [X] | [X] | [X] | Deterministic failure and no leaks |
+| Attractor smoke | [X] | [X] | [X] | Pipeline + artifact assertions |
+| Attractor invalid key | [X] | [X] | [X] | Structured failure artifacts + redaction |
+
+## Verification Artifacts Plan
+- [X] Use run-scoped evidence root: `.scratch/verification/SPRINT-004/implementation/<run_id>/`.
 ```text
 Verification:
-- `timeout 1800 ./.scratch/run_sprint004_impl_plan_verification.sh` (exit 0)
-- `cat .scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/command-status-all.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/summary.md`
-- `.scratch/verification/SPRINT-004/implementation-plan/execution-20260227T130840Z/live-run-paths.txt`
-Notes:
-- All matrix commands passed with expected exit codes in this execution.
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
+```
+- [X] Record each verification command and exit code in machine-readable index (`command-status.tsv`).
+```text
+Verification:
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
+Evidence:
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
+```
+- [X] Keep a human-readable summary (`summary.md`) linking each acceptance criterion to evidence paths.
+```text
+Verification:
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv` (exit 0)
+- `cat .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json` (exit 0)
+Evidence:
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/command-status.tsv
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/summary.md
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-build.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-current-env.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-openai-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-anthropic-only.log
+- .scratch/verification/SPRINT-004/execution-20260227T131552Z/make-test-e2e-gemini-only.log
+- .scratch/verification/SPRINT-004/live/1772198366-97713/run.json
+- .scratch/verification/SPRINT-004/live/1772198366-97713/secret-leaks.json
+- .scratch/verification/SPRINT-004/live/1772198210-85644/run.json
+- .scratch/verification/SPRINT-004/live/1772198213-85845/run.json
+- .scratch/verification/SPRINT-004/live/1772198218-86281/run.json
 ```
 
-## Cross-Provider Cross-Component Completion Matrix
-| Case | OpenAI | Anthropic | Gemini |
-| --- | --- | --- | --- |
-| Unified LLM blocking smoke | [X] | [X] | [X] |
-| Unified LLM invalid-key deterministic failure | [X] | [X] | [X] |
-| Coding Agent Loop natural completion smoke | [X] | [X] | [X] |
-| Coding Agent Loop invalid-key deterministic failure | [X] | [X] | [X] |
-| Attractor minimal pipeline smoke | [X] | [X] | [X] |
-| Attractor invalid-key deterministic failure | [X] | [X] | [X] |
-| Secret scan passes after run | [X] | [X] | [X] |
-
-## Verification Command Plan
-- Baseline:
-  - `timeout 135 make -j10 test`
-  - `timeout 135 tclsh tests/all.tcl`
-- Live harness:
-  - `timeout 135 tclsh tests/e2e_live.tcl -list`
-  - `timeout 180 tclsh tests/e2e_live.tcl`
-  - `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl`
-  - `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl`
-  - `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl`
-- Fail-fast and negative behavior:
-  - `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY timeout 180 make test-e2e`
-  - `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl`
-- Integration slices:
-  - `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*`
-  - `timeout 135 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*`
-
-## Evidence Layout Plan
-- `.scratch/verification/SPRINT-004/implementation-plan/<execution_id>/command-status.tsv`
-- `.scratch/verification/SPRINT-004/implementation-plan/<execution_id>/summary.md`
-- `.scratch/verification/SPRINT-004/live/<run_id>/run.json`
-- `.scratch/verification/SPRINT-004/live/<run_id>/secret-leaks.json`
-- `.scratch/verification/SPRINT-004/live/<run_id>/unified_llm/<provider>/...`
-- `.scratch/verification/SPRINT-004/live/<run_id>/coding_agent_loop/<provider>/...`
-- `.scratch/verification/SPRINT-004/live/<run_id>/attractor/<provider>/...`
-
-## Appendix - Mermaid Diagrams
+## Appendix - Mermaid Diagrams (Verified with `mmdc`)
 
 ### Core Domain Models
 ```mermaid
 classDiagram
-  class LiveRun {
-    +run_id
-    +providers
-    +artifact_root
-    +started_at
-    +ended_at
-  }
-  class ProviderRun {
-    +provider
-    +model
-    +status
-  }
-  class LiveHarness {
-    +select_providers()
-    +create_clients()
-    +run_components()
-    +scan_for_secret_leaks()
-  }
-  class HTTPSJSONTransport {
-    +call(request)
-    +redact_headers(headers)
-  }
-  class ArtifactStore {
-    +write_run_json()
-    +write_component_artifacts()
-    +write_secret_scan()
+  class LiveE2EHarness {
+    +preflightSelectProviders()
+    +runProviderSuites()
+    +scanForSecretLeaks()
+    +writeRunSummary()
   }
 
-  LiveHarness --> HTTPSJSONTransport
-  LiveHarness --> ArtifactStore
-  LiveRun --> ProviderRun
+  class UnifiedLLMClient {
+    +generate(request)
+    +stream(request)
+  }
+
+  class HTTPSJsonTransport {
+    +call(request)
+    +resolveBaseUrl(provider, request)
+    +redactHeaders(headers)
+  }
+
+  class ProviderProfile {
+    +name
+    +keyEnvVar
+    +modelEnvVar
+    +baseUrlEnvVar
+  }
+
+  class ArtifactStore {
+    +runRoot
+    +writeComponentLog()
+    +writeSecretLeakReport()
+  }
+
+  LiveE2EHarness --> ProviderProfile
+  LiveE2EHarness --> UnifiedLLMClient
+  UnifiedLLMClient --> HTTPSJsonTransport
+  LiveE2EHarness --> ArtifactStore
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  E2E_RUN ||--o{ PROVIDER_RUN : includes
-  PROVIDER_RUN ||--o{ COMPONENT_RUN : executes
-  COMPONENT_RUN ||--o{ ARTIFACT : writes
-  E2E_RUN ||--|| SECRET_SCAN : records
+  E2E_RUN ||--o{ PROVIDER_RUN : contains
+  PROVIDER_RUN ||--o{ COMPONENT_RUN : includes
+  COMPONENT_RUN ||--o{ ARTIFACT_FILE : emits
+  E2E_RUN ||--|| SECRET_SCAN_RESULT : records
 
   E2E_RUN {
     string run_id
-    string artifact_root
-    string started_at
-    string ended_at
+    datetime started_at
+    datetime ended_at
+    string selected_providers
   }
+
   PROVIDER_RUN {
     string provider
-    string model
     string status
+    string model
   }
+
   COMPONENT_RUN {
     string component
     string status
     string error_class
   }
-  ARTIFACT {
+
+  ARTIFACT_FILE {
     string path
-    string type
+    string sha256
+    int size_bytes
   }
-  SECRET_SCAN {
+
+  SECRET_SCAN_RESULT {
     string status
-    string report_path
+    int leak_count
   }
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  START[make test-e2e] --> PREFLIGHT[Validate keys and provider selection]
-  PREFLIGHT -->|invalid| FAILFAST[Exit non-zero before network]
-  PREFLIGHT -->|valid| ULLM[Run Unified LLM smoke tests]
-  ULLM --> CAL[Run Coding Agent Loop smoke tests]
-  CAL --> ATR[Run Attractor smoke tests]
-  ATR --> SCAN[Scan artifacts for secret leaks]
-  SCAN -->|leak| LEAKFAIL[Fail with leaked file paths only]
-  SCAN -->|clean| PASS[Write summary and exit 0]
+  A[make test-e2e] --> B[Run precommit]
+  B --> C[Launch tests/e2e_live.tcl]
+  C --> D[Preflight provider selection]
+  D -->|valid| E[Run Unified LLM/CAL/Attractor suites]
+  D -->|invalid| F[Fail fast with deterministic message]
+  E --> G[Write run artifacts]
+  G --> H[Run secret leak scan]
+  H -->|no leaks| I[Exit success]
+  H -->|leaks found| J[Exit failure with file paths]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  ENV[Env vars] --> HARNESS[Live harness]
-  HARNESS --> CLIENTS[Explicit ULLM clients]
-  CLIENTS --> HTTPS[HTTPS JSON transport]
-  HTTPS --> API[Provider APIs]
-  API --> RESP[Normalized responses]
-  RESP --> ASSERT[Test assertions]
+  ENV[Environment Variables] --> PREFLIGHT[Provider Preflight]
+  PREFLIGHT --> CLIENTS[Explicit Provider Clients]
+  CLIENTS --> HTTP[HTTPS JSON Transport]
+  HTTP --> RESP[Provider Responses]
+  RESP --> ASSERT[Component Assertions]
   ASSERT --> ART[Artifacts under .scratch]
-  ART --> SCAN[Secret leak scanner]
-  SCAN --> REPORT[run.json and secret-leaks.json]
+  ART --> SCAN[Secret Leak Scan]
+  SCAN --> REPORT[Run Summary and Leak Report]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph Entry
-    MAKE[make test-e2e]
+  subgraph Build
+    MAKE[Makefile:test-e2e]
   end
 
-  subgraph Tests
-    HARNESS[tests/e2e_live.tcl]
-    SUITE[tests/e2e_live/*.test]
+  subgraph TestHarness
+    ENTRY[tests/e2e_live.tcl]
+    LIVE[tests/e2e_live/*.test]
     SUPPORT[tests/support/e2e_live_support.tcl]
   end
 
   subgraph Runtime
     ULLM[lib/unified_llm]
+    TRANS[lib/unified_llm/transports/https_json.tcl]
     CAL[lib/coding_agent_loop]
-    ATR[lib/attractor]
+    ATTR[lib/attractor]
   end
 
-  subgraph Docs
-    HOWTO[docs/howto/live-e2e.md]
-    ADR[docs/ADR.md]
+  subgraph Evidence
+    RUNROOT[.scratch/verification/SPRINT-004/live/<run_id>]
+    REPORTS[run.json + secret-leaks.json]
   end
 
-  MAKE --> HARNESS --> SUITE
-  SUITE --> SUPPORT
-  SUITE --> ULLM
-  SUITE --> CAL
-  SUITE --> ATR
-  SUITE --> HOWTO
-  SUITE --> ADR
+  MAKE --> ENTRY
+  ENTRY --> LIVE
+  LIVE --> SUPPORT
+  SUPPORT --> ULLM
+  ULLM --> TRANS
+  LIVE --> CAL
+  LIVE --> ATTR
+  LIVE --> RUNROOT
+  RUNROOT --> REPORTS
 ```
