@@ -29,6 +29,8 @@ This directory contains spec-derived requirement artifacts and traceability mapp
 8. Run full build + test before merging:
 - `make build`
 - `make test`
+9. (Optional but recommended for sprint docs) lint checked evidence references:
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md`
 
 ## Common Failures
 - `MISSING_REQ_ID`: spec line matched required scope but lacks `req_id` comment.
@@ -36,3 +38,4 @@ This directory contains spec-derived requirement artifacts and traceability mapp
 - `MISSING_REQUIREMENT`: catalog contains ID missing from traceability.
 - `UNKNOWN_REQUIREMENT`: traceability contains ID not present in catalog.
 - `BAD_VERIFY_PATTERN`: verify command pattern does not match any real test name.
+- `requirements catalog parse error`: generated/fixture catalog JSON is not a valid top-level object with a `requirements` array.

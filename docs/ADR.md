@@ -92,3 +92,32 @@ Tradeoffs:
 - Spec edits now require explicit `req_id` maintenance.
 - Traceability file is significantly larger and must remain curated.
 - Verification rigor adds upfront maintenance work but removes false-green risk.
+
+## ADR-004: Structured Catalog JSON Validation and Sprint-Agnostic Evidence Linting
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+`tools/spec_coverage.tcl` originally collected catalog IDs with regex extraction, which could hide malformed test fixtures and non-object catalog structures. `tools/evidence_lint.sh` was also hardcoded to `SPRINT-001` evidence paths, limiting reuse for other sprint docs.
+
+### Decision
+- Enforce structured catalog parsing in `tools/spec_coverage.tcl` using JSON-object semantics:
+  - top-level object required
+  - `requirements` array required
+  - each requirement must be an object with non-empty `id`
+  - duplicate catalog IDs fail fast
+- Update integration fixtures/tests to emit valid JSON objects so failures represent real contract violations.
+- Make `tools/evidence_lint.sh` sprint-agnostic:
+  - detect sprint ID from doc filename when present
+  - accept evidence references under `.scratch/verification/<SPRINT-ID>/...`
+  - accept diagram evidence references under `.scratch/diagram-renders/<sprint-id>/...`
+
+### Consequences
+Positive:
+- Eliminates false-green behavior caused by regex-only catalog extraction.
+- Moves catalog contract errors to clear, deterministic failures.
+- Allows the same evidence lint workflow across sprint documents.
+
+Tradeoffs:
+- Tests and ad-hoc fixtures must now be strict JSON objects.
+- Guardrail expectations are stricter, increasing up-front discipline for doc updates.
