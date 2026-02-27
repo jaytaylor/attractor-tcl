@@ -1,5 +1,7 @@
 Legend: [ ] Incomplete, [X] Complete
 
+_Evidence for every completed checklist item must include the exact verification command (wrapped with backticks) plus its exit code and artifact paths (logs, `.scratch` transcripts) directly beneath the item._
+
 # Sprint #004 - Live E2E Smoke Suite (`make test-e2e`)
 
 ## Objective
@@ -17,17 +19,35 @@ Today the repo’s tests are deterministic and offline. This is good for correct
 We need an explicit, opt-in live suite that developers can run intentionally to validate real-world integration.
 
 ## Current State Snapshot (Verified 2026-02-27)
-- [ ] `make -j10 test` passes offline.
+- [X] `make -j10 test` passes offline.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `make -j10 test` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/baseline/make-test.log`
+- `.scratch/verification/SPRINT-004/baseline/make-test.exitcode`
+Notes:
+- Baseline test suite is deterministic/offline.
 ```
-- [ ] There is no `make test-e2e` target.
+- [X] There is no `make test-e2e` target.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `make test-e2e` (exit 2)
+Evidence:
+- `.scratch/verification/SPRINT-004/baseline/make-test-e2e.log`
+- `.scratch/verification/SPRINT-004/baseline/make-test-e2e.exitcode`
+Notes:
+- This sprint adds `make test-e2e` as an opt-in live suite entrypoint.
 ```
-- [ ] `tests/all.tcl` currently sources `tests/e2e/*.test`, so “live tests” must not be placed there.
+- [X] `tests/all.tcl` currently sources `tests/e2e/*.test`, so “live tests” must not be placed there.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `rg -n "foreach dir \\{unit integration e2e\\}" tests/all.tcl` (exit 0)
+Evidence:
+- `.scratch/verification/SPRINT-004/baseline/tests-all-sources-e2e.log`
+- `.scratch/verification/SPRINT-004/baseline/tests-all-sources-e2e.exitcode`
+Notes:
+- Live tests must live in a separate directory and be executed by a separate harness.
 ```
 
 ## Scope
@@ -50,6 +70,12 @@ Out of scope:
 - Evidence artifacts live under `.scratch/verification/SPRINT-004/...` and are referenced by exact path.
 - Mark an item `[X]` only once the verification commands have been run and evidence artifacts exist.
 
+## Provider Selection Semantics (Live Suite)
+- Default provider set for live runs: all providers with configured API keys in the environment.
+- If multiple provider keys are configured, tests must run provider-by-provider using explicit configuration (do not rely on `unified_llm::from_env`, which is intentionally ambiguous when multiple keys are present).
+- If a developer explicitly requests a provider (via a live-suite env var), and that provider’s key is missing, the suite must fail fast and must not attempt any network calls.
+- If a provider’s key is not configured and that provider was not explicitly requested, its live tests must be skipped with a clear summary (so a “partial key set” is still useful).
+
 ## Execution Order
 1. Phase 0: Baseline + design decisions
 2. Phase 1: Live HTTPS transport + redaction
@@ -71,6 +97,21 @@ Out of scope:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
+Contract to define (must be documented in Phase 5):
+- Provider API keys:
+  - OpenAI: `OPENAI_API_KEY`
+  - Anthropic: `ANTHROPIC_API_KEY`
+  - Gemini: `GEMINI_API_KEY`
+- Optional provider selection:
+  - `E2E_LIVE_PROVIDERS` as a comma-separated allowlist (example: `openai,anthropic`).
+- Optional model overrides (keep smoke tests cheap by default, but configurable):
+  - `OPENAI_MODEL` (default: `gpt-4o-mini`)
+  - `ANTHROPIC_MODEL` (default: `claude-sonnet-4-5`)
+  - `GEMINI_MODEL` (default: `gemini-1.5-pro`)
+- Optional base URL overrides (for proxies/self-hosted gateways):
+  - `OPENAI_BASE_URL` (default: `https://api.openai.com`)
+  - `ANTHROPIC_BASE_URL` (default: `https://api.anthropic.com`)
+  - `GEMINI_BASE_URL` (default: `https://generativelanguage.googleapis.com`)
 
 ### Acceptance Criteria - Phase 0
 - [ ] A contributor can read the ADR + docs and understand exactly how to run live tests and why they are not part of the offline suite.
@@ -144,7 +185,8 @@ Positive cases (must be implemented):
 - If streaming is supported: at least one delta event occurs and the concatenation is non-empty
 
 Negative cases (must be implemented):
-- Missing key: the harness fails fast with a descriptive error message (and does not attempt any network calls)
+- No provider keys configured at all: the harness fails fast with a descriptive error message (and does not attempt any network calls)
+- Explicit provider requested but missing key: the harness fails fast with a descriptive error message (and does not attempt any network calls)
 - Invalid key: provider returns an auth error; test asserts a deterministic failure surface (exit code + error classification or message pattern)
 
 ### Acceptance Criteria - Phase 2
