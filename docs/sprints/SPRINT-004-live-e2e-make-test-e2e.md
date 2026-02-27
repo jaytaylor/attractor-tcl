@@ -129,9 +129,9 @@ All of the following must be satisfied for each provider that is selected for a 
 
 | Test Case | OpenAI | Anthropic | Gemini |
 | --- | --- | --- | --- |
-| Unified LLM: blocking generation returns non-empty text | [ ] | [ ] | [ ] |
-| Coding Agent Loop: session submit completes naturally and emits required events | [ ] | [ ] | [ ] |
-| Attractor: minimal pipeline run succeeds and writes artifacts/checkpoint | [ ] | [ ] | [ ] |
+| Unified LLM: blocking generation returns non-empty text | [X] | [X] | [X] |
+| Coding Agent Loop: session submit completes naturally and emits required events | [X] | [X] | [X] |
+| Attractor: minimal pipeline run succeeds and writes artifacts/checkpoint | [X] | [X] | [X] |
 | Invalid key: deterministic failure surface + no secret leakage | [X] | [X] | [X] |
 
 ## Phase 0 - Baseline + Design Decisions
@@ -176,7 +176,7 @@ Contract to define (must be documented in Phase 5):
 - Optional model overrides (keep smoke tests cheap by default, but configurable):
   - `OPENAI_MODEL` (default: `gpt-4o-mini`)
   - `ANTHROPIC_MODEL` (default: `claude-sonnet-4-5`)
-  - `GEMINI_MODEL` (default: `gemini-1.5-pro`)
+  - `GEMINI_MODEL` (default: `gemini-2.5-flash`)
 - Optional base URL overrides (for proxies/self-hosted gateways):
   - `OPENAI_BASE_URL` (default: `https://api.openai.com`)
   - `ANTHROPIC_BASE_URL` (default: `https://api.anthropic.com`)
@@ -370,16 +370,23 @@ Negative cases (must be implemented):
 - Invalid key: provider returns an auth error; test asserts a deterministic failure surface (exit code + error classification or message pattern) and confirms no secrets appear in failure output
 
 ### Acceptance Criteria - Phase 2
-- [ ] `make test-e2e` can run the Unified LLM live suite for at least one configured provider and produces an auditable log under `.scratch/verification/SPRINT-004/live/<run_id>/unified_llm/`.
+- [X] `make test-e2e` can run the Unified LLM live suite for at least one configured provider and produces an auditable log under `.scratch/verification/SPRINT-004/live/<run_id>/unified_llm/`.
 ```text
-Verification (partial):
-- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Verification:
+- `timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772194683-78198/unified_llm/`
-Notes:
-- Harness creates auditable provider/component artifacts, but configured provider credentials/environment did not satisfy positive smoke assertions in this run (provider HTTP 4xx). This acceptance remains open pending a successful provider configuration.
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-openai-final.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-openai-final.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-anthropic-after-system-prompt-override.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-anthropic-after-system-prompt-override.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-gemini-after-live-smoke-space-prompt.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-gemini-after-live-smoke-space-prompt.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772196359-23905/unified_llm/`
 ```
 
 ## Phase 3 - Coding Agent Loop Live E2E Tests
@@ -422,16 +429,17 @@ Negative cases:
 - Invalid key: session submit fails deterministically and does not leak secrets
 
 ### Acceptance Criteria - Phase 3
-- [ ] Live agent loop tests run under `make test-e2e` and store logs under `.scratch/verification/SPRINT-004/live/<run_id>/coding_agent_loop/`.
+- [X] Live agent loop tests run under `make test-e2e` and store logs under `.scratch/verification/SPRINT-004/live/<run_id>/coding_agent_loop/`.
 ```text
-Verification (partial):
-- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Verification:
+- `timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772194683-78198/coding_agent_loop/`
-Notes:
-- Harness and artifact writing are verified; full acceptance remains open until at least one provider passes positive smoke assertions.
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772196359-23905/coding_agent_loop/`
 ```
 
 ## Phase 4 - Attractor Live E2E Tests
@@ -471,16 +479,17 @@ Negative cases:
 - Invalid key: run fails deterministically; the live harness must still write a useful failure log under the run’s artifact root (no secret leakage)
 
 ### Acceptance Criteria - Phase 4
-- [ ] Attractor live tests run under `make test-e2e` and store artifacts under `.scratch/verification/SPRINT-004/live/<run_id>/attractor/`.
+- [X] Attractor live tests run under `make test-e2e` and store artifacts under `.scratch/verification/SPRINT-004/live/<run_id>/attractor/`.
 ```text
-Verification (partial):
-- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Verification:
+- `timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=openai timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
+- `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772194683-78198/attractor/`
-Notes:
-- Harness writes attractor artifacts and deterministic invalid-key failure logs; full acceptance remains open until at least one provider passes positive smoke assertions.
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772196359-23905/attractor/`
 ```
 
 ## Phase 5 - Makefile Target + Docs + Closeout
@@ -537,19 +546,19 @@ Notes:
 ```
 
 ### Acceptance Criteria - Phase 5
-- [ ] `make test-e2e` fails fast and descriptively when no keys are configured, and passes when at least one provider is configured and all its tests pass.
+- [X] `make test-e2e` fails fast and descriptively when no keys are configured, and passes when at least one provider is configured and all its tests pass.
 ```text
-Verification (partial):
-- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 135 make test-e2e` (exit 2)
-- `timeout 135 tclsh tests/e2e_live.tcl` (exit 1)
+Verification:
+- `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit 2)
+- `timeout 180 make test-e2e` (exit 0)
+- `timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/make-test-e2e-failfast.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/make-test-e2e-failfast.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/harness-live-current-env.exitcode`
-Notes:
-- Fail-fast behavior is verified.
-- Passing live-provider execution remains pending valid provider credentials/model configuration.
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-no-keys-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-no-keys-latest.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-latest.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
 ```
 - [X] No secrets appear in any captured logs or artifacts.
 ```text

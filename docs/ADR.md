@@ -295,3 +295,40 @@ Positive:
 Tradeoffs:
 - Live test runs now depend on provider availability, credentials, and account/model compatibility.
 - Additional harness and artifact-management code increases maintenance scope.
+
+## ADR-012: Live Provider Payload Compatibility and Transport Robustness for Sprint #004 Closeout
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+After enabling live E2E execution with real provider credentials, the initial closeout pass exposed provider-facing compatibility failures that were not visible in offline fixtures:
+- URL joining duplicated version paths when base URLs already contained `/v1`.
+- Transport emitted duplicated `Content-Type` headers (`application/json,application/json`) for OpenAI.
+- Coding Agent Loop requests omitted model selection, causing provider-side validation failures.
+- Anthropic and Gemini rejected direct `system` role messages in `messages`/`contents` payloads.
+- Gemini default model (`gemini-1.5-pro`) was not available for the current API/account baseline.
+
+### Decision
+- Harden HTTPS transport behavior:
+  - deduplicate base-path + endpoint joins
+  - split content type from explicit headers and set it exactly once
+  - include bounded HTTP/network error body summaries in error messages for deterministic debugging
+- Extend Coding Agent Loop request control:
+  - profile-level model defaults (with environment overrides)
+  - session-level model override (`config.model`)
+  - session-level system prompt override (`config.system_prompt`) for provider-compatibility tests
+- Normalize provider request translation:
+  - Anthropic: move `system` content to top-level `system` field
+  - Gemini: move `system` content to `systemInstruction`; remap `assistant` role to `model`
+- Update Gemini live default model to `gemini-2.0-flash` for current availability.
+- Add/expand regression tests for URL joins, payload encoding behavior, and Coding Agent Loop model/system override forwarding.
+
+### Consequences
+Positive:
+- `make test-e2e` now passes for OpenAI, Anthropic, and Gemini in the validated environment.
+- Live smoke behavior is deterministic across success and fail-fast paths.
+- Transport and adapter failures surface actionable, bounded diagnostics without leaking secrets.
+
+Tradeoffs:
+- JSON encoding compatibility logic is more nuanced and requires continued regression coverage.
+- Provider payload translation now contains more provider-specific normalization behavior.

@@ -26,7 +26,7 @@ These tests call real provider HTTPS APIs and require API keys.
 - Model overrides:
   - `OPENAI_MODEL` (default `gpt-4o-mini`)
   - `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`)
-  - `GEMINI_MODEL` (default `gemini-1.5-pro`)
+  - `GEMINI_MODEL` (default `gemini-2.5-flash`)
 - Base URL overrides:
   - `OPENAI_BASE_URL` (default `https://api.openai.com`)
   - `ANTHROPIC_BASE_URL` (default `https://api.anthropic.com`)
