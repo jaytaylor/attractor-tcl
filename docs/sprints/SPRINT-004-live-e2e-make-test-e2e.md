@@ -378,15 +378,15 @@ Verification:
 - `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 - `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.exitcode`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-openai-final.log`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-openai-final.exitcode`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-anthropic-after-system-prompt-override.log`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-anthropic-after-system-prompt-override.exitcode`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-gemini-after-live-smoke-space-prompt.log`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-gemini-after-live-smoke-space-prompt.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772196359-23905/unified_llm/`
+- `.scratch/verification/SPRINT-004/live/1772196731-64281/unified_llm/`
 ```
 
 ## Phase 3 - Coding Agent Loop Live E2E Tests
@@ -437,9 +437,9 @@ Verification:
 - `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 - `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772196359-23905/coding_agent_loop/`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772196731-64281/coding_agent_loop/`
 ```
 
 ## Phase 4 - Attractor Live E2E Tests
@@ -487,9 +487,9 @@ Verification:
 - `env E2E_LIVE_PROVIDERS=anthropic timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 - `env E2E_LIVE_PROVIDERS=gemini timeout 180 tclsh tests/e2e_live.tcl` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772196359-23905/attractor/`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772196731-64281/attractor/`
 ```
 
 ## Phase 5 - Makefile Target + Docs + Closeout
@@ -557,21 +557,21 @@ Evidence:
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-no-keys-latest.exitcode`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-latest.log`
 - `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-latest.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.log`
-- `.scratch/verification/SPRINT-004/implementation-plan/precheck/e2e-live-all-providers-latest.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/make-test-e2e-after-gemini-2-5-default.exitcode`
 ```
 - [X] No secrets appear in any captured logs or artifacts.
 ```text
 Verification:
-- `timeout 135 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
-- `timeout 135 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-1.0` (exit 0)
-- `cat .scratch/verification/SPRINT-004/live/1772194683-78198/secret-leaks.json` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-unified-llm-https-transport-*` (exit 0)
+- `timeout 180 tclsh tests/all.tcl -match integration-e2e-live-secret-scan-1.0` (exit 0)
+- `cat .scratch/verification/SPRINT-004/live/1772196731-64281/secret-leaks.json` (exit 0)
 Evidence:
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-transport.exitcode`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-live-support.log`
-- `.scratch/verification/SPRINT-004/implementation-2026-02-27/tests-live-support.exitcode`
-- `.scratch/verification/SPRINT-004/live/1772194683-78198/secret-leaks.json`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/tests-integration-https-transport-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/tests-integration-https-transport-latest.exitcode`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/tests-secret-scan-only-latest.log`
+- `.scratch/verification/SPRINT-004/implementation-plan/precheck/tests-secret-scan-only-latest.exitcode`
+- `.scratch/verification/SPRINT-004/live/1772196731-64281/secret-leaks.json`
 ```
 
 ## Appendix - Mermaid Diagrams (Verify Render With mmdc)
