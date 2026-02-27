@@ -48,6 +48,12 @@ Out of scope:
 5. Phase 4: Cross-runtime integration closure
 6. Phase 5: Traceability and closeout
 
+## Verification Evidence Snapshot (2026-02-27)
+- Command status table: `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/command-status.tsv`
+- Command logs: `.scratch/verification/SPRINT-003/implementation-sync-2026-02-27/logs/`
+- Mermaid renders: `.scratch/diagram-renders/sprint-003/implementation-sync-2026-02-27/`
+- Coverage summary: `missing=0`, `unknown_catalog=0`, `bad_paths=0`, `malformed_blocks=0`
+
 ## Phase 0 - Baseline and Harness Hardening
 ### Deliverables
 - [X] Capture baseline outputs for build, tests, requirements catalog checks, and spec coverage checks.
