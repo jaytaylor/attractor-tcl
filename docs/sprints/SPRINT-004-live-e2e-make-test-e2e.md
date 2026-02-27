@@ -82,6 +82,7 @@ In scope:
 Out of scope:
 - Making live tests run in CI by default
 - Full NLSpec parity (handled by Sprint #003)
+- Validating true HTTP streaming semantics (current `unified_llm::stream` is a wrapper around blocking `generate`; streaming parity is handled by Sprint #003)
 - Any rate-limit/retry/backoff policy work
 
 ## Evidence Rules
@@ -122,6 +123,16 @@ Out of scope:
 4. Phase 3: Coding Agent Loop live E2E tests (per provider)
 5. Phase 4: Attractor live E2E tests (per provider)
 6. Phase 5: Makefile target + documentation + closeout
+
+## Cross-Provider / Cross-Component Matrix (Live Suite)
+All of the following must be satisfied for each provider that is selected for a given live run:
+
+| Test Case | OpenAI | Anthropic | Gemini |
+| --- | --- | --- | --- |
+| Unified LLM: blocking generation returns non-empty text | [ ] | [ ] | [ ] |
+| Coding Agent Loop: session submit completes naturally and emits required events | [ ] | [ ] | [ ] |
+| Attractor: minimal pipeline run succeeds and writes artifacts/checkpoint | [ ] | [ ] | [ ] |
+| Invalid key: deterministic failure surface + no secret leakage | [ ] | [ ] | [ ] |
 
 ## Phase 0 - Baseline + Design Decisions
 - [ ] Confirm baseline offline behavior and document the “no network by default” rule for tests.
@@ -242,6 +253,8 @@ Details to cover:
 - The harness performs a “secret leak scan”:
   - Scan all files under the artifacts root for the exact API key values loaded from env.
   - On leak detection: fail the run, list only the offending file paths, and do not print secrets.
+- For each selected provider, the harness must create an explicit client (do not rely on `unified_llm::from_env`):
+  - `::unified_llm::client_new -provider <provider> -api_key $::env(PROVIDER_API_KEY) -base_url <optional override> -transport ::unified_llm::transports::https_json::call`
 
 - [ ] Implement OpenAI live smoke tests (requires `OPENAI_API_KEY`).
 ```text
