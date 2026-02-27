@@ -165,3 +165,79 @@ Positive:
 Tradeoffs:
 - Intentional spec changes that alter catalog counts require synchronized test updates.
 - Traceability parser behavior is stricter and may fail where prior versions were permissive.
+
+## ADR-007: Unified LLM Parity Data Model and Deterministic Provider Translation
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+The prior Unified LLM implementation used text-only request payloads, synthesized streaming from blocking responses, and permissive provider fallback behavior (`mock` when no configuration was present). Sprint #003 required deterministic configuration errors, richer content parts, native provider payload mapping, and stronger typed error behavior.
+
+### Decision
+- Promote message normalization to first-class content parts (`text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_result`).
+- Require deterministic provider selection errors when no provider is configured or the environment is ambiguous.
+- Keep deterministic offline behavior with transport callbacks but add native HTTP transport path support for provider adapters.
+- Add provider-specific option validation (`extra_headers`, Anthropic `beta_headers`, Gemini `safety_settings`) before transport execution.
+- Add streaming event model (`STREAM_START`, `TEXT_DELTA`, `TOOL_CALL_END`, `FINISH`) as adapter-supported behavior rather than only post-hoc wrapping.
+- Expand unified usage normalization to include cache-write token accounting.
+
+### Consequences
+Positive:
+- Cross-provider behavior is explicit and deterministic under tests.
+- Multimodal input and structured-output paths now have typed validation failures.
+- Callers can distinguish config/input/provider transport failures by error code.
+
+Tradeoffs:
+- Request normalization and provider translation code paths are significantly larger.
+- More adapter-level test fixtures are required to keep translation correctness stable.
+
+## ADR-008: Coding Agent Loop ExecutionEnvironment and Session-State Machine Parity
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+The prior Coding Agent Loop directly executed filesystem/process operations in tool procedures and had limited session-state semantics for steering, aborts, and loop detection. Sprint #003 required a clear execution contract, deterministic truncation/cancellation behavior, and richer event semantics.
+
+### Decision
+- Introduce explicit `ExecutionEnvironment` abstraction with a local reference implementation for file/process/search operations.
+- Route tool implementations through `ExecutionEnvironment` so sessions and subagents can share one runtime environment.
+- Add session steering queue semantics so `steer` modifies the next model request payload.
+- Expand session event emissions with model request lifecycle and turn-end semantics.
+- Add explicit session abort handling and subagent depth-limit enforcement.
+- Add repeated tool-signature loop detection to emit deterministic warning events.
+
+### Consequences
+Positive:
+- Tool behavior is more testable and composable across session/subagent boundaries.
+- Steering and abort semantics are observable and deterministic.
+- Default truncation and shell-timeout semantics are centrally controlled by session config.
+
+Tradeoffs:
+- Session internals now manage more state fields and event transitions.
+- Subagent management needs stricter cleanup to avoid dangling sessions in tests.
+
+## ADR-009: Attractor DOT/Validation/Handler Parity with Warning-Preserving CLI Validate
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+The previous Attractor runtime handled only a narrow DOT subset and coarse validation rules. Sprint #003 required stricter start/exit invariants, richer diagnostic metadata, additional handler behavior, and validate/run/resume parity with deterministic artifacts.
+
+### Decision
+- Replace parser statement splitting with quote/bracket/brace-aware parsing and support chained edges, defaults, and subgraph flattening.
+- Enforce one start (`shape=Mdiamond`) and one exit (`shape=Msquare`) invariants with structured diagnostics (`severity`, `rule`, `message`).
+- Emit reachability warnings while allowing execution when warnings exist.
+- Strengthen edge validity by requiring explicitly declared nodes.
+- Expand runtime handler coverage (`wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, `stack.manager_loop`) and custom-handler registration.
+- Add built-in interviewer implementations (`autoapprove`, `queue`, `callback`, `console`).
+- Update CLI `validate` to fail only on error-severity diagnostics and surface warnings in output.
+
+### Consequences
+Positive:
+- Parse/validate behavior is explicit and test-covered for both positive and negative paths.
+- Runtime routing and interviewer behavior are deterministic under fixtures.
+- CLI workflows align with spec-required validate/run/resume contracts.
+
+Tradeoffs:
+- Parser and validator complexity increased.
+- Existing DOT examples had to migrate from legacy shape markers to `Mdiamond`/`Msquare`.
