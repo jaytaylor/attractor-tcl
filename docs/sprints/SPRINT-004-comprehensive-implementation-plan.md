@@ -2,1089 +2,415 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #004 Comprehensive Implementation Plan - Live E2E Smoke Suite (`make test-e2e`)
 
-## Review Findings From `docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md`
-- [X] Source sprint intent is correct, but the document currently mixes planning and historical execution evidence; implementation sequencing needs a clean execution plan.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] Live E2E behavior requirements are complete enough to execute now: explicit transport injection, provider selection rules, secret redaction, leak scanning, and isolated harness execution.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] This plan resets implementation tracking to execution mode, with all deliverables listed as TODO checklists and explicit acceptance criteria by phase.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
+## Review Summary (`docs/sprints/SPRINT-004-live-e2e-make-test-e2e.md`)
+- The sprint objective is clear: add an opt-in live E2E suite that validates OpenAI, Anthropic, and Gemini paths for `unified_llm`, `coding_agent_loop`, and `attractor`.
+- The source sprint document already captures correct behavioral constraints: explicit transport injection, deterministic provider selection, fail-fast missing-key behavior, redaction, and post-run leak scanning.
+- This plan converts those requirements into an implementation execution checklist with concrete file targets, verification commands, and acceptance criteria per phase.
 
-## Plan Status (2026-02-27)
-- [X] Total checklist items completed: `49`.
+## Implementation Goals
+- [ ] Keep deterministic offline tests unchanged: `make -j10 test` must remain network-free.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Total checklist items remaining: `0`.
+- [ ] Add and maintain an explicit live-only entrypoint: `make test-e2e`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Evidence root initialized for this plan under `.scratch/verification/SPRINT-004/comprehensive-plan/`.
+- [ ] Provide auditable artifacts and logs under `.scratch/verification/SPRINT-004/live/<run_id>/...` for every live run.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-
-## Executive Summary
-- [X] Deliver an opt-in live E2E suite that validates OpenAI, Anthropic, and Gemini integration across `unified_llm`, `coding_agent_loop`, and `attractor`.
+- [ ] Enforce security correctness: no secret value appears in test output or persisted artifacts.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] Keep deterministic offline behavior unchanged: `make -j10 test` remains offline-only and `make test-e2e` is the only live entrypoint.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] Enforce security correctness: redact secrets in all outputs and fail any run that leaks key material into artifacts.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Scope
 In scope:
-- Live harness (`tests/e2e_live.tcl`) and provider-specific live suites (`tests/e2e_live/*.test`).
-- Provider-agnostic HTTPS transport (`lib/unified_llm/transports/https_json.tcl`) used only via explicit injection.
+- Live harness behavior and provider selection semantics.
+- HTTPS transport and redaction behavior.
 - Live smoke coverage for Unified LLM, Coding Agent Loop, and Attractor.
-- Positive and negative path validation, including missing/invalid key behavior and deterministic error contracts.
-- Documentation and architecture decision updates (`docs/howto/live-e2e.md`, `docs/ADR.md`).
+- Positive and negative tests, including invalid/missing key behavior.
+- Documentation and ADR updates required for maintainability.
 
 Out of scope:
-- Running live tests from `make test`.
-- Streaming protocol parity beyond existing generate wrappers.
-- CI default execution of paid live tests.
-
-## Delivery Constraints
-- [X] No feature flags or gating: live behavior is controlled only by explicit `make test-e2e` invocation and explicit transport injection.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] No legacy compatibility obligations are required for this sprint.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] Significant architecture decisions are logged in `docs/ADR.md` with context, decision, and consequences.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-
-## Environment and Runtime Contract
-- Provider keys:
-  - `OPENAI_API_KEY`
-  - `ANTHROPIC_API_KEY`
-  - `GEMINI_API_KEY`
-- Optional provider selection:
-  - `E2E_LIVE_PROVIDERS=openai,anthropic,gemini`
-- Optional model overrides:
-  - `OPENAI_MODEL` (default `gpt-4o-mini`)
-  - `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`)
-  - `GEMINI_MODEL` (default `gemini-2.5-flash`)
-- Optional base URL overrides:
-  - `OPENAI_BASE_URL`
-  - `ANTHROPIC_BASE_URL`
-  - `GEMINI_BASE_URL`
-- Optional artifact root override:
-  - `E2E_LIVE_ARTIFACT_ROOT`
+- Running live E2E by default from `make test`.
+- CI default enablement of paid live tests.
+- Streaming-parity expansion beyond Sprint #004 smoke requirements.
 
 ## Cross-Provider Coverage Matrix
 | Surface | OpenAI | Anthropic | Gemini |
 | --- | --- | --- | --- |
-| Unified LLM generate smoke | Planned | Planned | Planned |
-| Coding Agent Loop natural completion smoke | Planned | Planned | Planned |
-| Attractor minimal pipeline smoke | Planned | Planned | Planned |
-| Invalid-key deterministic failure + no secret leak | Planned | Planned | Planned |
+| Unified LLM smoke generate path | Planned | Planned | Planned |
+| Coding Agent Loop natural completion path | Planned | Planned | Planned |
+| Attractor minimal pipeline live backend path | Planned | Planned | Planned |
+| Invalid key deterministic failure + no leak | Planned | Planned | Planned |
+| Explicit provider missing-key fail-fast | Planned | Planned | Planned |
 
-## Phase 0 - Baseline and Contract Lock
+## Phase 0 - Baseline Lock and Contracts
 ### Deliverables
-- [X] Reconfirm offline baseline behavior and prove that live tests are not sourced by `tests/all.tcl`.
+- [ ] Confirm and document baseline: `tests/all.tcl` sources only `tests/unit`, `tests/integration`, and `tests/e2e`, never `tests/e2e_live`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Validate and document provider-selection semantics for zero, subset, and explicit-request cases.
+- [ ] Confirm and document that `make test` remains deterministic/offline and unaffected by environment API keys.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Define evidence directory layout and run-id format under `.scratch/verification/SPRINT-004/live/<run_id>/...`.
+- [ ] Define runtime contract for env vars in a single canonical table in docs.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Record ADR entry for explicit live transport injection and mandatory secret scan.
+Contract fields: keys `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`; provider selector `E2E_LIVE_PROVIDERS`; model overrides `OPENAI_MODEL`, `ANTHROPIC_MODEL`, `GEMINI_MODEL`; base URL overrides `OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `GEMINI_BASE_URL`; artifact root override `E2E_LIVE_ARTIFACT_ROOT`.
+- [ ] Add/update ADR entry documenting the architectural rule: live HTTP is opt-in and only reachable through explicit `-transport` injection.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Design
-- Baseline offline suite passes with no API keys present.
-- Live harness enumerates tests and reports selected providers when keys exist.
-- Default provider set selects exactly providers with configured keys.
-
-### Negative Test Design
-- No keys configured and no explicit provider requested: fail fast before any network call.
-- Explicit provider requested without matching key: fail fast before any network call.
-- Invalid provider name in allowlist: deterministic validation error.
-
-### Acceptance Criteria
-- [X] A developer can run `make test-e2e` with clear preflight feedback and deterministic provider selection behavior.
+### Positive Test Design (Phase 0)
+- [ ] `tests/all.tcl -list` shows no live test files.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Baseline evidence proves offline and live suites are isolated.
+- [ ] `make test` passes with API keys unset.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `make test` passes with multiple provider keys set, proving no ambient live-call drift.
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 1 - HTTPS Transport and Redaction Guarantees
+### Negative Test Design (Phase 0)
+- [ ] Add an integration guardrail test that fails if `tests/all.tcl` ever starts sourcing `tests/e2e_live`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+### Acceptance Criteria - Phase 0
+- [ ] Contributors can determine exactly which command is offline vs live and which env vars influence live behavior.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Phase 1 - HTTPS Transport and Redaction Core
 ### Deliverables
-- [X] Implement provider-agnostic HTTPS JSON transport in `lib/unified_llm/transports/https_json.tcl` using Tcl `http` + `tls`.
+- [ ] Implement/maintain provider-agnostic transport entrypoint: `::unified_llm::transports::https_json::call` in `lib/unified_llm/transports/https_json.tcl`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Enforce deterministic errorcode contracts for HTTP failures and network/TLS failures.
+- [ ] Enforce base URL resolution order.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Redact `Authorization`, `x-api-key`, and `x-goog-api-key` in all logs, returned request metadata, and failure surfaces.
+Resolution order: request `base_url`, then provider-specific env override, then provider default URL.
+- [ ] Enforce deterministic transport error contracts.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add deterministic integration tests with a local HTTP fixture server for happy and error paths.
+Error contract: HTTP non-2xx => `UNIFIED_LLM TRANSPORT HTTP <provider> <status_code>`; network/TLS => `UNIFIED_LLM TRANSPORT NETWORK <provider>`.
+- [ ] Redact all auth secrets from surfaced request/response structures and error messages (`Authorization`, `x-api-key`, `x-goog-api-key`).
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Add/update deterministic local transport integration tests using in-process fixture server (`tests/support/http_fixture_server.tcl`, `tests/integration/unified_llm_https_transport_integration.test`).
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Design
-- Transport posts expected JSON payload and receives decoded response structure.
-- Headers in wire request include provider auth, while logged/request-metadata headers are redacted.
-- Base URL precedence follows request override > env override > provider default.
-
-### Negative Test Design
-- Non-2xx status returns expected Tcl errorcode shape.
-- Connection failures map to network errorcode shape.
-- Error messages and artifacts contain no key values.
-
-### Acceptance Criteria
-- [X] Transport behavior is fully validated offline through deterministic integration tests.
+### Positive Test Design (Phase 1)
+- [ ] Happy-path JSON POST: assert path, headers, payload, response status/body/headers normalization.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Secret redaction is proven for both success and failure paths.
+- [ ] Verify transport returns expected output dict keys: `status_code`, `headers`, `body`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Verify redacted headers are present in surfaced response metadata while raw secrets remain wire-only.
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 2 - Unified LLM Live E2E Smoke
+### Negative Test Design (Phase 1)
+- [ ] Non-2xx fixture response yields required HTTP error code shape.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Simulated network failure yields required NETWORK error code shape.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Error message assertions confirm no API key material appears.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+### Acceptance Criteria - Phase 1
+- [ ] Transport behavior is deterministic, provider-agnostic, and safe for artifact/log emission.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Phase 2 - Live Harness and Unified LLM Live E2E
 ### Deliverables
-- [X] Implement per-provider live smoke tests for OpenAI, Anthropic, and Gemini in `tests/e2e_live/unified_llm_live.test`.
+- [ ] Implement/maintain isolated harness entrypoint `tests/e2e_live.tcl` that sources only `tests/e2e_live/*.test`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Ensure each provider run builds an explicit client (`-provider`, `-api_key`, `-transport`) and never relies on ambiguous auto-resolution.
+- [ ] Implement provider discovery and selection semantics.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Assert live-response indicators per provider (provider response id/candidates/usage tokens) to distinguish live from stubbed responses.
+Selection rules: default selection is providers with configured keys; explicit selection uses `E2E_LIVE_PROVIDERS`; explicit provider without key fails fast before network calls; zero selected providers fails fast.
+- [ ] Implement run artifact root creation with unique run id and write `run.json` metadata.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add invalid-key tests with deterministic classification and secret-safe output.
+- [ ] Implement post-run secret leak scanner against every artifact file under run root; fail run on any match.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Add/maintain Unified LLM live smoke tests for OpenAI, Anthropic, Gemini in `tests/e2e_live/unified_llm_live.test`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Design
-- OpenAI generate returns non-empty text, provider response id, non-zero usage tokens.
-- Anthropic generate returns non-empty text, provider response id, non-zero usage tokens.
-- Gemini generate returns non-empty text, provider-specific raw candidates, non-zero usage tokens.
-
-### Negative Test Design
-- Missing key for explicitly requested provider fails preflight.
-- Invalid key reaches provider auth failure path and preserves deterministic error surface.
-- Redacted request headers are preserved in captured response metadata.
-
-### Acceptance Criteria
-- [X] Unified LLM live smoke passes for each selected provider and writes per-provider artifacts under `unified_llm/<provider>/`.
+### Positive Test Design (Phase 2)
+- [ ] OpenAI smoke: non-empty text, non-synthetic response id, non-zero input/output usage.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Negative tests confirm fail-fast and invalid-key behavior without secret leakage.
+- [ ] Anthropic smoke: non-empty text, non-synthetic response id, non-zero input/output usage.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Gemini smoke: non-empty text, raw provider candidates present, non-zero input/output usage.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Verify per-provider artifact tree exists at `unified_llm/<provider>/`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 3 - Coding Agent Loop Live E2E Smoke
+### Negative Test Design (Phase 2)
+- [ ] Zero-key environment fails fast with descriptive error and no network calls.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Explicit provider with missing key fails fast with descriptive error and no network calls.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Invalid key path emits deterministic auth failure surface and confirms no secret leak in logs/artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+### Acceptance Criteria - Phase 2
+- [ ] Unified LLM live suite is runnable via `make test-e2e` for any configured subset of providers and emits auditable artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Phase 3 - Coding Agent Loop Live E2E
 ### Deliverables
-- [X] Implement per-provider Coding Agent Loop live smoke tests in `tests/e2e_live/coding_agent_loop_live.test`.
+- [ ] Add/maintain per-provider live smoke tests in `tests/e2e_live/coding_agent_loop_live.test`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Inject provider-specific default Unified LLM clients before each loop run and restore prior defaults afterward.
+- [ ] Use explicit client injection path: create provider client and set/restore `::unified_llm::set_default_client` during each provider test.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Assert minimal live event contract: `SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`.
+- [ ] Assert minimal event contract in live runs.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add invalid-key negative tests ensuring deterministic failure and redacted logs.
+Required events: `SESSION_START`, `USER_INPUT`, `ASSISTANT_TEXT_END`.
+- [ ] Persist per-provider logs/artifacts under `coding_agent_loop/<provider>/`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Design
-- For each selected provider, a submit operation completes with non-empty assistant text.
-- Event order and presence match the required contract.
-
-### Negative Test Design
-- Invalid key path fails predictably.
-- Failure logs contain no secret values.
-- Default client restoration prevents provider cross-test contamination.
-
-### Acceptance Criteria
-- [X] Coding Agent Loop live suite passes for selected providers and stores per-provider artifacts under `coding_agent_loop/<provider>/`.
+### Positive Test Design (Phase 3)
+- [ ] For each selected provider, `session submit` returns non-empty assistant text and emits required events.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Event contract and isolation behavior are proven by test assertions.
+- [ ] Verify default client restoration to prevent cross-test contamination.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 4 - Attractor Live E2E Smoke
+### Negative Test Design (Phase 3)
+- [ ] Invalid key test path fails deterministically and does not leak auth material in emitted events or artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+### Acceptance Criteria - Phase 3
+- [ ] Coding Agent Loop live suite is stable provider-by-provider and writes auditable artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Phase 4 - Attractor Live E2E
 ### Deliverables
-- [X] Implement live backend helper used by tests that maps Attractor codergen requests to Unified LLM live generate calls.
+- [ ] Add/maintain test-only live backend adapter in `tests/support/e2e_live_support.tcl` that delegates to `unified_llm` live client.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add per-provider Attractor smoke tests using minimal pipeline `start -> codergen -> exit`.
+- [ ] Add/maintain per-provider live tests in `tests/e2e_live/attractor_live.test` using minimal `start -> codergen -> exit` pipeline.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Assert checkpoint and node artifacts are written (`checkpoint.json`, node `status.json`, `prompt.md`, `response.md`).
+- [ ] Assert run outputs include `checkpoint.json` and per-node artifacts (`status.json`, `prompt.md`, `response.md`).
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add invalid-key Attractor live tests with deterministic failure surfaces and safe artifacts.
+- [ ] Persist per-provider artifacts under `attractor/<provider>/`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Design
-- Minimal pipeline succeeds for each selected provider and writes expected artifacts.
-- Backend contract returns required `{text usage}` fields.
-
-### Negative Test Design
-- Invalid key causes provider failure with deterministic classification.
-- Artifact logs remain secret-safe on failure.
-
-### Acceptance Criteria
-- [X] Attractor live suite passes for selected providers and writes per-provider artifacts under `attractor/<provider>/`.
+### Positive Test Design (Phase 4)
+- [ ] For each selected provider, minimal pipeline succeeds and expected artifacts are present.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
-```
-- [X] Artifact integrity checks confirm expected files are present for successful runs.
-```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 5 - Build Target, Documentation, and Sprint Closeout
+### Negative Test Design (Phase 4)
+- [ ] Invalid key path fails deterministically while still producing useful failure artifacts without secret leakage.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+### Acceptance Criteria - Phase 4
+- [ ] Attractor live suite is reproducible and leaves provider-scoped artifacts for auditing.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Phase 5 - Build Entry, Docs, and Closeout
 ### Deliverables
-- [X] Ensure `Makefile` contains `test-e2e: precommit` and invokes only `tclsh tests/e2e_live.tcl`.
+- [ ] Ensure `Makefile` target `test-e2e` depends on `precommit` and runs only `tclsh tests/e2e_live.tcl`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Finalize `docs/howto/live-e2e.md` with prerequisites, env contract, examples, expected artifacts, and redaction checklist.
+- [ ] Add/update operator guide `docs/howto/live-e2e.md` with prerequisites, env var contract, provider selection semantics, and artifact layout.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Add and validate secret leak scan in harness: scan artifacts for exact key values and fail on any hit while reporting only paths.
+- [ ] Add/update troubleshooting guidance for common failures (missing keys, invalid keys, provider-side 4xx/5xx, artifact leak-scan failures).
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Update `docs/ADR.md` with final architecture decisions and operational consequences.
+- [ ] Record significant implementation decisions and consequences in `docs/ADR.md`.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Run final comprehensive verification sweep and publish command/exit-code evidence index.
+- [ ] Keep sprint completion checkboxes and evidence references synchronized with implementation reality.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Design
-- `make test-e2e` passes when at least one valid provider configuration is available.
-- Documentation examples execute as written.
-- Artifact index provides reproducible evidence paths.
-
-### Negative Test Design
-- `make test-e2e` fails fast with no keys.
-- Explicit missing key request fails fast.
-- Secret leak scan fails run when any artifact contains configured key value.
-
-### Acceptance Criteria
-- [X] Build target, docs, and ADR are synchronized with actual harness behavior.
+### Positive Test Design (Phase 5)
+- [ ] `make test-e2e` passes when at least one provider key is configured and tests are healthy.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] Final verification log includes exact commands, exit codes, and artifact paths for all phase-completion claims.
+- [ ] Provider-filtered runs pass for each selected provider independently.
 ```text
-Verification:
-- Exact command strings and exit codes recorded in `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `build` exit `0`; `test` exit `0`; `test_all` exit `0`; `test_e2e` exit `0`
-- `test_e2e_no_keys` exit `2` (expected fail-fast path)
-- `e2e_list` exit `0`; `e2e_openai` exit `0`; `e2e_anthropic` exit `0`; `e2e_gemini` exit `0`
-- `integration_transport` exit `0`; `integration_live_support` exit `0`; `integration_secret_scan` exit `0`
-- `mmdc_domain` exit `0`; `mmdc_er` exit `0`; `mmdc_workflow` exit `0`; `mmdc_dataflow` exit `0`; `mmdc_arch` exit `0`
-Evidence:
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/summary.md`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/command-status.tsv`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.log`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/logs/*.exitcode`
-- `.scratch/verification/SPRINT-004/comprehensive-plan/execution-20260227T141249Z/live-run-dirs.txt`
-- `.scratch/diagram-renders/sprint-004/comprehensive-plan/*.png`
-Notes:
-- Sprint #004 live E2E implementation revalidated end-to-end with deterministic offline baseline, opt-in live harness behavior, provider-specific smoke coverage, fail-fast no-key path, and secret-scan/integration coverage.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Verification Command Pack (To Execute Per Phase)
-- Baseline and suite isolation:
-  - `make -j10 build`
-  - `make -j10 test`
-  - `tclsh tests/all.tcl`
-  - `tclsh tests/e2e_live.tcl -list`
-- Live harness preflight:
-  - `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e`
-  - `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl`
-- Provider-specific live runs:
-  - `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl`
-  - `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl`
-  - `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl`
-- Integration-focused suites:
-  - `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*`
-  - `tclsh tests/all.tcl -match integration-e2e-live-*`
-- Secret scan checks:
-  - `tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*`
+### Negative Test Design (Phase 5)
+- [ ] `make test-e2e` fails fast with descriptive message when no providers are configured.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Secret leak scan failure path returns non-zero and reports only file paths containing leaks.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+### Acceptance Criteria - Phase 5
+- [ ] Developers can execute, debug, and audit live E2E runs from docs alone without reading internal source files.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Verification Command Pack (Execution Checklist)
+Use this command set as the default execution checklist while implementing the sprint. Record exit status and artifact paths under `.scratch/verification/SPRINT-004/...`.
+
+- [ ] `make -j10 build`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `make -j10 test`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `tclsh tests/e2e_live.tcl -list`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS make test-e2e`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `env E2E_LIVE_PROVIDERS=openai tclsh tests/e2e_live.tcl`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `env E2E_LIVE_PROVIDERS=anthropic tclsh tests/e2e_live.tcl`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `env E2E_LIVE_PROVIDERS=gemini tclsh tests/e2e_live.tcl`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `tclsh tests/all.tcl -match integration-unified-llm-https-transport-*`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `tclsh tests/all.tcl -match integration-e2e-live-support-*`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `tclsh tests/all.tcl -match integration-e2e-live-secret-scan-*`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Commit Strategy (Smallest Units)
+- [ ] Commit 1: transport and redaction core updates + deterministic transport integration tests.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Commit 2: live harness provider selection + artifact-root + leak-scan implementation.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Commit 3: Unified LLM live smoke tests (all providers + invalid-key cases).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Commit 4: Coding Agent Loop live tests + default-client restore safeguards.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Commit 5: Attractor live backend + pipeline smoke tests + invalid-key cases.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Commit 6: docs + ADR + sprint evidence synchronization.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Appendix - Mermaid Diagrams
 
@@ -1092,146 +418,161 @@ Notes:
 ```mermaid
 classDiagram
   class LiveE2EHarness {
-    +selectProviders(env)
-    +preflightValidate()
+    +discoverProviders()
+    +validateSelection()
+    +initArtifacts()
     +runSuite(provider)
-    +scanForSecretLeaks()
-  }
-
-  class UnifiedLLMClient {
-    +client_new(args)
-    +generate(messages)
-  }
-
-  class HTTPSJSONTransport {
-    +call(requestDict)
-    +normalizeHeaders()
-    +redactHeaders()
-  }
-
-  class LiveArtifactStore {
-    +createRunRoot()
-    +writeRunSummary()
-    +writeComponentArtifacts()
+    +scanForLeaks()
   }
 
   class ProviderConfig {
-    +provider
+    +name
     +apiKeyVar
     +modelVar
     +baseUrlVar
+    +defaultBaseUrl
+    +defaultModel
+  }
+
+  class UnifiedLLMClient {
+    +provider
+    +api_key
+    +model
+    +base_url
+    +transport
+  }
+
+  class HttpsJsonTransport {
+    +call(request)
+    +redact(headers)
+    +normalizeHeaders(raw)
+  }
+
+  class LiveEvidence {
+    +run_id
+    +run_json
+    +provider_logs
+    +secret_leaks_json
   }
 
   LiveE2EHarness --> ProviderConfig
   LiveE2EHarness --> UnifiedLLMClient
-  UnifiedLLMClient --> HTTPSJSONTransport
-  LiveE2EHarness --> LiveArtifactStore
+  UnifiedLLMClient --> HttpsJsonTransport
+  LiveE2EHarness --> LiveEvidence
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  LIVE_RUN ||--o{ PROVIDER_RUN : contains
-  PROVIDER_RUN ||--o{ COMPONENT_RUN : executes
+  E2E_RUN ||--o{ PROVIDER_RUN : contains
+  PROVIDER_RUN ||--o{ COMPONENT_RUN : contains
   COMPONENT_RUN ||--o{ ARTIFACT_FILE : writes
-  PROVIDER_RUN ||--o{ SECRET_SCAN_RESULT : checks
+  PROVIDER_RUN ||--o{ HTTP_EXCHANGE : records
 
-  LIVE_RUN {
+  E2E_RUN {
     string run_id
     datetime started_at
-    datetime ended_at
+    datetime finished_at
+    string artifact_root
     string status
   }
 
   PROVIDER_RUN {
     string provider
     string model
+    string base_url
     string status
   }
 
   COMPONENT_RUN {
-    string component
+    string component_name
     string status
-    string summary_path
   }
 
   ARTIFACT_FILE {
-    string relpath
-    string sha256
+    string path
+    string kind
     int bytes
   }
 
-  SECRET_SCAN_RESULT {
-    string status
-    int leak_count
-    string report_path
+  HTTP_EXCHANGE {
+    string endpoint
+    int status_code
+    int request_bytes
+    int response_bytes
   }
 ```
 
 ### Workflow Diagram
 ```mermaid
 flowchart TD
-  A[Developer invokes make test-e2e] --> B[Run precommit]
-  B --> C[Start tests/e2e_live.tcl]
-  C --> D[Provider selection and key validation]
-  D -->|invalid| E[Fail fast and exit non-zero]
-  D -->|valid| F[Run Unified LLM smoke per provider]
-  F --> G[Run Coding Agent Loop smoke per provider]
-  G --> H[Run Attractor smoke per provider]
+  A[make test-e2e] --> B[tests/e2e_live.tcl]
+  B --> C{Provider selection valid?}
+  C -->|No| D[Fail fast with descriptive error]
+  C -->|Yes| E[Create run_id and artifact root]
+  E --> F[Run Unified LLM live smoke]
+  F --> G[Run Coding Agent Loop live smoke]
+  G --> H[Run Attractor live smoke]
   H --> I[Run secret leak scan]
-  I -->|leaks found| J[Fail run and report offending paths]
-  I -->|no leaks| K[Write run summary and exit zero]
+  I --> J{Leaks found?}
+  J -->|Yes| K[Fail and list leaked file paths]
+  J -->|No| L[Pass and persist run summary]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  ENV[Environment Variables] --> SEL[Provider Selection]
-  SEL --> CFG[Provider Runtime Config]
-  CFG --> ULLM[Unified LLM Client]
-  ULLM --> TX[HTTPS JSON Transport]
-  TX --> API[Provider HTTPS API]
-  API --> RESP[Provider Response Payload]
-  RESP --> ASSERT[Test Assertions]
-  ASSERT --> ART[Artifacts and Logs]
-  ART --> SCAN[Secret Leak Scan]
-  SCAN --> SUMMARY[Run Summary JSON]
+  ENV[Environment variables] --> HARNESS[Live harness]
+  HARNESS --> CFG[Provider config resolver]
+  CFG --> CLIENT[Unified LLM client factory]
+  CLIENT --> TRANSPORT[HTTPS JSON transport]
+  TRANSPORT --> PROVIDERS[OpenAI / Anthropic / Gemini APIs]
+  PROVIDERS --> RESP[Provider responses]
+  RESP --> TESTS[Component assertions]
+  TESTS --> ART[Artifacts under .scratch]
+  ART --> SCAN[Secret leak scanner]
+  SCAN --> RESULT[Pass or fail summary]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
-  subgraph Make
-    M1[make test-e2e]
+  subgraph Build
+    M1[Makefile test]
+    M2[Makefile test-e2e]
   end
 
-  subgraph TestHarness
-    H1[tests/e2e_live.tcl]
-    H2[tests/e2e_live/*.test]
-    H3[tests/support/e2e_live_support.tcl]
+  subgraph Offline
+    TALL[tests/all.tcl]
+    TUNIT[tests/unit/*]
+    TINT[tests/integration/*]
+    TE2E[tests/e2e/*]
+  end
+
+  subgraph Live
+    TLIVE[tests/e2e_live.tcl]
+    TSUPPORT[tests/support/e2e_live_support.tcl]
+    TLIVETESTS[tests/e2e_live/*]
   end
 
   subgraph Runtime
-    R1[lib/unified_llm]
-    R2[lib/unified_llm/transports/https_json.tcl]
-    R3[lib/coding_agent_loop]
-    R4[lib/attractor]
-    R5[lib/attractor_core]
+    ULLM[lib/unified_llm/*]
+    CAL[lib/coding_agent_loop/*]
+    ATR[lib/attractor/*]
+    CORE[lib/attractor_core/*]
   end
 
-  subgraph Docs
-    D1[docs/howto/live-e2e.md]
-    D2[docs/ADR.md]
-  end
+  M1 --> TALL
+  TALL --> TUNIT
+  TALL --> TINT
+  TALL --> TE2E
 
-  M1 --> H1
-  H1 --> H2
-  H1 --> H3
-  H2 --> R1
-  R1 --> R2
-  H2 --> R3
-  H2 --> R4
-  R4 --> R5
-  H1 --> D1
-  H1 --> D2
+  M2 --> TLIVE
+  TLIVE --> TLIVETESTS
+  TLIVETESTS --> TSUPPORT
+  TLIVETESTS --> ULLM
+  TLIVETESTS --> CAL
+  TLIVETESTS --> ATR
+  ATR --> CORE
+  CAL --> ULLM
 ```
