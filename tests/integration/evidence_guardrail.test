@@ -1,0 +1,53 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+set tool [file join $root tools evidence_guardrail.tcl]
+
+namespace eval ::tests::integration::evidence_guardrail {
+    variable idx 0
+}
+
+proc ::tests::integration::evidence_guardrail::tmpdir {} {
+    variable idx
+    incr idx
+    set dir [file join [pwd] .scratch verification SPRINT-002 docs evidence-guardrail-$idx]
+    file delete -force $dir
+    file mkdir $dir
+    return $dir
+}
+
+proc ::tests::integration::evidence_guardrail::write_file {path body} {
+    file mkdir [file dirname $path]
+    set fh [open $path w]
+    puts -nonewline $fh $body
+    close $fh
+}
+
+test integration-evidence-guardrail-valid-1.0 {passes when referenced .scratch evidence files exist} -setup {
+    set dir [::tests::integration::evidence_guardrail::tmpdir]
+    set artifact [file join $dir artifact.log]
+    set doc [file join $dir sprint.md]
+    ::tests::integration::evidence_guardrail::write_file $artifact "ok\n"
+    ::tests::integration::evidence_guardrail::write_file $doc "Evidence: `.scratch/verification/SPRINT-002/docs/evidence-guardrail-1/artifact.log`\n"
+} -body {
+    set out [exec tclsh $tool $doc]
+    list \
+        [expr {[string first "checked=1" $out] >= 0}] \
+        [expr {[string first "missing=0" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}
+
+test integration-evidence-guardrail-missing-1.0 {fails when referenced .scratch evidence file is missing} -setup {
+    set dir [::tests::integration::evidence_guardrail::tmpdir]
+    set doc [file join $dir sprint.md]
+    ::tests::integration::evidence_guardrail::write_file $doc "Evidence: `.scratch/verification/SPRINT-002/docs/evidence-guardrail-2/missing.log`\n"
+} -body {
+    catch {exec tclsh $tool $doc} out
+    list \
+        [expr {[string first "MISSING_EVIDENCE" $out] >= 0}] \
+        [expr {[string first "missing=1" $out] >= 0}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}
