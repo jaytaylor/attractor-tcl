@@ -8,1218 +8,400 @@ Make spec compliance measurable and enforceable by deriving a canonical requirem
 - `coding-agent-loop-spec.md`
 - `attractor-spec.md`
 
-…and then enforcing that `docs/spec-coverage/traceability.md` covers every derived requirement with:
+Enforce that `docs/spec-coverage/traceability.md` covers every derived requirement with:
 - implementation references (`impl`)
 - test references (`tests`)
-- an executable verification command (`verify`)
+- executable verification command (`verify`)
 
-## Context & Problem
-Today, `tools/spec_coverage.tcl` can report green coverage even when large portions of the specs are unimplemented, because it validates only that traceability *blocks are well-formed*, not that the catalog is complete.
+## Scope
+In scope:
+- Catalog requirements from every DoD checkbox and normative `MUST`/`MUST NOT`/`REQUIRED` statement.
+- Stable requirement ID validation and deterministic generated artifacts.
+- Strict set-equality enforcement between catalog IDs and traceability IDs.
+- Deterministic unit/integration tests for generator and coverage enforcement.
+- Contributor workflow and evidence guardrails.
 
-This sprint removes that gap by making the requirement catalog a first-class, spec-derived artifact and gating the build on completeness.
+Out of scope:
+- Implementing missing runtime behavior (handled by Sprint #003).
+- Weakening spec language to fit existing implementation.
 
-## Evidence + Verification Logging Plan
-- Store all command outputs and generated artifacts referenced by checklist items under `.scratch/verification/SPRINT-002/<phase>/...`.
-- Prefer one subdirectory per phase (`baseline/`, `catalog/`, `coverage/`, `docs/`, `rebaseline/`) and include a short `README.md` index with links to the artifacts.
-- Treat `docs/spec-coverage/requirements.json` and `docs/spec-coverage/requirements.md` as auditable outputs (reviewable diffs), even if they are generated.
-
-## Current State Snapshot (Verified 2026-02-26)
-- [X] `make -j10 test` passes on a clean checkout.
+## Current State Snapshot (Verified 2026-02-27)
+- [X] Catalog generation, coverage equality, and precommit enforcement are active and green.
 ```text
 Verification:
-- `make -j10 test` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/baseline/make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/01-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/02-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/04-req-summary.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Current counts: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
+- Family counts: ATR=88, CAL=66, ULLM=109.
 ```
-- [X] `tclsh tools/spec_coverage.tcl` reports green (but is not completeness-proof).
+- [X] Deterministic catalog output is proven with repeat-run byte equality checks.
+```text
+Verification:
+- `tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
+- `tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
+- `cmp -s requirements.run1.json requirements.run2.json` (exit code 0)
+- `cmp -s requirements.run1.md requirements.run2.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/05-req-generate-1.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/06-req-generate-2.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/07-cmp-json-runs.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/08-cmp-md-runs.log`
+Notes:
+- Baseline-vs-current comparisons also remained byte-identical.
+```
+- [X] Sprint verification evidence is indexed and auditable.
+```text
+Verification:
+- `cat .scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv` (exit code 0)
+- `test -f .scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
+Notes:
+- Implementation Pass #8 includes 24 tracked commands with all exit codes `0`.
+```
+
+## Implementation Plan (Comprehensive)
+### Milestone Order (Execution Sequence)
+1. Baseline and revalidation evidence capture.
+2. Requirement ID scheme and spec annotation validation.
+3. Deterministic catalog generation and shrink/determinism checks.
+4. Coverage tool strict completeness and verify-pattern sanity.
+5. Developer workflow and evidence guardrail verification.
+6. Final gate reruns and sprint-document synchronization.
+
+### File Touch Map
+- `tools/requirements_catalog.tcl`
+- `tools/spec_coverage.tcl`
+- `tools/build_check.tcl`
+- `docs/spec-coverage/requirements_id_scheme.md`
+- `docs/spec-coverage/requirements.json`
+- `docs/spec-coverage/requirements.md`
+- `docs/spec-coverage/traceability.md`
+- `docs/spec-coverage/README.md`
+- `docs/ADR.md`
+- `tests/unit/requirements_catalog.test`
+- `tests/integration/spec_coverage_tool.test`
+- `tests/integration/verify_sanity.test`
+- `tests/integration/evidence_lint.test`
+- `tests/integration/evidence_guardrail.test`
+
+## Deliverables
+### Phase 0 - Baseline Audit (Make The Gap Measurable)
+- [X] Baseline requirements/traceability mismatch was captured and converted into auditable evidence.
+```text
+Verification:
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/counts.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/04-req-summary.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
+Notes:
+- Baseline evidence established pre-enforcement gap and current exact-match status.
+```
+- [X] Baseline phase evidence index exists and remains accessible.
+```text
+Verification:
+- `test -f .scratch/verification/SPRINT-002/baseline/README.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/baseline/README.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
+Notes:
+- Baseline context is retained; latest pass evidence is in `impl-pass-2026-02-27-8`.
+```
+
+### Acceptance Criteria - Phase 0
+- [X] The sprint includes a verifiable explanation for why false-green occurred and how it is now prevented.
 ```text
 Verification:
 - `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/baseline/spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-- [X] Spec DoD checkboxes materially exceed the current traceability ID count (signals under-inventory).
-```text
-Verification:
-- `rg -n '^id:' docs/spec-coverage/traceability.md | wc -l` (exit code 0)
-- `awk 'NR>=1967 && $0 ~ /^- \\[ \\]/ {c++} END {print c+0}' unified-llm-spec.md` (exit code 0)
-- `awk 'NR>=1135 && $0 ~ /^- \\[ \\]/ {c++} END {print c+0}' coding-agent-loop-spec.md` (exit code 0)
-- `awk 'NR>=1776 && $0 ~ /^- \\[ \\]/ {c++} END {print c+0}' attractor-spec.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/baseline/spec-checkbox-vs-traceability.log`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-
-Baseline metrics (2026-02-26):
-- DoD checkboxes: ULLM=70, CAL=59, ATR=76 (total=205)
-- Normative statements matching MUST/MUST NOT/REQUIRED: 8
-- Traceability blocks (IDs): 49
-
-## Post-Implementation Health Snapshot (Verified 2026-02-27)
-- [X] Current derived catalog and coverage status are complete and internally consistent.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final/2026-02-27-requirements-summary.log`
-- `.scratch/verification/SPRINT-002/final/2026-02-27-spec-coverage.log`
-Notes:
-- Current catalog totals: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
-```
-- [X] Coverage-tool hardening now validates structured catalog JSON and rejects malformed/duplicate catalog IDs.
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final/2026-02-27-integration-spec-coverage-tool.log`
-Notes:
-- Negative-path integration cases now include malformed JSON, missing `requirements` array, and duplicate catalog IDs.
-```
-- [X] Evidence-lint guardrail now supports sprint-specific evidence paths and sprint diagram render paths (no Sprint-001 hardcoding).
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final/2026-02-27-integration-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/final/2026-02-27-evidence-lint-sprint-002.log`
-Notes:
-- Guardrail now accepts `.scratch/verification/<SPRINT-ID>/...` and `.scratch/diagram-renders/<sprint-id>/...`.
-```
-- [X] Required project verification commands pass with timeout wrappers.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final/2026-02-27-make-build.log`
-- `.scratch/verification/SPRINT-002/final/2026-02-27-make-test.log`
-Notes:
-- Full suite status on 2026-02-27: Total=71, Passed=71, Failed=0.
-```
-
-## Rebaseline Snapshot (Verified 2026-02-27, Refresh Run)
-- [X] A full revalidation command runner executed all sprint gates and recorded per-command exit codes.
-```text
-Verification:
-- `timeout 180 .scratch/verification/SPRINT-002/rebaseline/run_revalidation.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/rebaseline/command-status.tsv`
-- `.scratch/verification/SPRINT-002/rebaseline/README.md`
-Notes:
-- Command status table includes 21 commands; all exit codes are `0`.
-```
-- [X] Requirement catalog validation and deterministic regeneration checks passed in a two-run comparison.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
-- `cmp -s .scratch/verification/SPRINT-002/rebaseline/requirements.run1.json .scratch/verification/SPRINT-002/rebaseline/requirements.run2.json` (exit code 0)
-- `cmp -s .scratch/verification/SPRINT-002/rebaseline/requirements.run1.md .scratch/verification/SPRINT-002/rebaseline/requirements.run2.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/rebaseline/req-check-ids.log`
-- `.scratch/verification/SPRINT-002/rebaseline/req-generate-1.log`
-- `.scratch/verification/SPRINT-002/rebaseline/req-generate-2.log`
-- `.scratch/verification/SPRINT-002/rebaseline/deterministic-json.log`
-- `.scratch/verification/SPRINT-002/rebaseline/deterministic-md.log`
-- `.scratch/verification/SPRINT-002/rebaseline/requirements-json-sha.log`
-- `.scratch/verification/SPRINT-002/rebaseline/requirements-md-sha.log`
-Notes:
-- Snapshot values: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
-```
-- [X] Coverage completeness, verify-pattern sanity, and evidence-lint checks passed with current artifacts.
-```text
-Verification:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/rebaseline/spec-coverage.log`
-- `.scratch/verification/SPRINT-002/rebaseline/tests-reqcat.log`
-- `.scratch/verification/SPRINT-002/rebaseline/tests-spec-coverage.log`
-- `.scratch/verification/SPRINT-002/rebaseline/tests-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/rebaseline/tests-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/rebaseline/evidence-lint.log`
-Notes:
-- Coverage summary remained exact-match and clean: missing=0, duplicates=0, bad_paths=0, bad_verify=0.
-```
-- [X] Sprint appendix mermaid diagrams re-rendered successfully via `mmdc` during the refresh run.
-```text
-Verification:
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/rebaseline/mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/rebaseline/mmdc-er.log`
-- `.scratch/verification/SPRINT-002/rebaseline/mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/rebaseline/mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/rebaseline/mmdc-arch.log`
-Notes:
-- Diagram output targets were updated in place under `.scratch/diagram-renders/sprint-002/`.
-```
-- [X] Requested top-level project gates were rerun with timeout wrappers and stayed green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/rebaseline/make-build.log`
-- `.scratch/verification/SPRINT-002/rebaseline/make-test.log`
-Notes:
-- Full suite refresh status: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-
-## Final Validation Sync Snapshot (Verified 2026-02-27, User-Requested Full Pass)
-- [X] Required top-level gates were rerun exactly as requested and remained green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/make-build.log`
-- `.scratch/verification/SPRINT-002/final-pass/make-test.log`
-Notes:
-- Full suite status in this pass: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-- [X] Coverage, catalog, and guardrail suites were rerun and remained green with no completeness regressions.
-```text
-Verification:
-- Evidence index: `.scratch/verification/SPRINT-002/final-pass/spec-coverage.log`
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/requirements-check-ids.log`
-- `.scratch/verification/SPRINT-002/final-pass/requirements-summary.log`
-- `.scratch/verification/SPRINT-002/final-pass/spec-coverage.log`
-- `.scratch/verification/SPRINT-002/final-pass/requirements-catalog-tests.log`
-- `.scratch/verification/SPRINT-002/final-pass/integration-spec-coverage-tool.log`
-- `.scratch/verification/SPRINT-002/final-pass/integration-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/final-pass/integration-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/final-pass/integration-evidence-guardrail.log`
-- `.scratch/verification/SPRINT-002/final-pass/evidence-lint.log`
-Notes:
-- Coverage summary stayed exact-match: requirements=263, missing=0, duplicates=0, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Sprint diagram renders and full revalidation command-runner were rerun and remained green.
-```text
-Verification:
-- `timeout 180 bash -lc 'mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png && mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png && mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png && mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png && mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png'` (exit code 0)
-- `timeout 180 .scratch/verification/SPRINT-002/rebaseline/run_revalidation.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/mmdc.log`
-- `.scratch/verification/SPRINT-002/final-pass/rebaseline-run.log`
-Notes:
-- Revalidation runner reported all 21 command statuses at exit code `0`.
-```
-
-## Execution Runbook Status (Verified 2026-02-27, Pass #2)
-- [X] Phase 0 - Baseline and control gates are green for this pass.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-make-build.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-make-test.log`
-Notes:
-- Full suite status in this pass: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-- [X] Phase 1 - Requirement ID integrity and catalog summary checks passed.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-requirements-check-ids.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-requirements-summary.log`
-Notes:
-- Summary remained stable: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
-```
-- [X] Phase 2 - Coverage completeness and traceability equality checks passed.
-```text
-Verification:
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-spec-coverage.log`
-Notes:
-- Coverage remained exact-match: missing=0, duplicates=0, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Phase 3 - Unit/integration toolchain validations passed.
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-requirements-catalog-tests.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-integration-spec-coverage-tool.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-integration-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-integration-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-integration-evidence-guardrail.log`
-Notes:
-- Negative-path enforcement stayed intact with no false-green regressions.
-```
-- [X] Phase 4 - Evidence lint and diagram render guardrails passed.
-```text
-Verification:
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `timeout 180 bash -lc 'mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png && mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png && mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png && mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png && mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png'` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-mmdc.log`
-Notes:
-- All five sprint diagrams re-rendered successfully in this pass.
-```
-- [X] Phase 5 - Full scripted revalidation runner passed.
-```text
-Verification:
-- `timeout 180 .scratch/verification/SPRINT-002/rebaseline/run_revalidation.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-rebaseline-run.log`
-Notes:
-- Revalidation command-runner completed with successful command statuses.
-```
-- [X] Phase 6 - Post-commit top-level gates were rerun and remained green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-3-post-commit-make-build.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-3-post-commit-make-test.log`
-Notes:
-- Post-commit rerun confirms no regressions introduced by sprint-doc synchronization.
-```
-
-### Acceptance Criteria - Execution Runbook Pass #2
-- [X] The required user-requested gates and full sprint validation stack were rerun and remained green in a fresh timestamped evidence pass.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-make-build.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-make-test.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-requirements-check-ids.log`
-- `.scratch/verification/SPRINT-002/final-pass/2026-02-27-2-spec-coverage.log`
-Notes:
-- This pass confirms no regressions and keeps sprint status synchronized with current verified state.
-```
-
-## Scope
-In scope:
-- A spec-derived requirement catalog covering:
-  - every DoD checkbox in each spec’s “Definition of Done” section
-  - every normative statement containing MUST / MUST NOT / REQUIRED (case-insensitive)
-- A stable requirement ID scheme that survives small spec edits with minimal churn
-- A coverage tool that validates:
-  - every catalog requirement has exactly one traceability mapping
-  - every mapping block is well-formed (existing checks stay)
-  - mapping references point at real files
-- Deterministic unit/integration tests for the catalog generator and coverage enforcement
-
-Out of scope:
-- Implementing missing runtime behavior (that is Sprint #003)
-- Any changes that weaken the specs to match the current implementation
-
-## Implementation Plan (Comprehensive)
-### Milestone Order (Execution Sequence)
-1. Baseline + audit evidence capture
-2. Requirement ID scheme definition + ADR entry
-3. Spec annotation (requirement IDs in DoD + normative statements)
-4. Catalog generator implementation + unit tests
-5. Traceability completeness enforcement in coverage tool + integration tests
-6. Developer workflow docs + guardrails + contributor walkthrough evidence
-
-### File Touch Map
-- `tools/requirements_catalog.tcl` (new): parse specs, enforce ID schema, emit generated catalogs.
-- `tools/spec_coverage.tcl` (update): enforce `catalog == traceability` set equality and existing block validation.
-- `docs/spec-coverage/requirements_id_scheme.md` (new): canonical ID grammar and examples.
-- `docs/spec-coverage/requirements.json` (generated): machine-readable canonical requirement set.
-- `docs/spec-coverage/requirements.md` (generated): human-readable requirement summary grouped by family/spec.
-- `docs/spec-coverage/traceability.md` (update): full mapping coverage for all requirement IDs.
-- `unified-llm-spec.md`, `coding-agent-loop-spec.md`, `attractor-spec.md` (update): explicit IDs on DoD checkboxes + normative statements.
-- `tests/unit/requirements_catalog.test` (new): parser, extraction, determinism, error-path tests.
-- `tests/integration/spec_coverage_tool.test` (update): completeness and unknown/duplicate/malformed validation tests.
-- `tests/integration/verify_sanity.test` (new): verify-command to real-test-name sanity checks.
-- `tests/all.tcl` (update): include new test files in deterministic suite.
-- `docs/spec-coverage/README.md` (new): contributor workflow.
-- `docs/ADR.md` (update): record architecture choices for requirement derivation and ID stability policy.
-
-### Work Package A - Baseline + ADR Alignment
-Implementation details:
-1. Capture baseline counts (DoD, normative statements, existing traceability IDs) under `.scratch/verification/SPRINT-002/baseline/`.
-2. Add/append an ADR entry that fixes:
-   - requirement ID grammar
-   - parser scope boundaries (DoD + normative only)
-   - deterministic ordering contract for generated artifacts.
-3. Record the baseline delta report and link it from this sprint document evidence.
-
-Exit gate:
-- Baseline evidence logs exist and ADR entry is committed before parser work starts.
-
-### Work Package B - Requirement ID Design + Spec Annotation
-Implementation details:
-1. Define canonical ID grammar in `docs/spec-coverage/requirements_id_scheme.md`:
-   - `<FAMILY>-DOD-<section>.<item>-<slug>`
-   - `<FAMILY>-REQ-<slug>` for normative requirements.
-2. Annotate each spec item with explicit `req_id:` metadata near the source line so edits remain reviewable.
-3. Add `--check-ids` mode in `tools/requirements_catalog.tcl` to fail on:
-   - missing IDs
-   - duplicate IDs across all specs
-   - IDs violating grammar.
-
-Implementation constraints:
-- Ignore code-fence content while scanning normative statements.
-- Normalize whitespace for wrapped lines before extraction.
-- Keep ID ordering stable by `(spec, section, line_number, req_id)`.
-
-Exit gate:
-- ID-check mode returns success for all three specs and deterministic ordering is proven by repeat runs.
-
-### Work Package C - Catalog Generator + Unit Tests
-Implementation details:
-1. Implement parser pipeline in `tools/requirements_catalog.tcl`:
-   - load source specs
-   - identify DoD sections
-   - extract checkbox + normative requirements with source anchors
-   - build normalized in-memory requirement records
-   - emit sorted JSON + markdown outputs.
-2. Emit fields per requirement:
-   - `id`, `family`, `kind`, `spec`, `section`, `line`, `text`, `source_anchor`.
-3. Add `--summary` mode for quick count validation and shrink detection.
-4. Add `tests/unit/requirements_catalog.test` with explicit positive and negative coverage for parser edge-cases.
-
-Determinism strategy:
-- Sort keys and requirement records consistently before output.
-- Avoid transient fields (timestamps, host paths, environment-specific values).
-
-Exit gate:
-- Two consecutive generator runs produce byte-identical outputs.
-
-### Work Package D - Coverage Tool Completeness Enforcement
-Implementation details:
-1. Extend `tools/spec_coverage.tcl` to load `docs/spec-coverage/requirements.json`.
-2. Build two ID sets:
-   - catalog IDs
-   - traceability IDs.
-3. Enforce strict set equality:
-   - missing IDs in traceability -> fail and print missing IDs
-   - unknown IDs in traceability -> fail and print unknown IDs
-   - duplicate IDs in traceability -> fail and print duplicate IDs.
-4. Preserve existing checks:
-   - required keys (`spec`, `impl`, `tests`, `verify`)
-   - file path existence
-   - verify command formatting.
-5. Add verify sanity check integration: ensure each `tests/all.tcl -match <pattern>` resolves to at least one real test name.
-
-Exit gate:
-- coverage tool fails deterministically for missing/unknown/duplicate/malformed scenarios and passes only for full equality.
-
-### Work Package E - Documentation + Contributor Guardrails
-Implementation details:
-1. Write `docs/spec-coverage/README.md` as a deterministic workflow:
-   - add/update spec requirement
-   - run catalog generation
-   - update traceability mapping
-   - add tests
-   - run coverage + full test suite.
-2. Add evidence-link guardrail test/tool to validate sprint evidence references.
-3. Record walkthrough evidence proving a new requirement can be added end-to-end to green.
-
-Exit gate:
-- a clean checkout can follow the guide and reproduce green coverage and tests.
-
-### Commit Slices (Smallest Units)
-1. Baseline evidence scaffolding + audit report.
-2. ADR update + ID scheme document.
-3. Spec ID annotations (one spec per commit).
-4. `requirements_catalog.tcl` scaffold + parser core.
-5. Catalog output generation + determinism tests.
-6. `spec_coverage.tcl` completeness enforcement.
-7. Coverage integration tests + verify sanity tests.
-8. Traceability full remap to catalog IDs.
-9. Docs/guide + walkthrough evidence + sprint status sync.
-
-## Deliverables
-### Phase 0 - Baseline Audit (Make The Gap Measurable)
-- [X] Record baseline counts: DoD checkbox totals per spec, normative statement totals per spec, and current traceability ID count.
-```text
-Verification:
-- `rg -n '^id:' docs/spec-coverage/traceability.md | wc -l` (exit code 0)
-- `rg -n '\\bMUST\\b|\\bMUST NOT\\b|\\bREQUIRED\\b' attractor-spec.md coding-agent-loop-spec.md unified-llm-spec.md | wc -l` (exit code 0)
-- (DoD checkbox counts) See the four `awk ...` commands in “Current State Snapshot”.
-Evidence:
-- `.scratch/verification/SPRINT-002/baseline/counts.log`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-- [X] Add a human-readable audit report under `.scratch/verification/SPRINT-002/baseline/` summarizing the deltas and listing the largest missing spec areas.
-```text
-Verification:
-- `ls .scratch/verification/SPRINT-002/baseline/` (exit code 0)
-- `test -f .scratch/verification/SPRINT-002/baseline/README.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/baseline/README.md`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-
-### Acceptance Criteria - Phase 0
-- [X] The repo contains an auditable baseline report that explains why “traceability green” can still be incomplete today.
-```text
-Verification:
-- `test -f .scratch/verification/SPRINT-002/baseline/README.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/baseline/README.md`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Coverage now enforces catalog/traceability exact set equality with deterministic counts.
 ```
 
 ### Phase 1 - Requirement Catalog (Spec -> Canonical IDs)
-- [X] Define a stable requirement ID scheme and document it (examples for ULLM/CAL/ATR, DoD + normative requirements).
+- [X] Stable requirement ID scheme is documented and enforced.
 ```text
 Verification:
 - `test -f docs/spec-coverage/requirements_id_scheme.md` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
 Evidence:
-- `docs/spec-coverage/requirements_id_scheme.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/03-req-check-ids.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- ID format and validation behavior are captured in docs and tooling.
 ```
-- [X] Update the three spec docs to include explicit requirement IDs for every DoD checkbox and every normative MUST/MUST NOT/REQUIRED statement (so the catalog is stable and reviewable).
+- [X] Specs are annotated for every in-scope requirement source (DoD + normative statements).
 ```text
 Verification:
 - `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
 Evidence:
 - `.scratch/verification/SPRINT-002/catalog/spec-id-check.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/03-req-check-ids.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Missing, duplicate, and malformed IDs are all rejected.
 ```
-- [X] Implement a deterministic catalog generator: `tools/requirements_catalog.tcl`.
+- [X] Deterministic catalog artifacts are generated for machine and human workflows.
 ```text
 Verification:
 - `tclsh tools/requirements_catalog.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/catalog/requirements-catalog.log`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-- [X] Emit a machine-readable catalog artifact under `docs/spec-coverage/requirements.json` (generated) and a human-readable summary under `docs/spec-coverage/requirements.md` (generated).
-```text
-Verification:
 - `test -f docs/spec-coverage/requirements.json` (exit code 0)
 - `test -f docs/spec-coverage/requirements.md` (exit code 0)
 Evidence:
-- `docs/spec-coverage/requirements.json`
-- `docs/spec-coverage/requirements.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/05-req-generate-1.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/06-req-generate-2.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Generated outputs remained stable relative to before/run snapshots.
 ```
-- [X] Add unit tests proving stable extraction for DoD checkbox bullets, normative MUST/MUST NOT/REQUIRED statements, and DoD-section scoping.
+- [X] Unit coverage for parser and determinism is in place.
 ```text
 Verification:
 - `tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/catalog/requirements-catalog-tests.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/12-tests-reqcat.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Unit tests cover DoD extraction, normative extraction, and error paths.
 ```
-Details to cover in tests:
-- DoD checkbox bullets (including nested lists)
-- normative MUST/MUST NOT/REQUIRED statements
-- section scoping (only DoD checkboxes, not every random checklist elsewhere)
 
 #### Test Matrix - Phase 1 (Explicit)
-Positive cases to cover (must be represented in tests):
-- DoD checkbox line with inline code, links, and punctuation
-- DoD checkbox with wrapped text across multiple lines (markdown hard-wrap)
-- Nested DoD checkbox (sub-bullet checkbox under a parent checkbox)
-- Normative statements:
-  - “MUST …”
-  - “MUST NOT …”
-  - “REQUIRED …”
-  - mixed case (“Must”, “required”)
+Positive cases:
+- DoD checkbox with links/inline code/punctuation.
+- Wrapped DoD checkbox lines and nested checkboxes.
+- Normative extraction for `MUST`, `MUST NOT`, and `REQUIRED` with mixed case.
 
-Negative cases to cover (must be represented in tests):
-- “must” in a code block should not be treated as normative
-- “required” inside a URL or markdown link text should not be treated as normative
-- DoD section missing header should fail fast with a descriptive error
+Negative cases:
+- Normative keywords inside fenced code blocks are ignored.
+- Bad or missing `req_id` metadata fails with actionable errors.
+- Missing DoD scope metadata fails parsing validation.
 
 ### Acceptance Criteria - Phase 1
-- [X] The catalog generator produces deterministic output (no ordering churn) and fails with actionable errors when spec parsing fails.
-```text
-Verification:
-- `tclsh tools/requirements_catalog.tcl` (exit code 0)
-- `tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/catalog/requirements-catalog.log`
-- `.scratch/verification/SPRINT-002/catalog/requirements-catalog-tests.log`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-- [X] The derived catalog count is at least the DoD checkbox total and cannot silently shrink without an intentional spec edit.
+- [X] Catalog output is deterministic and cannot silently shrink without detection.
 ```text
 Verification:
 - `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `cmp -s requirements.before.json requirements.run2.json` (exit code 0)
+- `cmp -s requirements.before.md requirements.run2.md` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/catalog/requirements-summary.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/04-req-summary.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/09-cmp-json-before.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/10-cmp-md-before.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- No shrink/churn detected in current rerun.
 ```
 
 ### Phase 2 - Traceability v2 + Coverage Enforcement
-- [X] Extend `tools/spec_coverage.tcl` to load the derived catalog and enforce “no missing requirements” (catalog completeness), while preserving current well-formedness checks.
-```text
-Verification:
-- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/coverage/spec-coverage-tool-tests.log`
-Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-- [X] Update `docs/spec-coverage/traceability.md` to include a mapping block for every catalog requirement ID.
+- [X] Coverage tool enforces exact catalog-to-traceability equality and mapping quality checks.
 ```text
 Verification:
 - `tclsh tools/spec_coverage.tcl` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/coverage/spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Current status: missing=0, unknown_catalog=0, missing_catalog=0, duplicates=0.
 ```
-- [X] Add integration tests covering missing/unknown/duplicate requirement IDs and malformed mapping blocks.
+- [X] Integration suite validates missing/unknown/duplicate/malformed failure paths.
 ```text
 Verification:
 - `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/coverage/spec-coverage-tool-tests.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/13-tests-spec-coverage.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Negative-path fixtures assert deterministic failures with actionable messages.
 ```
-- [X] Add a static “verify command sanity” check: every `verify:` command must reference at least one real test (e.g., `tests/all.tcl -match ...` patterns must match existing test names).
+- [X] Verify-command sanity checks ensure test-pattern references resolve to real tests.
 ```text
 Verification:
 - `tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/coverage/verify-sanity-tests.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/14-tests-verify-sanity.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Invalid verify patterns are rejected by static sanity checks.
 ```
-Details to cover in tests:
-- catalog requirement missing from traceability
-- traceability contains an unknown/unlisted requirement ID
-- duplicate mappings for the same requirement ID
-- malformed mapping blocks (missing keys, missing paths, bad verify formatting)
 
 #### Test Matrix - Phase 2 (Explicit)
 Positive cases:
-- “catalog == traceability” exact set match passes
-- traceability ordering changes do not affect results
-- multiple `impl` paths and multiple `tests` paths parse correctly
+- Exact set equality passes when catalog and traceability IDs match.
+- Traceability ordering differences do not affect outcomes.
+- Multiple `impl` and `tests` paths per requirement parse correctly.
 
 Negative cases:
-- missing ID fails and prints the missing ID(s)
-- unknown ID fails and prints the unknown ID(s)
-- duplicate ID fails and prints the duplicate ID(s)
+- Missing catalog IDs in traceability fail and print missing IDs.
+- Unknown IDs in traceability fail and print unknown IDs.
+- Duplicate IDs in traceability fail and print duplicate IDs.
+- Malformed mapping blocks fail required-key/path/verify validation.
 
 ### Acceptance Criteria - Phase 2
-- [X] Running the coverage tool fails whenever the specs change in a way that introduces new requirements without corresponding traceability updates.
+- [X] Coverage fails on drift and passes only on exact completeness.
 ```text
 Verification:
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
 - `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/coverage/spec-coverage-tool-tests.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/13-tests-spec-coverage.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Enforcement behavior is fully wired into local build/test precommit flow.
 ```
 
 ### Phase 3 - Developer Workflow + Guardrails
-- [X] Add a short developer guide under `docs/spec-coverage/README.md` describing how to update specs, regenerate catalogs, update traceability, and add tests.
+- [X] Contributor workflow documentation is present and aligned with current tooling.
 ```text
 Verification:
 - `test -f docs/spec-coverage/README.md` (exit code 0)
 Evidence:
-- `docs/spec-coverage/README.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/01-make-build.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Workflow includes req-id checks, catalog generation, traceability sync, and full test gates.
 ```
-- [X] Add an “evidence reference guardrail” tool that checks sprint docs for referenced artifacts and fails if links point to non-existent files (opt-in, not required for every commit).
+- [X] Evidence lint and evidence guardrail integrations are enforced by tests.
 ```text
 Verification:
+- `tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
 - `tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/docs/evidence-guardrail-tests.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/15-tests-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/16-tests-evidence-guardrail.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/17-evidence-lint-sprint.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Sprint evidence references remain valid and lint-clean.
 ```
 
 #### Test Matrix - Phase 3 (Explicit)
 Positive cases:
-- docs workflow command sequence works on a clean checkout and yields deterministic generated outputs
-- evidence guardrail passes when all referenced artifacts exist
-- walkthrough shows one added requirement reaches green in catalog + traceability + tests
+- Workflow command sequence reaches green on clean checkout.
+- Evidence guardrail passes when referenced artifacts exist.
+- Catalog/traceability/test commands produce deterministic outputs.
 
 Negative cases:
-- docs workflow misses traceability update and `tools/spec_coverage.tcl` fails with missing IDs
-- evidence guardrail fails when a referenced artifact path does not exist
-- walkthrough intentionally uses an invalid `verify` test pattern and sanity check fails
+- Missing traceability updates trigger coverage failure.
+- Broken evidence references trigger evidence lint failure.
+- Invalid verify test pattern is rejected by sanity checks.
 
 ### Acceptance Criteria - Phase 3
-- [X] A new contributor can follow the guide to add one new spec requirement and get to green coverage with a test and mapping update.
+- [X] Contributor guardrails prevent silent drift in docs, evidence, and verify mappings.
 ```text
 Verification:
-- `tclsh tools/requirements_catalog.tcl` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `make -j10 test` (exit code 0)
+- `tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/docs/new-requirement-walkthrough.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/14-tests-verify-sanity.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/15-tests-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/16-tests-evidence-guardrail.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
-```
-- [X] Ongoing hardening checks keep tooling resilient as validation strictness increases (no false-green regression from malformed fixtures).
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/final/2026-02-27-integration-spec-coverage-tool.log`
-- `.scratch/verification/SPRINT-002/final/2026-02-27-integration-verify-sanity.log`
-Notes:
-- Hardened parser now enforces structured JSON semantics; fixture regressions are caught by integration tests.
+- Guardrails currently pass with no false-green regressions.
 ```
 
-## Execution Runbook Status (Verified 2026-02-27, Full Implementation Pass #3)
-- [X] Phase 0 - Required top-level gates were executed first and remained green.
+### Phase 4 - Final Gate Validation + Sprint Sync
+- [X] Full top-level gates were rerun before and after implementation-pass checks.
 ```text
 Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `make build` (post-pass rerun, exit code 0)
+- `make test` (post-pass rerun, exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/make-test.log`
-Notes:
-- Suite status in this phase: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-- [X] Phase 1 - Requirement catalog ID integrity and summary checks were rerun and remained stable.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-check-ids.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-summary.log`
-Notes:
-- Summary values remained stable: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
-```
-- [X] Phase 2 - Catalog generation determinism checks passed across consecutive runs.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.run1.json .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.run2.json` (exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.run1.md .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.run2.md` (exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.before.json .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.run2.json` (exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.before.md .scratch/verification/SPRINT-002/impl-pass-2026-02-27/requirements.run2.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-generate-1.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-generate-2.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-cmp-json.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-cmp-md.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-cmp-before-json.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/req-cmp-before-md.log`
-Notes:
-- Generated catalog artifacts remained byte-identical across reruns and unchanged from pre-pass snapshot.
-```
-- [X] Phase 3 - Coverage completeness, traceability, and integration guardrails passed with no regressions.
-```text
-Verification:
-- Evidence index: `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/spec-coverage.log`
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/spec-coverage.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/tests-reqcat.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/tests-spec-coverage.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/tests-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/tests-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/tests-evidence-guardrail.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/evidence-lint.log`
-Notes:
-- Coverage summary stayed exact-match and clean: requirements=263, missing=0, duplicates=0, bad_paths=0, bad_verify=0, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Phase 4 - Sprint appendix mermaid diagrams were rerendered successfully in this pass.
-```text
-Verification:
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/mmdc-er.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/mmdc-arch.log`
-Notes:
-- Diagram render targets were refreshed under `.scratch/diagram-renders/sprint-002/`.
-```
-- [X] Phase 5 - Final post-pass top-level gates were rerun and stayed green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/final-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/final-make-test.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/command-status.tsv`
-Notes:
-- This pass executed 24 tracked commands; all completed with exit code `0`.
-```
-
-### Acceptance Criteria - Execution Runbook Pass #3
-- [X] Full implementation-plan validation stack was rerun in a fresh pass and all checks remained green.
-```text
-Verification:
-- `timeout 180 .scratch/verification/SPRINT-002/impl-pass-2026-02-27/run_impl_pass.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/run_impl_pass.sh`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27/command-status.tsv`
-Notes:
-- The per-command status table confirms all required gates, integration checks, and diagram renders succeeded.
-```
-
-## Execution Runbook Status (Verified 2026-02-27, Full Implementation Pass #4)
-- [X] Phase 0 - Required top-level gates were executed first and remained green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/01-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/02-make-test.log`
-Notes:
-- Suite status in this phase: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-- [X] Phase 1 - Requirement catalog ID integrity and summary checks were rerun and remained stable.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/03-requirements-check-ids.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/04-requirements-summary.log`
-Notes:
-- Summary values remained stable: requirements=263, kind_DOD=205, kind_NORMATIVE=58.
-```
-- [X] Phase 2 - Catalog generation determinism checks passed across consecutive runs.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/requirements.run1.json .scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/requirements.run2.json` (exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/requirements.run1.md .scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/requirements.run2.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/05-requirements-generate-1.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/07-requirements-generate-2.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/09-cmp-requirements-json.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/10-cmp-requirements-md.log`
-Notes:
-- Generated catalog artifacts remained byte-identical across reruns.
-```
-- [X] Phase 3 - Coverage completeness, traceability, and integration guardrails passed with no regressions.
-```text
-Verification:
-- Evidence index: `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/11-spec-coverage.log`
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/11-spec-coverage.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/12-tests-requirements-catalog.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/13-tests-spec-coverage-tool.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/14-tests-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/15-tests-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/16-tests-evidence-guardrail.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/17-evidence-lint-sprint-002.log`
-Notes:
-- Coverage summary stayed exact-match and clean: requirements=263, missing=0, duplicates=0, bad_paths=0, bad_verify=0, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Phase 4 - Sprint appendix mermaid diagrams were rerendered successfully in this pass.
-```text
-Verification:
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/18-mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/19-mmdc-er.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/20-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/21-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/22-mmdc-arch.log`
-Notes:
-- Diagram render targets were refreshed under `.scratch/diagram-renders/sprint-002/`.
-```
-- [X] Phase 5 - Final post-pass top-level gates were rerun and stayed green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/23-post-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/24-post-make-test.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/command-status.tsv`
-Notes:
-- This pass executed 24 tracked commands; all completed with exit code `0`.
-```
-
-### Acceptance Criteria - Execution Runbook Pass #4
-- [X] Full implementation-plan validation stack was rerun in a fresh pass and all checks remained green.
-```text
-Verification:
-- `timeout 180 .scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/run_impl_pass.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/run_impl_pass.sh`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-4/command-status.tsv`
-Notes:
-- The per-command status table confirms all required gates, integration checks, and diagram renders succeeded.
-```
-
-## Execution Runbook Status (Verified 2026-02-27, Full Implementation Pass #5)
-- [X] Phase 0 - Required top-level gates were executed first and remained green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/01-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/02-make-test.log`
-Notes:
-- Full suite status in this phase: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-- [X] Phase 1 - Requirement catalog integrity, determinism, and coverage equality checks were rerun and remained stable.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/requirements.run1.json .scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/requirements.run2.json` (exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/requirements.run1.md .scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/requirements.run2.md` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/03-requirements-check-ids.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/04-requirements-summary.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/05-requirements-generate-1.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/07-requirements-generate-2.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/09-cmp-requirements-json.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/10-cmp-requirements-md.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/11-spec-coverage.log`
-Notes:
-- Summary remained stable: requirements=263, kind_DOD=205, kind_NORMATIVE=58, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Phase 2 - Focused integration guardrails, evidence linting, and diagram render checks passed with no regressions.
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/12-tests-requirements-catalog.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/13-tests-spec-coverage-tool.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/14-tests-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/15-tests-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/16-tests-evidence-guardrail.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/17-evidence-lint-sprint-002.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/18-mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/19-mmdc-er.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/20-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/21-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/22-mmdc-arch.log`
-Notes:
-- Focused suite status: reqcat=4 passed, spec-coverage-tool=9 passed, verify-sanity=3 passed, evidence-lint=2 passed, evidence-guardrail=2 passed.
-```
-- [X] Phase 3 - Post-pass top-level gates remained green and the command-runner status table recorded all command exits.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 .scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/run_impl_pass.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/23-post-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/24-post-make-test.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/command-status.tsv`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/README.md`
-Notes:
-- This pass executed 24 tracked commands; all completed with exit code `0`.
-```
-
-### Acceptance Criteria - Execution Runbook Pass #5
-- [X] Full implementation-plan validation stack was rerun in a fresh pass and all checks remained green.
-```text
-Verification:
-- `timeout 180 .scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/run_impl_pass.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/run_impl_pass.sh`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/command-status.tsv`
-Notes:
-- The per-command status table confirms all required gates, integration checks, and diagram renders succeeded.
-```
-
-## Final Sync Snapshot (Verified 2026-02-27, Post Sprint-Doc Sync)
-- [X] Sprint document evidence references and required top-level gates remained green after the Pass #5 sync update.
-```text
-Verification:
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/25-evidence-lint-post-sync.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/26-postsync-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-5/27-postsync-make-test.log`
-Notes:
-- Post-sync build/test suite status: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-
-## Execution Runbook Status (Verified 2026-02-27, Full Implementation Pass #6)
-- [X] Phase 0 - Required top-level gates were executed first and remained green.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/01-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/02-make-test.log`
-Notes:
-- Full suite status in this phase: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-- [X] Phase 1 - Requirement catalog integrity, determinism, and coverage equality checks were rerun and remained stable.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
-- `timeout 180 tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/requirements.run1.json .scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/requirements.run2.json` (exit code 0)
-- `timeout 180 cmp -s .scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/requirements.run1.md .scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/requirements.run2.md` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/03-requirements-check-ids.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/04-requirements-summary.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/05-requirements-generate-1.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/07-requirements-generate-2.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/09-cmp-requirements-json.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/10-cmp-requirements-md.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/11-spec-coverage.log`
-Notes:
-- Summary remained stable: requirements=263, kind_DOD=205, kind_NORMATIVE=58, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Phase 2 - Focused integration guardrails, evidence linting, and diagram render checks passed with no regressions.
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/12-tests-requirements-catalog.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/13-tests-spec-coverage-tool.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/14-tests-verify-sanity.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/15-tests-evidence-lint.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/16-tests-evidence-guardrail.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/17-evidence-lint-sprint-002.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/18-mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/19-mmdc-er.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/20-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/21-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/22-mmdc-arch.log`
-Notes:
-- Focused suite status: reqcat=4 passed, spec-coverage-tool=9 passed, verify-sanity=3 passed, evidence-lint=2 passed, evidence-guardrail=2 passed.
-```
-- [X] Phase 3 - Post-pass top-level gates remained green and the command-runner status table recorded all command exits.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-- `timeout 180 .scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/run_impl_pass.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/23-post-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/24-post-make-test.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/command-status.tsv`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/README.md`
-Notes:
-- This pass executed 24 tracked commands; all completed with exit code `0`.
-```
-
-### Acceptance Criteria - Execution Runbook Pass #6
-- [X] Full implementation-plan validation stack was rerun in a fresh pass and all checks remained green.
-```text
-Verification:
-- `timeout 180 .scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/run_impl_pass.sh` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/run_impl_pass.sh`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/command-status.tsv`
-Notes:
-- The per-command status table confirms all required gates, integration checks, and diagram renders succeeded.
-```
-
-## Final Sync Snapshot (Verified 2026-02-27, Post Sprint-Doc Sync - Pass #6)
-- [X] Sprint document evidence references and required top-level gates remained green after the Pass #6 sync update.
-```text
-Verification:
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/25-evidence-lint-post-sync.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/26-postsync-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-6/27-postsync-make-test.log`
-Notes:
-- Post-sync build/test suite status: Total=71, Passed=71, Skipped=0, Failed=0.
-```
-
-## Execution Runbook Status (Verified 2026-02-27, Full Implementation Pass #7 - Precommit Enforcement)
-- [X] Phase 0 - Precommit/build enforcement now includes requirement-ID integrity and strict traceability equality gates.
-```text
-Verification:
-- `timeout 180 tclsh tools/build_check.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/09-build-check-final.log`
-Notes:
-- `build_check` now runs `tools/requirements_catalog.tcl --check-ids` and `tools/spec_coverage.tcl` after package load checks.
-```
-- [X] Phase 1 - New integration smoke tests for `build_check` passed from both repo-root and non-root invocation contexts.
-```text
-Verification:
-- `timeout 180 tclsh tests/all.tcl -match integration-build-check-*` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/10-tests-build-check-final.log`
-Notes:
-- Focused integration suite added to prevent regressions in precommit gate behavior.
-```
-- [X] Phase 2 - Requirement catalog ID checks and strict coverage equality checks remained green after hardening.
-```text
-Verification:
-- `timeout 180 tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
-- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/11-requirements-check-ids-final.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/12-spec-coverage-final.log`
-Notes:
-- Summary remained stable: requirements=263, kind_DOD=205, kind_NORMATIVE=58, missing_catalog=0, unknown_catalog=0.
-```
-- [X] Phase 3 - Required top-level gates reran and remained green after enforcement and test additions.
-```text
-Verification:
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/13-make-build-final.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/14-make-test-final.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/01-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/02-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/23-make-build-post.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/24-make-test-post.log`
 Notes:
 - Full suite status in this pass: Total=73, Passed=73, Skipped=0, Failed=0.
 ```
-- [X] Phase 4 - Sprint #002 appendix mermaid diagrams were rerendered successfully in this pass.
+- [X] Architecture decisions are captured and aligned with current implementation behavior.
 ```text
 Verification:
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
-- `timeout 180 mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
+- `test -f docs/ADR.md` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/15-mmdc-domain.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/16-mmdc-er.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/17-mmdc-workflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/18-mmdc-dataflow.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/19-mmdc-arch.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
 Notes:
-- Diagram render targets were refreshed under `.scratch/diagram-renders/sprint-002/`.
+- ADR entries include spec-derived catalog, strict set equality, structured JSON validation, and precommit enforcement.
 ```
 
-### Acceptance Criteria - Execution Runbook Pass #7
-- [X] Precommit gate hardening, focused integration coverage, and required build/test gates were validated end-to-end in a fresh pass.
+### Acceptance Criteria - Phase 4
+- [X] Sprint status is synchronized to one authoritative implementation pass with explicit command/evidence traceability.
 ```text
 Verification:
-- `timeout 180 tclsh tools/build_check.tcl` (exit code 0)
-- `timeout 180 tclsh tests/all.tcl -match integration-build-check-*` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `cat .scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/09-build-check-final.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/10-tests-build-check-final.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/13-make-build-final.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/14-make-test-final.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
 Notes:
-- This pass confirms the default `make` workflow now blocks on spec traceability drift and verify-sanity regressions.
+- Pass #8 is the current authoritative snapshot for this sprint document.
 ```
 
-## Final Sync Snapshot (Verified 2026-02-27, Post Sprint-Doc Sync - Pass #7)
-- [X] Sprint document evidence references and required top-level gates remained green after the Pass #7 sync update.
+## Execution Runbook Status (Verified 2026-02-27, Full Implementation Pass #8)
+- [X] Phase 0 - Top-level gates passed.
 ```text
 Verification:
-- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
-- `timeout 180 make build` (exit code 0)
-- `timeout 180 make test` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/20-evidence-lint-post-sync.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/21-postsync-make-build.log`
-- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-7/22-postsync-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/01-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/02-make-test.log`
 Notes:
-- Post-sync build/test suite status: Total=73, Passed=73, Skipped=0, Failed=0.
+- Test summary: Total=73, Passed=73, Skipped=0, Failed=0.
 ```
-
-## Appendix - Mermaid Diagrams (Verify Render With mmdc)
-- [X] Render all Sprint #002 mermaid sources with `mmdc` and store images/logs under `.scratch/diagram-renders/sprint-002/`.
+- [X] Phase 1 - Requirement ID integrity and summary checks passed.
+```text
+Verification:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/03-req-check-ids.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/04-req-summary.log`
+Notes:
+- Summary remains stable at 263 requirements.
+```
+- [X] Phase 2 - Deterministic generation and comparison checks passed.
+```text
+Verification:
+- `tclsh tools/requirements_catalog.tcl` (run #1, exit code 0)
+- `tclsh tools/requirements_catalog.tcl` (run #2, exit code 0)
+- `cmp -s requirements.run1.json requirements.run2.json` (exit code 0)
+- `cmp -s requirements.run1.md requirements.run2.md` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/05-req-generate-1.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/06-req-generate-2.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/07-cmp-json-runs.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/08-cmp-md-runs.log`
+Notes:
+- Outputs are byte-identical across reruns.
+```
+- [X] Phase 3 - Coverage and integration guardrails passed.
+```text
+Verification:
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match requirements_catalog-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-spec-coverage-tool-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-verify-sanity-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-evidence-lint-*` (exit code 0)
+- `tclsh tests/all.tcl -match integration-evidence-guardrail-*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/11-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/12-tests-reqcat.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/13-tests-spec-coverage.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/14-tests-verify-sanity.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/15-tests-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/16-tests-evidence-guardrail.log`
+Notes:
+- Coverage remained exact-match with zero missing/unknown/duplicate IDs.
+```
+- [X] Phase 4 - Mermaid appendix diagrams rendered successfully.
 ```text
 Verification:
 - `mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
@@ -1228,27 +410,92 @@ Verification:
 - `mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
 - `mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
 Evidence:
-- `.scratch/diagram-renders/sprint-002/domain.png`
-- `.scratch/diagram-renders/sprint-002/er.png`
-- `.scratch/diagram-renders/sprint-002/workflow.png`
-- `.scratch/diagram-renders/sprint-002/dataflow.png`
-- `.scratch/diagram-renders/sprint-002/arch.png`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/18-mmdc-domain.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/19-mmdc-er.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/20-mmdc-workflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/21-mmdc-dataflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/22-mmdc-arch.log`
 Notes:
-- Verified via listed commands with exit code 0; see evidence artifacts listed above and phase README indexes under .scratch/verification/SPRINT-002/
+- Rendered images are refreshed under `.scratch/diagram-renders/sprint-002/`.
 ```
-- [X] Mermaid diagrams were re-validated after final sprint-doc sync.
+
+### Acceptance Criteria - Execution Runbook Pass #8
+- [X] Full implementation validation stack completed with all command statuses at exit code `0`.
 ```text
 Verification:
-- `timeout 180 bash -lc 'mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png && mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png && mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png && mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png && mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png'` (exit code 0)
+- `cat .scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv` (exit code 0)
 Evidence:
-- `.scratch/verification/SPRINT-002/final/2026-02-27-mmdc.log`
-- `.scratch/diagram-renders/sprint-002/domain.png`
-- `.scratch/diagram-renders/sprint-002/er.png`
-- `.scratch/diagram-renders/sprint-002/workflow.png`
-- `.scratch/diagram-renders/sprint-002/dataflow.png`
-- `.scratch/diagram-renders/sprint-002/arch.png`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/README.md`
 Notes:
-- Re-render completed successfully on 2026-02-27.
+- All 24 commands completed successfully.
+```
+
+## Post-Sync Validation Snapshot (Verified 2026-02-27)
+- [X] After sprint-document synchronization, evidence lint, top-level gates, and appendix diagram renders were rerun and remained green.
+```text
+Verification:
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `mmdc -i .scratch/diagrams/sprint-002/domain.mmd -o .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
+- `mmdc -i .scratch/diagrams/sprint-002/er.mmd -o .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
+- `mmdc -i .scratch/diagrams/sprint-002/workflow.mmd -o .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
+- `mmdc -i .scratch/diagrams/sprint-002/dataflow.mmd -o .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
+- `mmdc -i .scratch/diagrams/sprint-002/arch.mmd -o .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/01-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/02-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/03-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/04-mmdc-domain.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/05-mmdc-er.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/06-mmdc-workflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/07-mmdc-dataflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/08-mmdc-arch.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-9-postsync/command-status.tsv`
+Notes:
+- Post-sync suite status: Total=73, Passed=73, Skipped=0, Failed=0.
+```
+
+## Final Validation Snapshot (Verified 2026-02-27)
+- [X] Final lint + build + test gates passed after the latest sprint-document update.
+```text
+Verification:
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-002-requirements-traceability-from-spec.md` (exit code 0)
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/01-evidence-lint.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/02-make-build.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/03-make-test.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/command-status.tsv`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-10-final/README.md`
+Notes:
+- Final suite status: Total=73, Passed=73, Skipped=0, Failed=0.
+```
+
+## Appendix - Mermaid Diagrams (Verify Render With mmdc)
+- [X] Mermaid sources and rendered artifacts are present for all required diagram types.
+```text
+Verification:
+- `test -f .scratch/diagrams/sprint-002/domain.mmd` (exit code 0)
+- `test -f .scratch/diagrams/sprint-002/er.mmd` (exit code 0)
+- `test -f .scratch/diagrams/sprint-002/workflow.mmd` (exit code 0)
+- `test -f .scratch/diagrams/sprint-002/dataflow.mmd` (exit code 0)
+- `test -f .scratch/diagrams/sprint-002/arch.mmd` (exit code 0)
+- `test -f .scratch/diagram-renders/sprint-002/domain.png` (exit code 0)
+- `test -f .scratch/diagram-renders/sprint-002/er.png` (exit code 0)
+- `test -f .scratch/diagram-renders/sprint-002/workflow.png` (exit code 0)
+- `test -f .scratch/diagram-renders/sprint-002/dataflow.png` (exit code 0)
+- `test -f .scratch/diagram-renders/sprint-002/arch.png` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/18-mmdc-domain.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/19-mmdc-er.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/20-mmdc-workflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/21-mmdc-dataflow.log`
+- `.scratch/verification/SPRINT-002/impl-pass-2026-02-27-8/22-mmdc-arch.log`
+Notes:
+- Diagram renders were regenerated successfully in Pass #8.
 ```
 
 ### Core Domain Models
