@@ -1,0 +1,12 @@
+package require tcltest
+namespace import ::tcltest::*
+
+foreach provider [::tests::e2e_live::selected_providers] {
+    test e2e-live-coding-agent-loop-$provider-smoke-1.0 "live coding_agent_loop smoke for $provider" \
+        -body [list ::tests::e2e_live::run_coding_agent_loop_smoke $provider] \
+        -result 1
+
+    test e2e-live-coding-agent-loop-$provider-invalid-key-1.0 "live coding_agent_loop invalid-key for $provider" \
+        -body [list ::tests::e2e_live::run_coding_agent_loop_invalid_key $provider] \
+        -result 1
+}

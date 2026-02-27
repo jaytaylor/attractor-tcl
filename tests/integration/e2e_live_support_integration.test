@@ -1,0 +1,49 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require attractor_core
+package require unified_llm
+package require coding_agent_loop
+package require attractor
+source [file join $root tests support e2e_live_support.tcl]
+
+test integration-e2e-live-selection-no-providers-1.0 {resolve selection fails when no provider keys exist} -body {
+    catch {::tests::e2e_live::resolve_provider_selection {}} err opts
+    dict get $opts -errorcode
+} -result {E2E_LIVE CONFIG NO_PROVIDERS}
+
+test integration-e2e-live-selection-explicit-missing-key-1.0 {explicit provider requires key} -body {
+    set envDict [dict create E2E_LIVE_PROVIDERS openai]
+    catch {::tests::e2e_live::resolve_provider_selection $envDict} err opts
+    dict get $opts -errorcode
+} -result {E2E_LIVE CONFIG MISSING_KEY openai OPENAI_API_KEY}
+
+test integration-e2e-live-selection-defaults-and-overrides-1.0 {selection computes provider configs with overrides} -body {
+    set envDict [dict create OPENAI_API_KEY sk-test OPENAI_MODEL gpt-test OPENAI_BASE_URL http://proxy.local]
+    set result [::tests::e2e_live::resolve_provider_selection $envDict]
+    set cfg [dict get $result provider_configs openai]
+    list [dict get $result selected] [dict get $cfg model] [dict get $cfg base_url]
+} -result {openai gpt-test http://proxy.local}
+
+test integration-e2e-live-secret-scan-1.0 {secret scan reports file paths without exposing secret} -setup {
+    set artifactRoot [file join $root .scratch verification SPRINT-004 integration e2e-live-secret-scan-[pid]]
+    file delete -force $artifactRoot
+    file mkdir $artifactRoot
+    set cleanPath [file join $artifactRoot clean.log]
+    set leakPath [file join $artifactRoot leak.log]
+    set fh [open $cleanPath w]
+    puts -nonewline $fh "all clear"
+    close $fh
+    set fh [open $leakPath w]
+    puts -nonewline $fh "token=secret-value-123"
+    close $fh
+
+    set ::tests::e2e_live::artifact_root $artifactRoot
+    set ::tests::e2e_live::loaded_key_values [list secret-value-123]
+} -body {
+    ::tests::e2e_live::scan_artifacts_for_secret_leaks
+} -cleanup {
+    file delete -force $artifactRoot
+} -result [list [file join $root .scratch verification SPRINT-004 integration e2e-live-secret-scan-[pid] leak.log]]
