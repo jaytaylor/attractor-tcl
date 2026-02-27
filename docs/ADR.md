@@ -241,3 +241,28 @@ Positive:
 Tradeoffs:
 - Parser and validator complexity increased.
 - Existing DOT examples had to migrate from legacy shape markers to `Mdiamond`/`Msquare`.
+
+## ADR-010: Phase-Scoped Sprint Verification Evidence as a First-Class Contract
+- Date: 2026-02-27
+- Status: Accepted
+
+### Context
+Sprint #003 closeout artifacts were historically easy to reproduce but were coarse-grained: many checklist lines referenced a single umbrella run, making it harder to audit phase-level proof and command-to-artifact linkage.
+
+### Decision
+- Adopt a phase-scoped execution evidence layout for Sprint #003 under `.scratch/verification/SPRINT-003/execution-2026-02-27/`.
+- Record command-level status in both per-phase and aggregate tables:
+  - `phase-*/command-status.tsv`
+  - `command-status-all.tsv`
+- Require deterministic generation of a requirement-family gap ledger by comparing requirement catalog IDs against traceability IDs.
+- Treat appendix diagram rendering (`mmdc`) as a mandatory closeout artifact, stored under `.scratch/diagram-renders/sprint-003/`.
+
+### Consequences
+Positive:
+- Checklist completion can be audited at phase and command granularity.
+- Requirement ownership closure is explicitly provable from generated ledgers.
+- Diagram and docs verification become repeatable, explicit closeout gates.
+
+Tradeoffs:
+- Evidence generation adds additional local execution time during sprint closeout.
+- Maintaining phase indexes increases documentation overhead, especially for small doc-only changes.
