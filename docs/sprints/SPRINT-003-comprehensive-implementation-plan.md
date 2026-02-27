@@ -278,37 +278,87 @@ Notes:
 
 ## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [ ] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
+- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- Execution environment contracts are validated through CAL parity and full integration suite execution.
 ```
-- [ ] Complete loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, round limits, turn limits, and cancellation.
+- [X] Complete loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, round limits, turn limits, and cancellation.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-test.log`
+Notes:
+- Lifecycle transition behavior is validated by CAL unit/integration cases and full-suite execution.
 ```
-- [ ] Align truncation behavior so surfaced summaries are bounded while events retain full payload.
+- [X] Align truncation behavior so surfaced summaries are bounded while events retain full payload.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- Truncation marker and full-event payload behavior remains validated in CAL parity tests.
 ```
-- [ ] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request.
+- [X] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- Steering and follow-up queue semantics are exercised in targeted CAL lifecycle scenarios.
 ```
-- [ ] Implement lifecycle event-kind and payload parity, including deterministic loop-warning emission.
+- [X] Implement lifecycle event-kind and payload parity, including deterministic loop-warning emission.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- Event-kind parity and loop-warning behavior are covered by CAL parity assertions.
 ```
-- [ ] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl`, including environment and project-document context behavior.
+- [X] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl`, including environment and project-document context behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- Profile context and project-document prompt shaping remain covered by CAL parity fixtures.
 ```
-- [ ] Complete subagent lifecycle parity with shared execution environment and isolated histories.
+- [X] Complete subagent lifecycle parity with shared execution environment and isolated histories.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-test.log`
+Notes:
+- Subagent lifecycle behavior remains validated in CAL integration and full-suite scenarios.
 ```
-- [ ] Expand CAL unit and integration tests for lifecycle, tool execution, steering queue semantics, subagent depth, and terminal states.
+- [X] Expand CAL unit and integration tests for lifecycle, tool execution, steering queue semantics, subagent depth, and terminal states.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- CAL unit + integration coverage remains green after phase verification run.
 ```
 
 ### Test Matrix - Phase 2
@@ -329,13 +379,26 @@ Negative cases:
 - Subagent depth overflow fails with deterministic depth-limit errors.
 
 ### Acceptance Criteria - Phase 2
-- [ ] CAL parity tests pass for lifecycle, tool contracts, steering/follow-up semantics, subagents, and event contracts.
+- [X] CAL parity tests pass for lifecycle, tool contracts, steering/follow-up semantics, subagents, and event contracts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-cal.log`
+Notes:
+- CAL parity matrix is green for lifecycle, tools, steering/follow-up, subagents, and events.
 ```
-- [ ] Every CAL requirement ID maps to implementation, tests, and verification evidence.
+- [X] Every CAL requirement ID maps to implementation, tests, and verification evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-2/logs/p2-spec-coverage.log`
+- `docs/spec-coverage/traceability.md`
+Notes:
+- Coverage checks confirm CAL requirement IDs remain fully mapped with no missing or unknown entries.
 ```
 
 ## Phase 3 - Attractor Parity Closure
