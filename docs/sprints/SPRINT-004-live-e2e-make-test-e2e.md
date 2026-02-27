@@ -18,6 +18,14 @@ Today the repo’s tests are deterministic and offline. This is good for correct
 
 We need an explicit, opt-in live suite that developers can run intentionally to validate real-world integration.
 
+## Approach (Plan Recap)
+- Keep the existing deterministic suite as the default (`make -j10 test`) and add a separate live suite (`make test-e2e`) that is opt-in and requires explicit keys.
+- Use explicit transport injection (`client_new -transport ...`) so offline tests cannot “accidentally” become live just because a developer has API keys in their environment.
+- Make evidence a first-class artifact of the live suite (run summary JSON, per-provider logs, and per-component artifacts), stored under a unique run directory.
+- Treat secret redaction as a correctness property:
+  - do not write secrets to artifacts
+  - automatically scan artifacts for secret values and fail the run if anything leaks
+
 ## Current State Snapshot (Verified 2026-02-27)
 - [X] `make -j10 test` passes offline.
 ```text
@@ -50,6 +58,17 @@ Notes:
 - Live tests must live in a separate directory and be executed by a separate harness.
 ```
 
+## Current State Snapshot (Code Pointers)
+- Unified LLM transport hook:
+  - `lib/unified_llm/adapters/openai.tcl` calls `::unified_llm::adapters::__invoke_transport` which uses the injected `state.transport` callback (otherwise returns an offline stub response).
+- Provider selection behavior:
+  - `lib/unified_llm/main.tcl` implements `::unified_llm::from_env`, which intentionally errors if multiple provider keys are present and `UNIFIED_LLM_PROVIDER` is not set.
+  - The live harness must not rely on `from_env` when multiple keys are present; it must run providers explicitly.
+- Coding Agent Loop live injection:
+  - `lib/coding_agent_loop/main.tcl` calls `::unified_llm::generate` without an explicit client, so live tests must set and restore `::unified_llm::set_default_client` during each provider run.
+- Attractor live injection:
+  - `lib/attractor/main.tcl` supports `::attractor::run ... -backend <cmdPrefix>`; live tests should provide a backend that calls `unified_llm` using the live transport.
+
 ## Scope
 In scope:
 - A new live test harness that is not executed by `make test`
@@ -69,6 +88,17 @@ Out of scope:
 - Every checklist item includes a verification/evidence block directly beneath it.
 - Evidence artifacts live under `.scratch/verification/SPRINT-004/...` and are referenced by exact path.
 - Mark an item `[X]` only once the verification commands have been run and evidence artifacts exist.
+
+## Execution Guardrails (Live Suite)
+- The live suite must never auto-run as part of `make -j10 test`.
+- The live suite must never print or persist secrets (API keys, bearer tokens, or provider auth headers).
+- The live suite must include an automated “secret leak scan”:
+  - After the run completes (pass or fail), scan every artifact file under the artifacts root for the exact API key values that were loaded from the environment.
+  - If a match is found, fail the run and report only the file path(s) containing leaked material (do not print the secret).
+- The live suite must be deterministic about provider selection:
+  - “no providers selected” is an error
+  - “provider missing key” is an error only when explicitly requested
+  - “provider key missing but not requested” is a skip
 
 ## Evidence Layout (Live Suite)
 - Default artifact root:
@@ -209,6 +239,9 @@ Details to cover:
   - If `E2E_LIVE_ARTIFACT_ROOT` is set, use it
   - Otherwise compute `.scratch/verification/SPRINT-004/live/<run_id>` and create it
   - Write a small `run.json` summary file into the artifacts root (providers selected, models selected, timestamps)
+- The harness performs a “secret leak scan”:
+  - Scan all files under the artifacts root for the exact API key values loaded from env.
+  - On leak detection: fail the run, list only the offending file paths, and do not print secrets.
 
 - [ ] Implement OpenAI live smoke tests (requires `OPENAI_API_KEY`).
 ```text
