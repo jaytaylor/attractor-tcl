@@ -629,7 +629,7 @@ For Claude Opus 4.6, Opus 4.5, Sonnet 4.5, Haiku 4.5, and older Claude models. M
 - `glob` (file pattern matching sorted by mtime)
 - Subagent tools (maps to Claude Code's Task tool pattern, Section 7)
 
-**System prompt:** Should mirror the Claude Code system prompt structure. Cover identity, tool selection guidance, the edit_file format (explain that `old_string` must be unique), file operation preferences (edit existing files over creating new ones), and coding best practices.
+**System prompt:** Should mirror the Claude Code system prompt structure. Cover identity, tool selection guidance, the edit_file format (explain that `old_string` must be unique), file operation preferences (edit existing files over creating new ones), and coding best practices. <!-- req_id: CAL-REQ-SYSTEM-PROMPT-SHOULD-MIRROR-CLAUDE-CODE -->
 
 **Provider options:** The Anthropic profile should pass beta headers (e.g., for extended thinking, 1M context) via `provider_options.anthropic.beta_headers`.
 
@@ -778,7 +778,7 @@ The default. Runs everything on the local machine.
 
 ### 4.3 Alternative Environments (Extension Points)
 
-These are not required implementations. They demonstrate the extensibility of the interface.
+These are not required implementations. They demonstrate the extensibility of the interface. <!-- req_id: CAL-REQ-THESE-REQUIRED-IMPLEMENTATIONS-THEY-DEMONSTRATE-EXTENSIBILITY -->
 
 **DockerExecutionEnvironment:**
 ```
@@ -840,7 +840,7 @@ ReadOnlyExecutionEnvironment(inner: ExecutionEnvironment):
 
 ### 5.1 Tool Output Truncation
 
-When tool output exceeds the configured limit, it MUST be truncated before being sent to the LLM. The full output is always available via the event stream (`TOOL_CALL_END` event).
+When tool output exceeds the configured limit, it MUST be truncated before being sent to the LLM. The full output is always available via the event stream (`TOOL_CALL_END` event). <!-- req_id: CAL-REQ-TOOL-OUTPUT-EXCEEDS-CONFIGURED-LIMIT-MUST -->
 
 **Truncation algorithm (head/tail split):**
 
@@ -886,7 +886,7 @@ These defaults are overridable via `SessionConfig.tool_output_limits`.
 
 ### 5.3 Truncation Order (Important)
 
-Character-based truncation (Section 5.1) is the primary safeguard and MUST always run first. It handles every case including pathological ones like a 2-line CSV where each line is 10MB. Line-based truncation is a secondary readability pass that runs after character truncation.
+Character-based truncation (Section 5.1) is the primary safeguard and MUST always run first. It handles every case including pathological ones like a 2-line CSV where each line is 10MB. Line-based truncation is a secondary readability pass that runs after character truncation. <!-- req_id: CAL-REQ-CHARACTER-BASED-TRUNCATION-SECTION-5-1 -->
 
 The full pipeline for every tool output:
 
@@ -932,7 +932,7 @@ FUNCTION truncate_lines(output: String, max_lines: Integer) -> String:
          + JOIN(lines[-tail_count..], "\n")
 ```
 
-**Why character truncation must come first:** A file could have 2 lines that are each 10MB. Line-based truncation would see "only 2 lines" and pass it through untouched, blowing up the context window. Character truncation catches this because it operates on raw size, not line count. Always truncate by size first, then by line count.
+**Why character truncation must come first:** A file could have 2 lines that are each 10MB. Line-based truncation would see "only 2 lines" and pass it through untouched, blowing up the context window. Character truncation catches this because it operates on raw size, not line count. Always truncate by size first, then by line count. <!-- req_id: CAL-REQ-WHY-CHARACTER-TRUNCATION-MUST-COME-FIRST -->
 
 ### 5.4 Default Command Timeouts
 
@@ -993,10 +993,10 @@ final_system_prompt =
 Each profile supplies its own base prompt tuned for the model family. The base instructions should closely mirror the system prompts of the provider's native agent:
 
 - **OpenAI profile:** Mirror codex-rs system prompt. Cover identity, tool usage (especially apply_patch conventions), coding best practices, error handling guidance.
-- **Anthropic profile:** Mirror Claude Code system prompt. Cover identity, tool selection guidance (read before edit, edit over write), the edit_file format (old_string must be unique), file operation preferences.
+- **Anthropic profile:** Mirror Claude Code system prompt. Cover identity, tool selection guidance (read before edit, edit over write), the edit_file format (old_string must be unique), file operation preferences. <!-- req_id: CAL-REQ-ANTHROPIC-PROFILE-MIRROR-CLAUDE-CODE-SYSTEM -->
 - **Gemini profile:** Mirror gemini-cli system prompt. Cover identity, tool usage, GEMINI.md conventions, coding best practices.
 
-The spec does NOT prescribe full system prompt text -- those are implementation details that change frequently. It specifies what topics the prompt must cover.
+The spec does NOT prescribe full system prompt text -- those are implementation details that change frequently. It specifies what topics the prompt must cover. <!-- req_id: CAL-REQ-SPEC-DOES-PRESCRIBE-FULL-SYSTEM-PROMPT -->
 
 ### 6.3 Environment Context Block
 
@@ -1138,95 +1138,95 @@ This section defines how to validate that an implementation of this spec is comp
 
 ### 9.1 Core Loop
 
-- [ ] Session can be created with a ProviderProfile and ExecutionEnvironment
-- [ ] `process_input()` runs the agentic loop: LLM call -> tool execution -> loop until natural completion
-- [ ] Natural completion: model responds with text only (no tool calls) and the loop exits
-- [ ] Round limits: `max_tool_rounds_per_input` stops the loop when reached
-- [ ] Session turn limits: `max_turns` stops the loop across all inputs
-- [ ] Abort signal: cancellation stops the loop, kills running processes, transitions to CLOSED
-- [ ] Loop detection: consecutive identical tool call patterns trigger a warning SteeringTurn
-- [ ] Multiple sequential inputs work: submit, wait for completion, submit again
+- [ ] Session can be created with a ProviderProfile and ExecutionEnvironment <!-- req_id: CAL-DOD-9.1-SESSION-CAN-CREATED-PROVIDERPROFILE-EXECUTIONENVIRONMENT -->
+- [ ] `process_input()` runs the agentic loop: LLM call -> tool execution -> loop until natural completion <!-- req_id: CAL-DOD-9.2-RUNS-AGENTIC-LOOP-LLM-CALL-TOOL -->
+- [ ] Natural completion: model responds with text only (no tool calls) and the loop exits <!-- req_id: CAL-DOD-9.3-NATURAL-COMPLETION-MODEL-RESPONDS-TEXT-ONLY -->
+- [ ] Round limits: `max_tool_rounds_per_input` stops the loop when reached <!-- req_id: CAL-DOD-9.4-ROUND-LIMITS-STOPS-LOOP-REACHED -->
+- [ ] Session turn limits: `max_turns` stops the loop across all inputs <!-- req_id: CAL-DOD-9.5-SESSION-TURN-LIMITS-STOPS-LOOP-ACROSS -->
+- [ ] Abort signal: cancellation stops the loop, kills running processes, transitions to CLOSED <!-- req_id: CAL-DOD-9.6-ABORT-SIGNAL-CANCELLATION-STOPS-LOOP-KILLS -->
+- [ ] Loop detection: consecutive identical tool call patterns trigger a warning SteeringTurn <!-- req_id: CAL-DOD-9.7-LOOP-DETECTION-CONSECUTIVE-IDENTICAL-TOOL-CALL -->
+- [ ] Multiple sequential inputs work: submit, wait for completion, submit again <!-- req_id: CAL-DOD-9.8-MULTIPLE-SEQUENTIAL-INPUTS-SUBMIT-WAIT-COMPLETION -->
 
 ### 9.2 Provider Profiles
 
-- [ ] OpenAI profile provides codex-rs-aligned tools including `apply_patch` (v4a format)
-- [ ] Anthropic profile provides Claude Code-aligned tools including `edit_file` (old_string/new_string)
-- [ ] Gemini profile provides gemini-cli-aligned tools
-- [ ] Each profile produces a provider-specific system prompt covering identity, tool usage, and coding guidance
-- [ ] Custom tools can be registered on top of any profile
-- [ ] Tool name collisions resolved: custom registration overrides profile defaults
+- [ ] OpenAI profile provides codex-rs-aligned tools including `apply_patch` (v4a format) <!-- req_id: CAL-DOD-9.9-OPENAI-PROFILE-PROVIDES-CODEX-RS-ALIGNED -->
+- [ ] Anthropic profile provides Claude Code-aligned tools including `edit_file` (old_string/new_string) <!-- req_id: CAL-DOD-9.10-ANTHROPIC-PROFILE-PROVIDES-CLAUDE-CODE-ALIGNED -->
+- [ ] Gemini profile provides gemini-cli-aligned tools <!-- req_id: CAL-DOD-9.11-GEMINI-PROFILE-PROVIDES-GEMINI-CLI-ALIGNED -->
+- [ ] Each profile produces a provider-specific system prompt covering identity, tool usage, and coding guidance <!-- req_id: CAL-DOD-9.12-EACH-PROFILE-PRODUCES-PROVIDER-SPECIFIC-SYSTEM -->
+- [ ] Custom tools can be registered on top of any profile <!-- req_id: CAL-DOD-9.13-CUSTOM-TOOLS-CAN-REGISTERED-TOP-ANY -->
+- [ ] Tool name collisions resolved: custom registration overrides profile defaults <!-- req_id: CAL-DOD-9.14-TOOL-NAME-COLLISIONS-RESOLVED-CUSTOM-REGISTRATION -->
 
 ### 9.3 Tool Execution
 
-- [ ] Tool calls are dispatched through the ToolRegistry
-- [ ] Unknown tool calls return an error result to the LLM (not an exception)
-- [ ] Tool argument JSON is parsed and validated against the tool's parameter schema
-- [ ] Tool execution errors are caught and returned as error results (`is_error = true`)
-- [ ] Parallel tool execution works when the profile's `supports_parallel_tool_calls` is true
+- [ ] Tool calls are dispatched through the ToolRegistry <!-- req_id: CAL-DOD-9.15-TOOL-CALLS-DISPATCHED-THROUGH-TOOLREGISTRY -->
+- [ ] Unknown tool calls return an error result to the LLM (not an exception) <!-- req_id: CAL-DOD-9.16-UNKNOWN-TOOL-CALLS-RETURN-ERROR-RESULT -->
+- [ ] Tool argument JSON is parsed and validated against the tool's parameter schema <!-- req_id: CAL-DOD-9.17-TOOL-ARGUMENT-JSON-PARSED-VALIDATED-AGAINST -->
+- [ ] Tool execution errors are caught and returned as error results (`is_error = true`) <!-- req_id: CAL-DOD-9.18-TOOL-EXECUTION-ERRORS-CAUGHT-RETURNED-ERROR -->
+- [ ] Parallel tool execution works when the profile's `supports_parallel_tool_calls` is true <!-- req_id: CAL-DOD-9.19-PARALLEL-TOOL-EXECUTION-PROFILE-S-TRUE -->
 
 ### 9.4 Execution Environment
 
-- [ ] `LocalExecutionEnvironment` implements all file and command operations
-- [ ] Command timeout default is 10 seconds
-- [ ] Command timeout is overridable per-call via the shell tool's `timeout_ms` parameter
-- [ ] Timed-out commands: process group receives SIGTERM, then SIGKILL after 2 seconds
-- [ ] Environment variable filtering excludes sensitive variables (`*_API_KEY`, `*_SECRET`, etc.) by default
-- [ ] The `ExecutionEnvironment` interface is implementable by consumers for custom environments (Docker, K8s, WASM, SSH)
+- [ ] `LocalExecutionEnvironment` implements all file and command operations <!-- req_id: CAL-DOD-9.20-IMPLEMENTS-ALL-FILE-COMMAND-OPERATIONS -->
+- [ ] Command timeout default is 10 seconds <!-- req_id: CAL-DOD-9.21-COMMAND-TIMEOUT-DEFAULT-10-SECONDS -->
+- [ ] Command timeout is overridable per-call via the shell tool's `timeout_ms` parameter <!-- req_id: CAL-DOD-9.22-COMMAND-TIMEOUT-OVERRIDABLE-PER-CALL-VIA -->
+- [ ] Timed-out commands: process group receives SIGTERM, then SIGKILL after 2 seconds <!-- req_id: CAL-DOD-9.23-TIMED-OUT-COMMANDS-PROCESS-GROUP-RECEIVES -->
+- [ ] Environment variable filtering excludes sensitive variables (`*_API_KEY`, `*_SECRET`, etc.) by default <!-- req_id: CAL-DOD-9.24-ENVIRONMENT-VARIABLE-FILTERING-EXCLUDES-SENSITIVE-VARIABLES -->
+- [ ] The `ExecutionEnvironment` interface is implementable by consumers for custom environments (Docker, K8s, WASM, SSH) <!-- req_id: CAL-DOD-9.25-INTERFACE-IMPLEMENTABLE-CONSUMERS-CUSTOM-ENVIRONMENTS-DOCKER -->
 
 ### 9.5 Tool Output Truncation
 
-- [ ] Character-based truncation runs FIRST on all tool outputs (handles pathological cases like 10MB single-line CSVs)
-- [ ] Line-based truncation runs SECOND where configured (shell: 256, grep: 200, glob: 500)
-- [ ] Truncation inserts a visible marker: `[WARNING: Tool output was truncated. N characters removed...]`
-- [ ] The full untruncated output is available via the `TOOL_CALL_END` event
-- [ ] Default character limits match the table in Section 5.2 (read_file: 50k, shell: 30k, grep: 20k, etc.)
-- [ ] Both character and line limits are overridable via `SessionConfig`
+- [ ] Character-based truncation runs FIRST on all tool outputs (handles pathological cases like 10MB single-line CSVs) <!-- req_id: CAL-DOD-9.26-CHARACTER-BASED-TRUNCATION-RUNS-FIRST-ALL -->
+- [ ] Line-based truncation runs SECOND where configured (shell: 256, grep: 200, glob: 500) <!-- req_id: CAL-DOD-9.27-LINE-BASED-TRUNCATION-RUNS-SECOND-CONFIGURED -->
+- [ ] Truncation inserts a visible marker: `[WARNING: Tool output was truncated. N characters removed...]` <!-- req_id: CAL-DOD-9.28-TRUNCATION-INSERTS-VISIBLE-MARKER -->
+- [ ] The full untruncated output is available via the `TOOL_CALL_END` event <!-- req_id: CAL-DOD-9.29-FULL-UNTRUNCATED-OUTPUT-AVAILABLE-VIA-EVENT -->
+- [ ] Default character limits match the table in Section 5.2 (read_file: 50k, shell: 30k, grep: 20k, etc.) <!-- req_id: CAL-DOD-9.30-DEFAULT-CHARACTER-LIMITS-MATCH-TABLE-SECTION -->
+- [ ] Both character and line limits are overridable via `SessionConfig` <!-- req_id: CAL-DOD-9.31-BOTH-CHARACTER-LINE-LIMITS-OVERRIDABLE-VIA -->
 
 ### 9.6 Steering
 
-- [ ] `steer()` queues a message that is injected after the current tool round
-- [ ] `follow_up()` queues a message that is processed after the current input completes
-- [ ] Steering messages appear as SteeringTurn in the history
-- [ ] SteeringTurns are converted to user-role messages for the LLM
+- [ ] `steer()` queues a message that is injected after the current tool round <!-- req_id: CAL-DOD-9.32-QUEUES-MESSAGE-INJECTED-AFTER-CURRENT-TOOL -->
+- [ ] `follow_up()` queues a message that is processed after the current input completes <!-- req_id: CAL-DOD-9.33-QUEUES-MESSAGE-PROCESSED-AFTER-CURRENT-INPUT -->
+- [ ] Steering messages appear as SteeringTurn in the history <!-- req_id: CAL-DOD-9.34-STEERING-MESSAGES-APPEAR-STEERINGTURN-HISTORY -->
+- [ ] SteeringTurns are converted to user-role messages for the LLM <!-- req_id: CAL-DOD-9.35-STEERINGTURNS-CONVERTED-USER-ROLE-MESSAGES-LLM -->
 
 ### 9.7 Reasoning Effort
 
-- [ ] `reasoning_effort` is passed through to the LLM SDK Request
-- [ ] Changing `reasoning_effort` mid-session takes effect on the next LLM call
-- [ ] Valid values: "low", "medium", "high", null (provider default) (certain providers might have other options like `xhigh`)
+- [ ] `reasoning_effort` is passed through to the LLM SDK Request <!-- req_id: CAL-DOD-9.36-PASSED-THROUGH-LLM-SDK-REQUEST -->
+- [ ] Changing `reasoning_effort` mid-session takes effect on the next LLM call <!-- req_id: CAL-DOD-9.37-CHANGING-MID-SESSION-TAKES-EFFECT-NEXT -->
+- [ ] Valid values: "low", "medium", "high", null (provider default) (certain providers might have other options like `xhigh`) <!-- req_id: CAL-DOD-9.38-VALID-VALUES-LOW-MEDIUM-HIGH-NULL -->
 
 ### 9.8 System Prompts
 
-- [ ] System prompt includes provider-specific base instructions
-- [ ] System prompt includes environment context (platform, git, working dir, date, model info)
-- [ ] System prompt includes tool descriptions from the active profile
-- [ ] Project documentation files (AGENTS.md + provider-specific files) are discovered and included
-- [ ] User instruction overrides are appended last (highest priority)
-- [ ] Only relevant project files are loaded (e.g., Anthropic profile loads CLAUDE.md, not GEMINI.md)
+- [ ] System prompt includes provider-specific base instructions <!-- req_id: CAL-DOD-9.39-SYSTEM-PROMPT-INCLUDES-PROVIDER-SPECIFIC-BASE -->
+- [ ] System prompt includes environment context (platform, git, working dir, date, model info) <!-- req_id: CAL-DOD-9.40-SYSTEM-PROMPT-INCLUDES-ENVIRONMENT-CONTEXT-PLATFORM -->
+- [ ] System prompt includes tool descriptions from the active profile <!-- req_id: CAL-DOD-9.41-SYSTEM-PROMPT-INCLUDES-TOOL-DESCRIPTIONS-ACTIVE -->
+- [ ] Project documentation files (AGENTS.md + provider-specific files) are discovered and included <!-- req_id: CAL-DOD-9.42-PROJECT-DOCUMENTATION-FILES-AGENTS-MD-PROVIDER -->
+- [ ] User instruction overrides are appended last (highest priority) <!-- req_id: CAL-DOD-9.43-USER-INSTRUCTION-OVERRIDES-APPENDED-LAST-HIGHEST -->
+- [ ] Only relevant project files are loaded (e.g., Anthropic profile loads CLAUDE.md, not GEMINI.md) <!-- req_id: CAL-DOD-9.44-ONLY-RELEVANT-PROJECT-FILES-LOADED-E -->
 
 ### 9.9 Subagents
 
-- [ ] Subagents can be spawned with a scoped task via the `spawn_agent` tool
-- [ ] Subagents share the parent's execution environment (same filesystem)
-- [ ] Subagents maintain independent conversation history
-- [ ] Depth limiting prevents recursive spawning (default max depth: 1)
-- [ ] Subagent results are returned to the parent as tool results
-- [ ] `send_input`, `wait`, and `close_agent` tools work correctly
+- [ ] Subagents can be spawned with a scoped task via the `spawn_agent` tool <!-- req_id: CAL-DOD-9.45-SUBAGENTS-CAN-SPAWNED-SCOPED-TASK-VIA -->
+- [ ] Subagents share the parent's execution environment (same filesystem) <!-- req_id: CAL-DOD-9.46-SUBAGENTS-SHARE-PARENT-S-EXECUTION-ENVIRONMENT -->
+- [ ] Subagents maintain independent conversation history <!-- req_id: CAL-DOD-9.47-SUBAGENTS-MAINTAIN-INDEPENDENT-CONVERSATION-HISTORY -->
+- [ ] Depth limiting prevents recursive spawning (default max depth: 1) <!-- req_id: CAL-DOD-9.48-DEPTH-LIMITING-PREVENTS-RECURSIVE-SPAWNING-DEFAULT -->
+- [ ] Subagent results are returned to the parent as tool results <!-- req_id: CAL-DOD-9.49-SUBAGENT-RESULTS-RETURNED-PARENT-TOOL-RESULTS -->
+- [ ] `send_input`, `wait`, and `close_agent` tools work correctly <!-- req_id: CAL-DOD-9.50-TOOLS-CORRECTLY -->
 
 ### 9.10 Event System
 
-- [ ] All event kinds listed in Section 2.9 are emitted at the correct times
-- [ ] Events are delivered via async iterator or language-appropriate equivalent
-- [ ] `TOOL_CALL_END` events carry full untruncated tool output
-- [ ] Session lifecycle events (SESSION_START, SESSION_END) bracket the session
+- [ ] All event kinds listed in Section 2.9 are emitted at the correct times <!-- req_id: CAL-DOD-9.51-ALL-EVENT-KINDS-LISTED-SECTION-2 -->
+- [ ] Events are delivered via async iterator or language-appropriate equivalent <!-- req_id: CAL-DOD-9.52-EVENTS-DELIVERED-VIA-ASYNC-ITERATOR-LANGUAGE -->
+- [ ] `TOOL_CALL_END` events carry full untruncated tool output <!-- req_id: CAL-DOD-9.53-EVENTS-CARRY-FULL-UNTRUNCATED-TOOL-OUTPUT -->
+- [ ] Session lifecycle events (SESSION_START, SESSION_END) bracket the session <!-- req_id: CAL-DOD-9.54-SESSION-LIFECYCLE-EVENTS-SESSIONSTART-SESSIONEND-BRACKET -->
 
 ### 9.11 Error Handling
 
-- [ ] Tool execution errors -> error result sent to LLM (model can recover)
-- [ ] LLM API transient errors (429, 500-503) -> retry with backoff (handled by Unified LLM SDK layer)
-- [ ] Authentication errors -> surface immediately, no retry, session transitions to CLOSED
-- [ ] Context window overflow -> emit warning event (no automatic compaction)
-- [ ] Graceful shutdown: abort signal -> cancel LLM stream -> kill running processes -> flush events -> emit SESSION_END
+- [ ] Tool execution errors -> error result sent to LLM (model can recover) <!-- req_id: CAL-DOD-9.55-TOOL-EXECUTION-ERRORS-ERROR-RESULT-SENT -->
+- [ ] LLM API transient errors (429, 500-503) -> retry with backoff (handled by Unified LLM SDK layer) <!-- req_id: CAL-DOD-9.56-LLM-API-TRANSIENT-ERRORS-429-500 -->
+- [ ] Authentication errors -> surface immediately, no retry, session transitions to CLOSED <!-- req_id: CAL-DOD-9.57-AUTHENTICATION-ERRORS-SURFACE-IMMEDIATELY-RETRY-SESSION -->
+- [ ] Context window overflow -> emit warning event (no automatic compaction) <!-- req_id: CAL-DOD-9.58-CONTEXT-WINDOW-OVERFLOW-EMIT-WARNING-EVENT -->
+- [ ] Graceful shutdown: abort signal -> cancel LLM stream -> kill running processes -> flush events -> emit SESSION_END <!-- req_id: CAL-DOD-9.59-GRACEFUL-SHUTDOWN-ABORT-SIGNAL-CANCEL-LLM -->
 
 ### 9.12 Cross-Provider Parity Matrix
 

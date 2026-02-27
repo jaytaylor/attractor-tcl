@@ -65,7 +65,7 @@ Layer 2: Provider Utilities     Shared helpers for building adapters
 Layer 1: Provider Specification  ProviderAdapter interface, shared types
 ```
 
-**Layer 1 -- Provider Specification.** Defines the contract that every provider adapter must implement. Contains only interface definitions and shared type definitions. No implementation logic. This layer is the stability contract: it changes rarely and only with explicit versioning. A new provider is added by implementing this interface, not by modifying it.
+**Layer 1 -- Provider Specification.** Defines the contract that every provider adapter must implement. Contains only interface definitions and shared type definitions. No implementation logic. This layer is the stability contract: it changes rarely and only with explicit versioning. A new provider is added by implementing this interface, not by modifying it. <!-- req_id: ULLM-REQ-LAYER-1-PROVIDER-SPECIFICATION-DEFINES-CONTRACT -->
 
 **Layer 2 -- Provider Utilities.** Contains shared code for building adapters: HTTP client helpers, Server-Sent Events (SSE) parsing, retry logic, response normalization utilities, JSON schema translation helpers. Provider adapter authors import this layer; application developers generally do not.
 
@@ -138,7 +138,7 @@ client = Client(
 
 **Execution order.** Middleware runs in registration order for the request phase (first registered = first to execute) and in reverse order for the response phase. This is the standard onion/chain-of-responsibility pattern.
 
-**Streaming middleware.** Middleware must also apply to streaming requests. For streaming, middleware wraps the event iterator and can observe or transform individual stream events. The middleware interface should support both modes:
+**Streaming middleware.** Middleware must also apply to streaming requests. For streaming, middleware wraps the event iterator and can observe or transform individual stream events. The middleware interface should support both modes: <!-- req_id: ULLM-REQ-STREAMING-MIDDLEWARE-MIDDLEWARE-MUST-ALSO-APPLY -->
 
 ```
 FUNCTION streaming_middleware(request, next):
@@ -158,7 +158,7 @@ FUNCTION streaming_middleware(request, next):
 
 ### 2.4 Provider Adapter Interface
 
-Every provider must implement this interface:
+Every provider must implement this interface: <!-- req_id: ULLM-REQ-EVERY-PROVIDER-MUST-IMPLEMENT-INTERFACE -->
 
 ```
 INTERFACE ProviderAdapter:
@@ -177,7 +177,7 @@ INTERFACE ProviderAdapter:
 
 #### Optional Adapter Methods
 
-These methods are recommended but not required:
+These methods are recommended but not required: <!-- req_id: ULLM-REQ-THESE-METHODS-RECOMMENDED-BUT-REQUIRED -->
 
 ```
 FUNCTION close() -> Void
@@ -205,11 +205,11 @@ result = generate(model = "...", prompt = "...", client = my_client)
 
 The library is async-first. All provider calls are non-blocking. The `complete()` and `stream()` methods are asynchronous. The high-level API provides both async and sync wrappers for languages that support both paradigms.
 
-Multiple concurrent requests to different providers (or the same provider) are safe. The Client holds no mutable state between requests. Provider adapters manage their own connection pools and must be safe for concurrent use.
+Multiple concurrent requests to different providers (or the same provider) are safe. The Client holds no mutable state between requests. Provider adapters manage their own connection pools and must be safe for concurrent use. <!-- req_id: ULLM-REQ-MULTIPLE-CONCURRENT-REQUESTS-DIFFERENT-PROVIDERS-SAME -->
 
 ### 2.7 Native API Usage (Critical)
 
-Each provider adapter MUST use the provider's native, preferred API -- not a compatibility layer. This is a fundamental design requirement. Using a lowest-common-denominator compatibility layer (such as only targeting the OpenAI Chat Completions API shape) loses access to provider-specific capabilities like reasoning tokens, extended thinking, prompt caching, and advanced tool features.
+Each provider adapter MUST use the provider's native, preferred API -- not a compatibility layer. This is a fundamental design requirement. Using a lowest-common-denominator compatibility layer (such as only targeting the OpenAI Chat Completions API shape) loses access to provider-specific capabilities like reasoning tokens, extended thinking, prompt caching, and advanced tool features. <!-- req_id: ULLM-REQ-EACH-PROVIDER-ADAPTER-MUST-USE-PROVIDER -->
 
 | Provider  | Required API                    | Why Not Compatibility Layer                                                |
 |-----------|---------------------------------|---------------------------------------------------------------------------|
@@ -221,7 +221,7 @@ The unified SDK abstracts over these different APIs so that callers write provid
 
 ### 2.8 Provider Beta Headers and Feature Flags
 
-Providers frequently gate new features behind beta headers or feature flags. The unified SDK must support passing these through cleanly.
+Providers frequently gate new features behind beta headers or feature flags. The unified SDK must support passing these through cleanly. <!-- req_id: ULLM-REQ-PROVIDERS-FREQUENTLY-GATE-NEW-FEATURES-BEHIND -->
 
 **Anthropic beta headers.** Anthropic uses the `anthropic-beta` header to enable features like:
 - `max-tokens-3-5-sonnet-2025-04-14` -- enables 1M token context for certain models
@@ -229,7 +229,7 @@ Providers frequently gate new features behind beta headers or feature flags. The
 - `token-efficient-tools-2025-02-19` -- more efficient tool token usage
 - `prompt-caching-2024-07-31` -- enables prompt caching
 
-These must be passed as HTTP headers on the request. The adapter should accept them via `provider_options`:
+These must be passed as HTTP headers on the request. The adapter should accept them via `provider_options`: <!-- req_id: ULLM-REQ-THESE-MUST-PASSED-HTTP-HEADERS-REQUEST -->
 
 ```
 request = Request(
@@ -278,7 +278,7 @@ RECORD ModelInfo:
 | OpenAI    | **GPT-5.2 series** (GPT-5.2, GPT-5.2-codex)        |
 | Gemini    | **Gemini 3 Pro (Preview)**, Gemini 3 Flash (Preview) |
 
-Implementations should default to the latest available models when no model is specified by the caller, and should prefer newer models in any model selection logic. However, the catalog must also include older models that are still served by the APIs, as callers may need them for cost, latency, or compatibility reasons.
+Implementations should default to the latest available models when no model is specified by the caller, and should prefer newer models in any model selection logic. However, the catalog must also include older models that are still served by the APIs, as callers may need them for cost, latency, or compatibility reasons. <!-- req_id: ULLM-REQ-IMPLEMENTATIONS-SHOULD-DEFAULT-LATEST-AVAILABLE-MODELS -->
 
 Example catalog (keep this updated as new models release):
 
@@ -323,13 +323,13 @@ get_latest_model(provider: String, capability: String | None) -> ModelInfo | Non
     -- to always use the latest available model.
 ```
 
-**Why a catalog matters for coding agents:** When an AI coding agent builds on top of this SDK, it needs to select models by capability (e.g., "pick a model that supports vision" or "pick the cheapest model that supports tools"). Without a catalog, the agent must hallucinate model identifiers from its training data, which go stale as providers release new models. The catalog gives the agent a reliable, up-to-date source of truth.
+**Why a catalog matters for coding agents:** When an AI coding agent builds on top of this SDK, it needs to select models by capability (e.g., "pick a model that supports vision" or "pick the cheapest model that supports tools"). Without a catalog, the agent must hallucinate model identifiers from its training data, which go stale as providers release new models. The catalog gives the agent a reliable, up-to-date source of truth. <!-- req_id: ULLM-REQ-WHY-CATALOG-MATTERS-CODING-AGENTS-AI -->
 
 The catalog should be shipped as a data file (JSON or similar) that can be updated independently of the library code. Consider auto-generating it from provider documentation or APIs. **When in doubt, prefer the latest models** -- they are generally more capable, and the SDK should make it easy to stay current.
 
 ### 2.10 Prompt Caching (Critical for Cost)
 
-Prompt caching allows providers to reuse computation from previous requests when the prefix of the conversation is unchanged. For agentic workloads where the system prompt and conversation history are identical across many turns, caching can reduce input token costs by 50-90%. The unified SDK MUST support caching for each provider.
+Prompt caching allows providers to reuse computation from previous requests when the prefix of the conversation is unchanged. For agentic workloads where the system prompt and conversation history are identical across many turns, caching can reduce input token costs by 50-90%. The unified SDK MUST support caching for each provider. <!-- req_id: ULLM-REQ-PROMPT-CACHING-ALLOWS-PROVIDERS-REUSE-COMPUTATION -->
 
 | Provider  | Caching Behavior                                                      | SDK Action Required |
 |-----------|-----------------------------------------------------------------------|---------------------|
@@ -337,9 +337,9 @@ Prompt caching allows providers to reuse computation from previous requests when
 | Gemini    | Automatic -- prefix caching for repeated content, plus explicit `cachedContent` API for long contexts | None for automatic. Expose explicit caching via `provider_options`. |
 | Anthropic | **Not automatic.** Requires explicit `cache_control` annotations on content blocks. | The Anthropic adapter must inject `cache_control` breakpoints automatically for agentic workloads. |
 
-Anthropic is the only provider where the SDK must do extra work. Without cache_control annotations, every turn re-processes the entire system prompt and conversation history at full price. With proper caching, cached input tokens cost 90% less. This is the single highest-ROI optimization for agentic workloads.
+Anthropic is the only provider where the SDK must do extra work. Without cache_control annotations, every turn re-processes the entire system prompt and conversation history at full price. With proper caching, cached input tokens cost 90% less. This is the single highest-ROI optimization for agentic workloads. <!-- req_id: ULLM-REQ-ANTHROPIC-ONLY-PROVIDER-SDK-MUST-DO -->
 
-All three providers report cache statistics. The SDK must map these to `Usage.cache_read_tokens` and `Usage.cache_write_tokens` so callers can verify caching is working.
+All three providers report cache statistics. The SDK must map these to `Usage.cache_read_tokens` and `Usage.cache_write_tokens` so callers can verify caching is working. <!-- req_id: ULLM-REQ-ALL-THREE-PROVIDERS-REPORT-CACHE-STATISTICS -->
 
 ---
 
@@ -472,9 +472,9 @@ RECORD ImageData:
     detail      : String | None     -- processing fidelity hint: "auto", "low", "high"
 ```
 
-Exactly one of `url` or `data` must be provided. The adapter base64-encodes `data` if the provider requires it. `media_type` defaults to `"image/png"` when `data` is provided and no type is specified.
+Exactly one of `url` or `data` must be provided. The adapter base64-encodes `data` if the provider requires it. `media_type` defaults to `"image/png"` when `data` is provided and no type is specified. <!-- req_id: ULLM-REQ-EXACTLY-ONE-MUST-PROVIDED-ADAPTER-BASE64 -->
 
-**Image upload is critical for multimodal capabilities.** Many models (Claude, GPT-4.1, Gemini) accept image inputs for analysis, code screenshot reading, diagram understanding, and more. The SDK must handle image upload correctly across all providers:
+**Image upload is critical for multimodal capabilities.** Many models (Claude, GPT-4.1, Gemini) accept image inputs for analysis, code screenshot reading, diagram understanding, and more. The SDK must handle image upload correctly across all providers: <!-- req_id: ULLM-REQ-IMAGE-UPLOAD-CRITICAL-MULTIMODAL-CAPABILITIES-MANY -->
 
 | Concern              | OpenAI                                               | Anthropic                                         | Gemini                                            |
 |----------------------|------------------------------------------------------|---------------------------------------------------|---------------------------------------------------|
@@ -516,7 +516,7 @@ RECORD ToolCallData:
     type        : String            -- "function" (default) or "custom"
 ```
 
-The `id` field is assigned by the provider and is required for linking tool results back to calls. For providers that do not assign unique IDs (e.g., Gemini), the adapter must generate synthetic unique IDs (e.g., `"call_" + random_uuid()`) and maintain a mapping to the function name.
+The `id` field is assigned by the provider and is required for linking tool results back to calls. For providers that do not assign unique IDs (e.g., Gemini), the adapter must generate synthetic unique IDs (e.g., `"call_" + random_uuid()`) and maintain a mapping to the function name. <!-- req_id: ULLM-REQ-FIELD-ASSIGNED-PROVIDER-REQUIRED-LINKING-TOOL -->
 
 #### ToolResultData
 
@@ -540,7 +540,7 @@ RECORD ThinkingData:
     redacted    : Boolean           -- true if this is redacted thinking (opaque content)
 ```
 
-Thinking blocks from Anthropic's extended thinking must be preserved exactly as received and included in subsequent messages. The `signature` field enables this. Redacted thinking blocks contain opaque data that cannot be read but must be passed back verbatim.
+Thinking blocks from Anthropic's extended thinking must be preserved exactly as received and included in subsequent messages. The `signature` field enables this. Redacted thinking blocks contain opaque data that cannot be read but must be passed back verbatim. <!-- req_id: ULLM-REQ-THINKING-BLOCKS-ANTHROPIC-S-EXTENDED-THINKING -->
 
 **Cross-provider portability:** Thinking blocks with signatures are only valid when continuing with the same provider and model. When switching providers, the adapter should strip signatures and optionally convert the thinking text to a user-visible context message.
 
@@ -661,7 +661,7 @@ RECORD Usage:
     raw                 : Dict | None       -- raw provider usage data
 ```
 
-Usage objects must support addition for aggregating across multi-step operations:
+Usage objects must support addition for aggregating across multi-step operations: <!-- req_id: ULLM-REQ-USAGE-OBJECTS-MUST-SUPPORT-ADDITION-AGGREGATING -->
 
 ```
 usage_a + usage_b -> Usage
@@ -685,7 +685,7 @@ Provider usage field mapping:
 Reasoning tokens are tokens the model uses for internal chain-of-thought before producing visible output. Properly tracking and surfacing reasoning tokens is essential for cost management and debugging, because reasoning tokens are billed as output tokens but are not visible in the response text.
 
 **OpenAI reasoning models (GPT-5.2 series, etc.):**
-- The **Responses API** (`/v1/responses`) is REQUIRED for reasoning models. The Chat Completions API does not return reasoning token breakdowns for these models. The Responses API returns `usage.output_tokens_details.reasoning_tokens` which tells you exactly how many tokens were spent on reasoning vs. visible output.
+- The **Responses API** (`/v1/responses`) is REQUIRED for reasoning models. The Chat Completions API does not return reasoning token breakdowns for these models. The Responses API returns `usage.output_tokens_details.reasoning_tokens` which tells you exactly how many tokens were spent on reasoning vs. visible output. <!-- req_id: ULLM-REQ-THE-RESPONSES-API-IS-REQUIRED-FOR -->
 - The `reasoning_effort` request parameter ("low", "medium", "high") controls how much reasoning the model does. This maps to `reasoning.effort` in the Responses API request body.
 - Reasoning content is not visible in the response (OpenAI does not expose the thinking text for GPT-5.2 series models). The adapter should still populate `reasoning_tokens` in Usage so callers can track costs.
 
@@ -693,14 +693,14 @@ Reasoning tokens are tokens the model uses for internal chain-of-thought before 
 - Extended thinking is enabled via the `thinking` parameter (through `provider_options`) and requires specific beta headers.
 - Anthropic surfaces thinking as explicit `thinking` content blocks in the response. These blocks contain the actual reasoning text and count toward `output_tokens` in the usage.
 - The adapter should populate `reasoning_tokens` by summing the token lengths of thinking blocks (Anthropic does not provide a separate reasoning token count, but the thinking block text can be used for estimation).
-- Thinking blocks carry a `signature` field that must be round-tripped verbatim in subsequent messages.
+- Thinking blocks carry a `signature` field that must be round-tripped verbatim in subsequent messages. <!-- req_id: ULLM-REQ-THINKING-BLOCKS-CARRY-A-FIELD-THAT -->
 
 **Gemini thinking (Gemini 3 models):**
 - Gemini 3 Flash supports "thinking" via the `thinkingConfig` parameter.
 - Gemini reports `thoughtsTokenCount` in `usageMetadata`, which maps directly to `reasoning_tokens`.
 - Thinking content may be returned in the response as a `thought` part.
 
-**Why this matters:** When switching between providers, reasoning token usage can vary dramatically. A query that uses 500 reasoning tokens on OpenAI GPT-5.2 might use 2000 thinking tokens on Claude. The unified SDK must track this accurately so callers can make informed cost decisions. Even though reasoning tokens make direct provider switching unfavorable (the thinking styles are different), the SDK should still translate correctly so higher-level tools can compare.
+**Why this matters:** When switching between providers, reasoning token usage can vary dramatically. A query that uses 500 reasoning tokens on OpenAI GPT-5.2 might use 2000 thinking tokens on Claude. The unified SDK must track this accurately so callers can make informed cost decisions. Even though reasoning tokens make direct provider switching unfavorable (the thinking styles are different), the SDK should still translate correctly so higher-level tools can compare. <!-- req_id: ULLM-REQ-WHY-MATTERS-SWITCHING-BETWEEN-PROVIDERS-REASONING -->
 
 ### 3.10 ResponseFormat
 
@@ -838,7 +838,7 @@ FOR EACH event IN event_stream:
 - Returns an async iterator immediately.
 - Yields StreamEvent objects as they arrive from the provider.
 - The stream terminates with a FINISH event containing the complete accumulated response.
-- Must be consumed or explicitly closed; abandoning a stream without closing it may leak connections.
+- Must be consumed or explicitly closed; abandoning a stream without closing it may leak connections. <!-- req_id: ULLM-REQ-MUST-BE-CONSUMED-OR-EXPLICITLY-CLOSED -->
 - Does NOT retry automatically.
 
 ### 4.3 High-Level: generate()
@@ -1059,9 +1059,9 @@ RECORD Tool:
     execute     : Function | None           -- handler function (if present, tool is "active")
 ```
 
-**Tool name constraints:** Names must be valid identifiers: alphanumeric characters and underscores, starting with a letter. Maximum 64 characters. This is the strictest common subset across all providers. The library validates names at definition time.
+**Tool name constraints:** Names must be valid identifiers: alphanumeric characters and underscores, starting with a letter. Maximum 64 characters. This is the strictest common subset across all providers. The library validates names at definition time. <!-- req_id: ULLM-REQ-TOOL-NAME-CONSTRAINTS-NAMES-MUST-VALID -->
 
-**Parameter schema:** Parameters must be defined as a JSON Schema object with `"type": "object"` at the root. This is a universal requirement across all providers. The library passes this schema to the provider, which uses it to constrain argument generation.
+**Parameter schema:** Parameters must be defined as a JSON Schema object with `"type": "object"` at the root. This is a universal requirement across all providers. The library passes this schema to the provider, which uses it to constrain argument generation. <!-- req_id: ULLM-REQ-PARAMETER-SCHEMA-PARAMETERS-MUST-DEFINED-JSON -->
 
 **Example:**
 
@@ -1141,7 +1141,7 @@ Provider mapping:
 | required  | `"required"`                                            | `{"type": "any"}`                  | `"ANY"`                                                    |
 | named     | `{"type":"function","function":{"name":"..."}}`        | `{"type":"tool","name":"..."}`     | `{"mode":"ANY","allowedFunctionNames":["..."]}`            |
 
-Note on Anthropic `none` mode: Anthropic does not support `tool_choice: {"type": "none"}` when tools are present. The adapter must omit the tools array from the request body entirely.
+Note on Anthropic `none` mode: Anthropic does not support `tool_choice: {"type": "none"}` when tools are present. The adapter must omit the tools array from the request body entirely. <!-- req_id: ULLM-REQ-NOTE-ANTHROPIC-MODE-ANTHROPIC-DOES-SUPPORT -->
 
 If a provider does not support a particular mode, the adapter raises `UnsupportedToolChoiceError`. The `supports_tool_choice(mode)` method allows checking capabilities upfront.
 
@@ -1219,10 +1219,10 @@ FUNCTION tool_loop(request, tools, max_tool_rounds, stop_when):
 
 ### 5.7 Parallel Tool Execution
 
-When the model returns multiple tool calls in a single response, they are logically independent (the model generated them simultaneously without seeing any results). The library MUST handle this correctly:
+When the model returns multiple tool calls in a single response, they are logically independent (the model generated them simultaneously without seeing any results). The library MUST handle this correctly: <!-- req_id: ULLM-REQ-MODEL-RETURNS-MULTIPLE-TOOL-CALLS-SINGLE -->
 
 1. **Execute all tool calls concurrently.** Launch all execute handlers simultaneously (using async tasks, threads, or equivalent concurrency primitive).
-2. **Wait for ALL results before continuing.** Do not send partial results back to the model. The continuation request must include results for every tool call from the previous response.
+2. **Wait for ALL results before continuing.** Do not send partial results back to the model. The continuation request must include results for every tool call from the previous response. <!-- req_id: ULLM-REQ-2-WAIT-ALL-RESULTS-BEFORE-CONTINUING -->
 3. **Send all results in a single continuation request.** Bundle all tool results into the message history and make one LLM call, not one call per result.
 4. **Preserve ordering.** Tool results should appear in the same order as the corresponding tool calls, even though execution may complete out of order.
 5. **Handle partial failures gracefully.** If some tool executions succeed and others fail, send all results (with `is_error = true` for failures). Do not abort the entire batch because one tool failed.
@@ -1472,7 +1472,7 @@ This section provides detailed guidance for implementing a provider adapter. It 
 
 ### 7.1 Interface Summary
 
-Each adapter must implement:
+Each adapter must implement: <!-- req_id: ULLM-REQ-EACH-ADAPTER-MUST-IMPLEMENT -->
 
 ```
 INTERFACE ProviderAdapter:
@@ -1492,7 +1492,7 @@ Recommended optional methods:
 
 ### 7.2 Request Translation
 
-The adapter must translate a unified `Request` into the provider's native API format. The general steps are:
+The adapter must translate a unified `Request` into the provider's native API format. The general steps are: <!-- req_id: ULLM-REQ-ADAPTER-MUST-TRANSLATE-UNIFIED-PROVIDER-S -->
 
 1. **Extract system messages.** For Anthropic: extract from message list, pass as `system` parameter. For Gemini: extract and pass as `systemInstruction`. For OpenAI (Responses API): extract and pass as `instructions` parameter.
 
@@ -1557,10 +1557,10 @@ ContentPart Translations:
 ```
 
 Special behaviors:
-- **Strict alternation:** Anthropic requires alternating user/assistant messages. The adapter must merge consecutive same-role messages by combining their content arrays.
+- **Strict alternation:** Anthropic requires alternating user/assistant messages. The adapter must merge consecutive same-role messages by combining their content arrays. <!-- req_id: ULLM-REQ-STRICT-ALTERNATION-ANTHROPIC-REQUIRES-ALTERNATING-USER -->
 - **Tool results in user messages:** Anthropic requires tool results to appear in user-role messages, not a separate "tool" role.
-- **Thinking block round-tripping:** Thinking and redacted_thinking blocks from previous responses must be preserved exactly as received and included in subsequent assistant messages.
-- **max_tokens is required:** Anthropic always requires `max_tokens`. Default to 4096 if not specified.
+- **Thinking block round-tripping:** Thinking and redacted_thinking blocks from previous responses must be preserved exactly as received and included in subsequent assistant messages. <!-- req_id: ULLM-REQ-THINKING-BLOCK-ROUND-TRIPPING-THINKING-AND -->
+- **max_tokens is required:** Anthropic always requires `max_tokens`. Default to 4096 if not specified. <!-- req_id: ULLM-REQ-MAX-TOKENS-IS-REQUIRED-ANTHROPIC-ALWAYS -->
 
 #### Gemini Message Translation
 
@@ -1582,7 +1582,7 @@ ContentPart Translations:
 
 Special behaviors:
 - **No developer role:** Treated the same as system.
-- **Tool call IDs:** Gemini does not assign unique IDs to function calls. The adapter must generate synthetic unique IDs (e.g., `"call_" + random_uuid()`) and maintain a mapping from synthetic IDs to function names for when tool results are sent back.
+- **Tool call IDs:** Gemini does not assign unique IDs to function calls. The adapter must generate synthetic unique IDs (e.g., `"call_" + random_uuid()`) and maintain a mapping from synthetic IDs to function names for when tool results are sent back. <!-- req_id: ULLM-REQ-TOOL-CALL-IDS-GEMINI-DOES-NOT -->
 - **Function response format:** Gemini's `functionResponse` uses the function *name* (not the call ID) and expects a dict for the response (wrap strings in `{"result": "..."}` if needed).
 - **Streaming format:** Gemini uses JSON chunks (optionally via SSE with `?alt=sse`), not a standard SSE endpoint.
 
@@ -1597,7 +1597,7 @@ Special behaviors:
 
 ### 7.5 Response Translation
 
-The adapter must parse the provider's response into the unified Response format:
+The adapter must parse the provider's response into the unified Response format: <!-- req_id: ULLM-REQ-ADAPTER-MUST-PARSE-PROVIDER-S-RESPONSE -->
 
 1. **Extract content parts.** Parse the provider's content/parts array into `List<ContentPart>` with appropriate `ContentKind` tags.
 2. **Map finish reason.** Translate the provider's finish/stop reason to the unified `FinishReason` (see mapping table in Section 3.8).
@@ -1607,7 +1607,7 @@ The adapter must parse the provider's response into the unified Response format:
 
 ### 7.6Error Translation
 
-The adapter must translate HTTP errors into the error hierarchy:
+The adapter must translate HTTP errors into the error hierarchy: <!-- req_id: ULLM-REQ-ADAPTER-MUST-TRANSLATE-HTTP-ERRORS-ERROR -->
 
 1. Parse the response body for error details (message, error code).
 2. Extract `Retry-After` header if present.
@@ -1641,7 +1641,7 @@ The adapter translates provider-specific streaming formats into the unified Stre
 
 #### SSE Parsing
 
-Most providers use Server-Sent Events (SSE). A proper SSE parser must handle:
+Most providers use Server-Sent Events (SSE). A proper SSE parser must handle: <!-- req_id: ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS -->
 
 - `event:` lines (event type)
 - `data:` lines (payload, may span multiple lines)
@@ -1672,7 +1672,7 @@ Translation:
     response.completed             -> FINISH event with usage (including reasoning_tokens)
 ```
 
-The Responses API streaming format provides reasoning token counts in the final `response.completed` event, which is why it is required for reasoning models.
+The Responses API streaming format provides reasoning token counts in the final `response.completed` event, which is why it is required for reasoning models. <!-- req_id: ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING -->
 
 For the OpenAI-compatible adapter (Chat Completions), the streaming format is:
 
@@ -1727,7 +1727,7 @@ Note: Gemini typically delivers function calls as complete objects in a single c
 
 ### 7.8 Provider Quirks Reference
 
-A summary of provider-specific behaviors that adapters must handle:
+A summary of provider-specific behaviors that adapters must handle: <!-- req_id: ULLM-REQ-SUMMARY-PROVIDER-SPECIFIC-BEHAVIORS-ADAPTERS-MUST -->
 
 | Concern                      | OpenAI                           | Anthropic                              | Gemini                              |
 |------------------------------|----------------------------------|----------------------------------------|-------------------------------------|
@@ -1844,7 +1844,7 @@ messages = [
 ]
 ```
 
-When continuing a conversation that includes thinking blocks, the thinking content parts must be included in the message history so the provider can verify their integrity.
+When continuing a conversation that includes thinking blocks, the thinking content parts must be included in the message history so the provider can verify their integrity. <!-- req_id: ULLM-REQ-CONTINUING-CONVERSATION-INCLUDES-THINKING-BLOCKS-THINKING -->
 
 ---
 
@@ -1970,99 +1970,99 @@ This section defines how to validate that an implementation of this spec is comp
 
 ### 8.1 Core Infrastructure
 
-- [ ] `Client` can be constructed from environment variables (`Client.from_env()`)
-- [ ] `Client` can be constructed programmatically with explicit adapter instances
-- [ ] Provider routing works: requests are dispatched to the correct adapter based on `provider` field
-- [ ] Default provider is used when `provider` is omitted from a request
-- [ ] `ConfigurationError` is raised when no provider is configured and no default is set
-- [ ] Middleware chain executes in correct order (request: registration order, response: reverse order)
-- [ ] Module-level default client works (`set_default_client()` and implicit lazy initialization)
-- [ ] Model catalog is populated with current models and `get_model_info()` / `list_models()` return correct data
+- [ ] `Client` can be constructed from environment variables (`Client.from_env()`) <!-- req_id: ULLM-DOD-8.1-CAN-CONSTRUCTED-ENVIRONMENT-VARIABLES -->
+- [ ] `Client` can be constructed programmatically with explicit adapter instances <!-- req_id: ULLM-DOD-8.2-CAN-CONSTRUCTED-PROGRAMMATICALLY-EXPLICIT-ADAPTER-INSTANCES -->
+- [ ] Provider routing works: requests are dispatched to the correct adapter based on `provider` field <!-- req_id: ULLM-DOD-8.3-PROVIDER-ROUTING-REQUESTS-DISPATCHED-CORRECT-ADAPTER -->
+- [ ] Default provider is used when `provider` is omitted from a request <!-- req_id: ULLM-DOD-8.4-DEFAULT-PROVIDER-USED-OMITTED-REQUEST -->
+- [ ] `ConfigurationError` is raised when no provider is configured and no default is set <!-- req_id: ULLM-DOD-8.5-RAISED-PROVIDER-CONFIGURED-DEFAULT-SET -->
+- [ ] Middleware chain executes in correct order (request: registration order, response: reverse order) <!-- req_id: ULLM-DOD-8.6-MIDDLEWARE-CHAIN-EXECUTES-CORRECT-ORDER-REQUEST -->
+- [ ] Module-level default client works (`set_default_client()` and implicit lazy initialization) <!-- req_id: ULLM-DOD-8.7-MODULE-LEVEL-DEFAULT-CLIENT-IMPLICIT-LAZY -->
+- [ ] Model catalog is populated with current models and `get_model_info()` / `list_models()` return correct data <!-- req_id: ULLM-DOD-8.8-MODEL-CATALOG-POPULATED-CURRENT-MODELS-RETURN -->
 
 ### 8.2 Provider Adapters
 
 For EACH provider (OpenAI, Anthropic, Gemini), verify:
 
-- [ ] Adapter uses the provider's **native API** (OpenAI: Responses API, Anthropic: Messages API, Gemini: Gemini API) -- NOT a compatibility shim
-- [ ] Authentication works (API key from env var or explicit config)
-- [ ] `complete()` sends a request and returns a correctly populated `Response`
-- [ ] `stream()` returns an async iterator of correctly typed `StreamEvent` objects
-- [ ] System messages are extracted/handled per provider convention
-- [ ] All 5 roles (SYSTEM, USER, ASSISTANT, TOOL, DEVELOPER) are translated correctly
-- [ ] `provider_options` escape hatch passes through provider-specific parameters
-- [ ] Beta headers are supported (especially Anthropic's `anthropic-beta` header)
-- [ ] HTTP errors are translated to the correct error hierarchy types
-- [ ] `Retry-After` headers are parsed and set on the error object
+- [ ] Adapter uses the provider's **native API** (OpenAI: Responses API, Anthropic: Messages API, Gemini: Gemini API) -- NOT a compatibility shim <!-- req_id: ULLM-DOD-8.9-ADAPTER-USES-PROVIDER-S-NATIVE-API -->
+- [ ] Authentication works (API key from env var or explicit config) <!-- req_id: ULLM-DOD-8.10-AUTHENTICATION-API-KEY-ENV-VAR-EXPLICIT -->
+- [ ] `complete()` sends a request and returns a correctly populated `Response` <!-- req_id: ULLM-DOD-8.11-SENDS-REQUEST-RETURNS-CORRECTLY-POPULATED -->
+- [ ] `stream()` returns an async iterator of correctly typed `StreamEvent` objects <!-- req_id: ULLM-DOD-8.12-RETURNS-ASYNC-ITERATOR-CORRECTLY-TYPED-OBJECTS -->
+- [ ] System messages are extracted/handled per provider convention <!-- req_id: ULLM-DOD-8.13-SYSTEM-MESSAGES-EXTRACTED-HANDLED-PER-PROVIDER -->
+- [ ] All 5 roles (SYSTEM, USER, ASSISTANT, TOOL, DEVELOPER) are translated correctly <!-- req_id: ULLM-DOD-8.14-ALL-5-ROLES-SYSTEM-USER-ASSISTANT -->
+- [ ] `provider_options` escape hatch passes through provider-specific parameters <!-- req_id: ULLM-DOD-8.15-ESCAPE-HATCH-PASSES-THROUGH-PROVIDER-SPECIFIC -->
+- [ ] Beta headers are supported (especially Anthropic's `anthropic-beta` header) <!-- req_id: ULLM-DOD-8.16-BETA-HEADERS-SUPPORTED-ESPECIALLY-ANTHROPIC-S -->
+- [ ] HTTP errors are translated to the correct error hierarchy types <!-- req_id: ULLM-DOD-8.17-HTTP-ERRORS-TRANSLATED-CORRECT-ERROR-HIERARCHY -->
+- [ ] `Retry-After` headers are parsed and set on the error object <!-- req_id: ULLM-DOD-8.18-HEADERS-PARSED-SET-ERROR-OBJECT -->
 
 ### 8.3 Message & Content Model
 
-- [ ] Messages with text-only content work across all providers
-- [ ] **Image input works**: images sent as URL, base64 data, and local file path are correctly translated per provider
-- [ ] Audio and document content parts are handled (or gracefully rejected if provider doesn't support them)
-- [ ] Tool call content parts round-trip correctly (assistant message with tool calls -> tool result messages -> next assistant message)
-- [ ] Thinking blocks (Anthropic) are preserved and round-tripped with signatures intact
-- [ ] Redacted thinking blocks are passed through verbatim
-- [ ] Multimodal messages (text + images in the same message) work
+- [ ] Messages with text-only content work across all providers <!-- req_id: ULLM-DOD-8.19-MESSAGES-TEXT-ONLY-CONTENT-ACROSS-ALL -->
+- [ ] **Image input works**: images sent as URL, base64 data, and local file path are correctly translated per provider <!-- req_id: ULLM-DOD-8.20-IMAGE-INPUT-IMAGES-SENT-URL-BASE64 -->
+- [ ] Audio and document content parts are handled (or gracefully rejected if provider doesn't support them) <!-- req_id: ULLM-DOD-8.21-AUDIO-DOCUMENT-CONTENT-PARTS-HANDLED-GRACEFULLY -->
+- [ ] Tool call content parts round-trip correctly (assistant message with tool calls -> tool result messages -> next assistant message) <!-- req_id: ULLM-DOD-8.22-TOOL-CALL-CONTENT-PARTS-ROUND-TRIP -->
+- [ ] Thinking blocks (Anthropic) are preserved and round-tripped with signatures intact <!-- req_id: ULLM-DOD-8.23-THINKING-BLOCKS-ANTHROPIC-PRESERVED-ROUND-TRIPPED -->
+- [ ] Redacted thinking blocks are passed through verbatim <!-- req_id: ULLM-DOD-8.24-REDACTED-THINKING-BLOCKS-PASSED-THROUGH-VERBATIM -->
+- [ ] Multimodal messages (text + images in the same message) work <!-- req_id: ULLM-DOD-8.25-MULTIMODAL-MESSAGES-TEXT-IMAGES-SAME-MESSAGE -->
 
 ### 8.4 Generation
 
-- [ ] `generate()` works with a simple text `prompt`
-- [ ] `generate()` works with a full `messages` list
-- [ ] `generate()` rejects when both `prompt` and `messages` are provided
-- [ ] `stream()` yields `TEXT_DELTA` events that concatenate to the full response text
-- [ ] `stream()` yields `STREAM_START` and `FINISH` events with correct metadata
-- [ ] Streaming follows the start/delta/end pattern for text segments
-- [ ] `generate_object()` returns parsed, validated structured output
-- [ ] `generate_object()` raises `NoObjectGeneratedError` on parse/validation failure
-- [ ] Cancellation via abort signal works for both `generate()` and `stream()`
-- [ ] Timeouts work (total timeout and per-step timeout)
+- [ ] `generate()` works with a simple text `prompt` <!-- req_id: ULLM-DOD-8.26-SIMPLE-TEXT -->
+- [ ] `generate()` works with a full `messages` list <!-- req_id: ULLM-DOD-8.27-FULL-LIST -->
+- [ ] `generate()` rejects when both `prompt` and `messages` are provided <!-- req_id: ULLM-DOD-8.28-REJECTS-BOTH-PROVIDED -->
+- [ ] `stream()` yields `TEXT_DELTA` events that concatenate to the full response text <!-- req_id: ULLM-DOD-8.29-YIELDS-EVENTS-CONCATENATE-FULL-RESPONSE-TEXT -->
+- [ ] `stream()` yields `STREAM_START` and `FINISH` events with correct metadata <!-- req_id: ULLM-DOD-8.30-YIELDS-EVENTS-CORRECT-METADATA -->
+- [ ] Streaming follows the start/delta/end pattern for text segments <!-- req_id: ULLM-DOD-8.31-STREAMING-FOLLOWS-START-DELTA-END-PATTERN -->
+- [ ] `generate_object()` returns parsed, validated structured output <!-- req_id: ULLM-DOD-8.32-RETURNS-PARSED-VALIDATED-STRUCTURED-OUTPUT -->
+- [ ] `generate_object()` raises `NoObjectGeneratedError` on parse/validation failure <!-- req_id: ULLM-DOD-8.33-RAISES-PARSE-VALIDATION-FAILURE -->
+- [ ] Cancellation via abort signal works for both `generate()` and `stream()` <!-- req_id: ULLM-DOD-8.34-CANCELLATION-VIA-ABORT-SIGNAL-BOTH -->
+- [ ] Timeouts work (total timeout and per-step timeout) <!-- req_id: ULLM-DOD-8.35-TIMEOUTS-TOTAL-TIMEOUT-PER-STEP-TIMEOUT -->
 
 ### 8.5 Reasoning Tokens
 
-- [ ] OpenAI reasoning models (GPT-5.2 series, etc.) return `reasoning_tokens` in `Usage` via the Responses API
-- [ ] `reasoning_effort` parameter is passed through correctly to OpenAI reasoning models
-- [ ] Anthropic extended thinking blocks are returned as `THINKING` content parts when enabled
-- [ ] Thinking block `signature` field is preserved for round-tripping
-- [ ] Gemini thinking tokens (`thoughtsTokenCount`) are mapped to `reasoning_tokens` in `Usage`
-- [ ] `Usage` correctly reports `reasoning_tokens` as distinct from `output_tokens`
+- [ ] OpenAI reasoning models (GPT-5.2 series, etc.) return `reasoning_tokens` in `Usage` via the Responses API <!-- req_id: ULLM-DOD-8.36-OPENAI-REASONING-MODELS-GPT-5-2 -->
+- [ ] `reasoning_effort` parameter is passed through correctly to OpenAI reasoning models <!-- req_id: ULLM-DOD-8.37-PARAMETER-PASSED-THROUGH-CORRECTLY-OPENAI-REASONING -->
+- [ ] Anthropic extended thinking blocks are returned as `THINKING` content parts when enabled <!-- req_id: ULLM-DOD-8.38-ANTHROPIC-EXTENDED-THINKING-BLOCKS-RETURNED-CONTENT -->
+- [ ] Thinking block `signature` field is preserved for round-tripping <!-- req_id: ULLM-DOD-8.39-THINKING-BLOCK-FIELD-PRESERVED-ROUND-TRIPPING -->
+- [ ] Gemini thinking tokens (`thoughtsTokenCount`) are mapped to `reasoning_tokens` in `Usage` <!-- req_id: ULLM-DOD-8.40-GEMINI-THINKING-TOKENS-MAPPED -->
+- [ ] `Usage` correctly reports `reasoning_tokens` as distinct from `output_tokens` <!-- req_id: ULLM-DOD-8.41-CORRECTLY-REPORTS-DISTINCT -->
 
 ### 8.6 Prompt Caching
 
-- [ ] **OpenAI**: caching works automatically via the Responses API (no client-side configuration needed)
-- [ ] **OpenAI**: `Usage.cache_read_tokens` is populated from `usage.prompt_tokens_details.cached_tokens`
-- [ ] **Anthropic**: adapter automatically injects `cache_control` breakpoints on the system prompt, tool definitions, and conversation prefix
-- [ ] **Anthropic**: `prompt-caching-2024-07-31` beta header is included automatically when cache_control is present
-- [ ] **Anthropic**: `Usage.cache_read_tokens` and `Usage.cache_write_tokens` are populated correctly
-- [ ] **Anthropic**: automatic caching can be disabled via `provider_options.anthropic.auto_cache = false`
-- [ ] **Gemini**: automatic prefix caching works (no client-side configuration needed)
-- [ ] **Gemini**: `Usage.cache_read_tokens` is populated from `usageMetadata.cachedContentTokenCount`
-- [ ] Multi-turn agentic session: verify that turn 5+ shows significant cache_read_tokens (>50% of input tokens) for all three providers
+- [ ] **OpenAI**: caching works automatically via the Responses API (no client-side configuration needed) <!-- req_id: ULLM-DOD-8.42-OPENAI-CACHING-AUTOMATICALLY-VIA-RESPONSES-API -->
+- [ ] **OpenAI**: `Usage.cache_read_tokens` is populated from `usage.prompt_tokens_details.cached_tokens` <!-- req_id: ULLM-DOD-8.43-OPENAI-POPULATED -->
+- [ ] **Anthropic**: adapter automatically injects `cache_control` breakpoints on the system prompt, tool definitions, and conversation prefix <!-- req_id: ULLM-DOD-8.44-ANTHROPIC-ADAPTER-AUTOMATICALLY-INJECTS-BREAKPOINTS-SYSTEM -->
+- [ ] **Anthropic**: `prompt-caching-2024-07-31` beta header is included automatically when cache_control is present <!-- req_id: ULLM-DOD-8.45-ANTHROPIC-BETA-HEADER-INCLUDED-AUTOMATICALLY-CACHECONTROL -->
+- [ ] **Anthropic**: `Usage.cache_read_tokens` and `Usage.cache_write_tokens` are populated correctly <!-- req_id: ULLM-DOD-8.46-ANTHROPIC-POPULATED-CORRECTLY -->
+- [ ] **Anthropic**: automatic caching can be disabled via `provider_options.anthropic.auto_cache = false` <!-- req_id: ULLM-DOD-8.47-ANTHROPIC-AUTOMATIC-CACHING-CAN-DISABLED-VIA -->
+- [ ] **Gemini**: automatic prefix caching works (no client-side configuration needed) <!-- req_id: ULLM-DOD-8.48-GEMINI-AUTOMATIC-PREFIX-CACHING-CLIENT-SIDE -->
+- [ ] **Gemini**: `Usage.cache_read_tokens` is populated from `usageMetadata.cachedContentTokenCount` <!-- req_id: ULLM-DOD-8.49-GEMINI-POPULATED -->
+- [ ] Multi-turn agentic session: verify that turn 5+ shows significant cache_read_tokens (>50% of input tokens) for all three providers <!-- req_id: ULLM-DOD-8.50-MULTI-TURN-AGENTIC-SESSION-VERIFY-TURN -->
 
 ### 8.7 Tool Calling
 
-- [ ] Tools with `execute` handlers (active tools) trigger automatic tool execution loops
-- [ ] Tools without `execute` handlers (passive tools) return tool calls to the caller without looping
-- [ ] `max_tool_rounds` is respected: loop stops after the configured number of rounds
-- [ ] `max_tool_rounds = 0` disables automatic execution entirely
-- [ ] **Parallel tool calls**: when the model returns N tool calls in one response, all N are executed concurrently
-- [ ] **Parallel tool results**: all N results are sent back in a single continuation request (not one at a time)
-- [ ] Tool execution errors are sent to the model as error results (`is_error = true`), not raised as exceptions
-- [ ] Unknown tool calls (model calls a tool not in definitions) send an error result, not an exception
-- [ ] `ToolChoice` modes (auto, none, required, named) are translated correctly per provider
-- [ ] Tool call argument JSON is parsed and validated before passing to execute handlers
-- [ ] `StepResult` objects track each step's tool calls, results, and usage
+- [ ] Tools with `execute` handlers (active tools) trigger automatic tool execution loops <!-- req_id: ULLM-DOD-8.51-TOOLS-HANDLERS-ACTIVE-TOOLS-TRIGGER-AUTOMATIC -->
+- [ ] Tools without `execute` handlers (passive tools) return tool calls to the caller without looping <!-- req_id: ULLM-DOD-8.52-TOOLS-WITHOUT-HANDLERS-PASSIVE-TOOLS-RETURN -->
+- [ ] `max_tool_rounds` is respected: loop stops after the configured number of rounds <!-- req_id: ULLM-DOD-8.53-RESPECTED-LOOP-STOPS-AFTER-CONFIGURED-NUMBER -->
+- [ ] `max_tool_rounds = 0` disables automatic execution entirely <!-- req_id: ULLM-DOD-8.54-DISABLES-AUTOMATIC-EXECUTION-ENTIRELY -->
+- [ ] **Parallel tool calls**: when the model returns N tool calls in one response, all N are executed concurrently <!-- req_id: ULLM-DOD-8.55-PARALLEL-TOOL-CALLS-MODEL-RETURNS-N -->
+- [ ] **Parallel tool results**: all N results are sent back in a single continuation request (not one at a time) <!-- req_id: ULLM-DOD-8.56-PARALLEL-TOOL-RESULTS-ALL-N-RESULTS -->
+- [ ] Tool execution errors are sent to the model as error results (`is_error = true`), not raised as exceptions <!-- req_id: ULLM-DOD-8.57-TOOL-EXECUTION-ERRORS-SENT-MODEL-ERROR -->
+- [ ] Unknown tool calls (model calls a tool not in definitions) send an error result, not an exception <!-- req_id: ULLM-DOD-8.58-UNKNOWN-TOOL-CALLS-MODEL-CALLS-TOOL -->
+- [ ] `ToolChoice` modes (auto, none, required, named) are translated correctly per provider <!-- req_id: ULLM-DOD-8.59-MODES-AUTO-NONE-REQUIRED-NAMED-TRANSLATED -->
+- [ ] Tool call argument JSON is parsed and validated before passing to execute handlers <!-- req_id: ULLM-DOD-8.60-TOOL-CALL-ARGUMENT-JSON-PARSED-VALIDATED -->
+- [ ] `StepResult` objects track each step's tool calls, results, and usage <!-- req_id: ULLM-DOD-8.61-OBJECTS-TRACK-EACH-STEP-S-TOOL -->
 
 ### 8.8 Error Handling & Retry
 
-- [ ] All errors in the hierarchy are raised for the correct HTTP status codes (see Section 6.4 table)
-- [ ] `retryable` flag is set correctly on each error type
-- [ ] Exponential backoff with jitter works: delays increase correctly per attempt
-- [ ] `Retry-After` header overrides calculated backoff when present (and within `max_delay`)
-- [ ] `max_retries = 0` disables automatic retries
-- [ ] Rate limit errors (429) are retried transparently
-- [ ] Non-retryable errors (401, 403, 404) are raised immediately without retry
-- [ ] Retries apply per-step, not to the entire multi-step operation
-- [ ] Streaming does not retry after partial data has been delivered
+- [ ] All errors in the hierarchy are raised for the correct HTTP status codes (see Section 6.4 table) <!-- req_id: ULLM-DOD-8.62-ALL-ERRORS-HIERARCHY-RAISED-CORRECT-HTTP -->
+- [ ] `retryable` flag is set correctly on each error type <!-- req_id: ULLM-DOD-8.63-FLAG-SET-CORRECTLY-EACH-ERROR-TYPE -->
+- [ ] Exponential backoff with jitter works: delays increase correctly per attempt <!-- req_id: ULLM-DOD-8.64-EXPONENTIAL-BACKOFF-JITTER-DELAYS-INCREASE-CORRECTLY -->
+- [ ] `Retry-After` header overrides calculated backoff when present (and within `max_delay`) <!-- req_id: ULLM-DOD-8.65-HEADER-OVERRIDES-CALCULATED-BACKOFF-PRESENT-WITHIN -->
+- [ ] `max_retries = 0` disables automatic retries <!-- req_id: ULLM-DOD-8.66-DISABLES-AUTOMATIC-RETRIES -->
+- [ ] Rate limit errors (429) are retried transparently <!-- req_id: ULLM-DOD-8.67-RATE-LIMIT-ERRORS-429-RETRIED-TRANSPARENTLY -->
+- [ ] Non-retryable errors (401, 403, 404) are raised immediately without retry <!-- req_id: ULLM-DOD-8.68-NON-RETRYABLE-ERRORS-401-403-404 -->
+- [ ] Retries apply per-step, not to the entire multi-step operation <!-- req_id: ULLM-DOD-8.69-RETRIES-APPLY-PER-STEP-ENTIRE-MULTI -->
+- [ ] Streaming does not retry after partial data has been delivered <!-- req_id: ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA -->
 
 ### 8.9 Cross-Provider Parity
 

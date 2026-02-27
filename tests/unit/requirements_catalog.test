@@ -1,0 +1,133 @@
+package require tcltest
+package require json
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+set tool [file join $root tools requirements_catalog.tcl]
+
+namespace eval ::tests::unit::reqcat {
+    variable idx 0
+}
+
+proc ::tests::unit::reqcat::tmpdir {} {
+    variable idx
+    incr idx
+    set dir [file join [pwd] .scratch verification SPRINT-002 catalog unit-reqcat-$idx]
+    file delete -force $dir
+    file mkdir $dir
+    return $dir
+}
+
+proc ::tests::unit::reqcat::write_file {path body} {
+    set fh [open $path w]
+    puts -nonewline $fh $body
+    close $fh
+}
+
+proc ::tests::unit::reqcat::read_file {path} {
+    set fh [open $path r]
+    set data [read $fh]
+    close $fh
+    return $data
+}
+
+test requirements_catalog-extracts-dod-and-normative-1.0 {extracts DoD and normative requirements and ignores excluded cases} -setup {
+    set dir [::tests::unit::reqcat::tmpdir]
+    set spec [file join $dir spec.md]
+    set outJson [file join $dir requirements.json]
+    set outMd [file join $dir requirements.md]
+    ::tests::unit::reqcat::write_file $spec [join [list \
+{# Spec} \
+{} \
+{This Must be deterministic. <!-- req_id: ULLM-REQ-THIS-MUST-BE-DETERMINISTIC -->} \
+{See [required](https://example.com/required) for docs.} \
+{} \
+{```text} \
+{must not inside code} \
+{```} \
+{} \
+{## 8. Definition of Done} \
+{- [ ] Parent checkbox has `inline code` and [a link](https://example.com). <!-- req_id: ULLM-DOD-8.1-PARENT-CHECKBOX -->} \
+{  wrapped continuation line for the same checkbox} \
+{  - [ ] Nested child checkbox. <!-- req_id: ULLM-DOD-8.2-NESTED-CHILD-CHECKBOX -->} \
+{} \
+{## 9. Outside} \
+{- [ ] This checkbox is outside DoD and should not be parsed.} \
+{} \
+{The system is REQUIRED to keep outputs stable. <!-- req_id: ULLM-REQ-SYSTEM-REQUIRED-KEEP-OUTPUTS-STABLE -->} \
+] "\n"]
+} -body {
+    set out [exec tclsh $tool --spec "$spec|ULLM|Definition of Done" --out-json $outJson --out-md $outMd]
+    set parsed [::json::json2dict [::tests::unit::reqcat::read_file $outJson]]
+    set reqs [dict get $parsed requirements]
+
+    set hasWrapped 0
+    foreach req $reqs {
+        if {[dict get $req id] eq "ULLM-DOD-8.1-PARENT-CHECKBOX" && [string first "wrapped continuation line" [dict get $req text]] >= 0} {
+            set hasWrapped 1
+        }
+    }
+
+    list \
+        [expr {[llength $reqs] == 4}] \
+        [expr {[string first "requirements=4" $out] >= 0}] \
+        $hasWrapped \
+        [expr {[file exists $outMd]}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1 1 1}
+
+test requirements_catalog-fails-missing-dod-header-1.0 {fails when DoD heading is missing} -setup {
+    set dir [::tests::unit::reqcat::tmpdir]
+    set spec [file join $dir spec.md]
+    ::tests::unit::reqcat::write_file $spec [join [list \
+"# Spec" \
+"This MUST have an id. <!-- req_id: ULLM-REQ-THIS-MUST-HAVE-ID -->" \
+"- [ ] Orphan checkbox" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --check-ids --spec "$spec|ULLM|Definition of Done"} out
+    expr {[string first "MISSING_DOD_HEADER" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1
+
+test requirements_catalog-fails-missing-normative-id-1.0 {fails when normative statement is missing req_id} -setup {
+    set dir [::tests::unit::reqcat::tmpdir]
+    set spec [file join $dir spec.md]
+    ::tests::unit::reqcat::write_file $spec [join [list \
+"# Spec" \
+"This MUST have an explicit id." \
+"## 8. Definition of Done" \
+"- [ ] Item. <!-- req_id: ULLM-DOD-8.1-ITEM -->" \
+] "\n"]
+} -body {
+    catch {exec tclsh $tool --check-ids --spec "$spec|ULLM|Definition of Done"} out
+    expr {[string first "MISSING_REQ_ID" $out] >= 0 && [string first "NORMATIVE" $out] >= 0}
+} -cleanup {
+    file delete -force $dir
+} -result 1
+
+test requirements_catalog-deterministic-output-1.0 {generator output is deterministic} -setup {
+    set dir [::tests::unit::reqcat::tmpdir]
+    set spec [file join $dir spec.md]
+    set outJsonA [file join $dir a.json]
+    set outJsonB [file join $dir b.json]
+    set outMdA [file join $dir a.md]
+    set outMdB [file join $dir b.md]
+    ::tests::unit::reqcat::write_file $spec [join [list \
+"# Spec" \
+"This MUST stay stable. <!-- req_id: ULLM-REQ-THIS-MUST-STAY-STABLE -->" \
+"## 8. Definition of Done" \
+"- [ ] First item. <!-- req_id: ULLM-DOD-8.1-FIRST-ITEM -->" \
+"- [ ] Second item. <!-- req_id: ULLM-DOD-8.2-SECOND-ITEM -->" \
+] "\n"]
+} -body {
+    exec tclsh $tool --spec "$spec|ULLM|Definition of Done" --out-json $outJsonA --out-md $outMdA
+    exec tclsh $tool --spec "$spec|ULLM|Definition of Done" --out-json $outJsonB --out-md $outMdB
+    list \
+        [expr {[::tests::unit::reqcat::read_file $outJsonA] eq [::tests::unit::reqcat::read_file $outJsonB]}] \
+        [expr {[::tests::unit::reqcat::read_file $outMdA] eq [::tests::unit::reqcat::read_file $outMdB]}]
+} -cleanup {
+    file delete -force $dir
+} -result {1 1}

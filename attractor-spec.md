@@ -110,11 +110,11 @@ Direction       ::= 'TB' | 'LR' | 'BT' | 'RL'
 ### 2.3 Key Constraints
 
 - **One digraph per file.** Multiple graphs, undirected graphs, and `strict` modifiers are rejected.
-- **Bare identifiers for node IDs.** Node IDs must match `[A-Za-z_][A-Za-z0-9_]*`. Human-readable names go in the `label` attribute.
-- **Commas required between attributes.** Inside attribute blocks, commas separate key-value pairs for unambiguous parsing.
+- **Bare identifiers for node IDs.** Node IDs must match `[A-Za-z_][A-Za-z0-9_]*`. Human-readable names go in the `label` attribute. <!-- req_id: ATR-REQ-BARE-IDENTIFIERS-FOR-NODE-IDS-NODE -->
+- **Commas required between attributes.** Inside attribute blocks, commas separate key-value pairs for unambiguous parsing. <!-- req_id: ATR-REQ-COMMAS-REQUIRED-BETWEEN-ATTRIBUTES-INSIDE-ATTRIBUTE -->
 - **Directed edges only.** `->` is the only edge operator. `--` (undirected) is rejected.
 - **Comments supported.** Both `// line` and `/* block */` comments are stripped before parsing.
-- **Semicolons optional.** Statement-terminating semicolons are accepted but not required.
+- **Semicolons optional.** Statement-terminating semicolons are accepted but not required. <!-- req_id: ATR-REQ-SEMICOLONS-OPTIONAL-STATEMENT-TERMINATING-SEMICOLONS-ARE -->
 
 ### 2.4 Value Types
 
@@ -454,7 +454,7 @@ FUNCTION best_by_weight_then_lexical(edges):
 
 ### 3.4 Goal Gate Enforcement
 
-Nodes with `goal_gate=true` represent critical stages that must succeed before the pipeline can exit. When the traversal reaches a terminal node (shape=Msquare):
+Nodes with `goal_gate=true` represent critical stages that must succeed before the pipeline can exit. When the traversal reaches a terminal node (shape=Msquare): <!-- req_id: ATR-REQ-NODES-REPRESENT-CRITICAL-STAGES-MUST-SUCCEED -->
 
 1. Check all visited nodes that have `goal_gate=true`.
 2. If any goal gate node has a non-success outcome (not SUCCESS or PARTIAL_SUCCESS), the pipeline cannot exit.
@@ -632,7 +632,7 @@ StartHandler:
         RETURN Outcome(status=SUCCESS)
 ```
 
-Every graph must have exactly one start node (shape=Mdiamond). The lint rules enforce this.
+Every graph must have exactly one start node (shape=Mdiamond). The lint rules enforce this. <!-- req_id: ATR-REQ-EVERY-GRAPH-MUST-HAVE-EXACTLY-ONE -->
 
 ### 4.4 Exit Handler
 
@@ -644,7 +644,7 @@ ExitHandler:
         RETURN Outcome(status=SUCCESS)
 ```
 
-Every graph must have exactly one exit node (shape=Msquare).
+Every graph must have exactly one exit node (shape=Msquare). <!-- req_id: ATR-REQ-EVERY-GRAPH-MUST-HAVE-EXACTLY-ONE-2 -->
 
 ### 4.5 Codergen Handler (LLM Task)
 
@@ -985,8 +985,8 @@ my_node [type="my_custom_type", shape=box, custom_attr="value"]
 ```
 
 **Handler contract:**
-- Handlers MUST be stateless or protect shared mutable state with synchronization.
-- Handler panics/exceptions MUST be caught by the engine and converted to FAIL outcomes.
+- Handlers MUST be stateless or protect shared mutable state with synchronization. <!-- req_id: ATR-REQ-HANDLERS-MUST-BE-STATELESS-OR-PROTECT -->
+- Handler panics/exceptions MUST be caught by the engine and converted to FAIL outcomes. <!-- req_id: ATR-REQ-HANDLER-PANICS-EXCEPTIONS-MUST-BE-CAUGHT -->
 - Handlers SHOULD NOT embed provider-specific logic; LLM orchestration is delegated to the integrated SDK.
 
 ---
@@ -1375,7 +1375,7 @@ For `wait.human` nodes, the node attribute `human.default_choice` specifies whic
 
 ### 7.1 Diagnostic Model
 
-Validation produces a list of diagnostics, each with a severity level. The engine must refuse to execute a pipeline with error-severity diagnostics.
+Validation produces a list of diagnostics, each with a severity level. The engine must refuse to execute a pipeline with error-severity diagnostics. <!-- req_id: ATR-REQ-VALIDATION-PRODUCES-LIST-DIAGNOSTICS-EACH-SEVERITY -->
 
 ```
 Diagnostic:
@@ -1605,7 +1605,7 @@ Implementations may expose the pipeline engine as an HTTP service for web-based 
 | `GET`  | `/pipelines/{id}/checkpoint`            | Get current checkpoint state. |
 | `GET`  | `/pipelines/{id}/context`               | Get current context key-value store. |
 
-Human gates must be operable via web controls in addition to CLI. The server maintains SSE connections for real-time event streaming.
+Human gates must be operable via web controls in addition to CLI. The server maintains SSE connections for real-time event streaming. <!-- req_id: ATR-REQ-HUMAN-GATES-MUST-OPERABLE-VIA-WEB -->
 
 ### 9.6 Observability and Events
 
@@ -1685,7 +1685,7 @@ Literal        ::= String | Integer | Boolean
 - `preferred_label` refers to the `preferred_label` value from the node's outcome.
 - `context.*` keys look up values from the run context. Missing keys compare as empty strings (never equal to non-empty values).
 - String comparison is exact and case-sensitive.
-- All clauses must evaluate to true for the condition to pass.
+- All clauses must evaluate to true for the condition to pass. <!-- req_id: ATR-REQ-ALL-CLAUSES-MUST-EVALUATE-TO-TRUE -->
 
 ### 10.4 Variable Resolution
 
@@ -1779,112 +1779,112 @@ This section defines how to validate that an implementation of this spec is comp
 
 ### 11.1 DOT Parsing
 
-- [ ] Parser accepts the supported DOT subset (digraph with graph/node/edge attribute blocks)
-- [ ] Graph-level attributes (`goal`, `label`, `model_stylesheet`) are extracted correctly
-- [ ] Node attributes are parsed including multi-line attribute blocks (attributes spanning multiple lines within `[...]`)
-- [ ] Edge attributes (`label`, `condition`, `weight`) are parsed correctly
-- [ ] Chained edges (`A -> B -> C`) produce individual edges for each pair
-- [ ] Node/edge default blocks (`node [...]`, `edge [...]`) apply to subsequent declarations
-- [ ] Subgraph blocks are flattened (contents kept, wrapper removed)
-- [ ] `class` attribute on nodes merges in attributes from the stylesheet
-- [ ] Quoted and unquoted attribute values both work
-- [ ] Comments (`//` and `/* */`) are stripped before parsing
+- [ ] Parser accepts the supported DOT subset (digraph with graph/node/edge attribute blocks) <!-- req_id: ATR-DOD-11.1-PARSER-ACCEPTS-SUPPORTED-DOT-SUBSET-DIGRAPH -->
+- [ ] Graph-level attributes (`goal`, `label`, `model_stylesheet`) are extracted correctly <!-- req_id: ATR-DOD-11.2-GRAPH-LEVEL-ATTRIBUTES-EXTRACTED-CORRECTLY -->
+- [ ] Node attributes are parsed including multi-line attribute blocks (attributes spanning multiple lines within `[...]`) <!-- req_id: ATR-DOD-11.3-NODE-ATTRIBUTES-PARSED-INCLUDING-MULTI-LINE -->
+- [ ] Edge attributes (`label`, `condition`, `weight`) are parsed correctly <!-- req_id: ATR-DOD-11.4-EDGE-ATTRIBUTES-PARSED-CORRECTLY -->
+- [ ] Chained edges (`A -> B -> C`) produce individual edges for each pair <!-- req_id: ATR-DOD-11.5-CHAINED-EDGES-PRODUCE-INDIVIDUAL-EDGES-EACH -->
+- [ ] Node/edge default blocks (`node [...]`, `edge [...]`) apply to subsequent declarations <!-- req_id: ATR-DOD-11.6-NODE-EDGE-DEFAULT-BLOCKS-APPLY-SUBSEQUENT -->
+- [ ] Subgraph blocks are flattened (contents kept, wrapper removed) <!-- req_id: ATR-DOD-11.7-SUBGRAPH-BLOCKS-FLATTENED-CONTENTS-KEPT-WRAPPER -->
+- [ ] `class` attribute on nodes merges in attributes from the stylesheet <!-- req_id: ATR-DOD-11.8-ATTRIBUTE-NODES-MERGES-ATTRIBUTES-STYLESHEET -->
+- [ ] Quoted and unquoted attribute values both work <!-- req_id: ATR-DOD-11.9-QUOTED-UNQUOTED-ATTRIBUTE-VALUES-BOTH -->
+- [ ] Comments (`//` and `/* */`) are stripped before parsing <!-- req_id: ATR-DOD-11.10-COMMENTS-STRIPPED-BEFORE-PARSING -->
 
 ### 11.2 Validation and Linting
 
-- [ ] Exactly one start node (shape=Mdiamond) is required
-- [ ] Exactly one exit node (shape=Msquare) is required
-- [ ] Start node has no incoming edges
-- [ ] Exit node has no outgoing edges
-- [ ] All nodes are reachable from start (no orphans)
-- [ ] All edges reference valid node IDs
-- [ ] Codergen nodes (shape=box) have non-empty `prompt` attribute (warning if missing)
-- [ ] Condition expressions on edges parse without errors
-- [ ] `validate_or_raise()` throws on error-severity violations
-- [ ] Lint results include rule name, severity (error/warning), node/edge ID, and message
+- [ ] Exactly one start node (shape=Mdiamond) is required <!-- req_id: ATR-DOD-11.11-EXACTLY-ONE-START-NODE-SHAPE-MDIAMOND -->
+- [ ] Exactly one exit node (shape=Msquare) is required <!-- req_id: ATR-DOD-11.12-EXACTLY-ONE-EXIT-NODE-SHAPE-MSQUARE -->
+- [ ] Start node has no incoming edges <!-- req_id: ATR-DOD-11.13-START-NODE-HAS-INCOMING-EDGES -->
+- [ ] Exit node has no outgoing edges <!-- req_id: ATR-DOD-11.14-EXIT-NODE-HAS-OUTGOING-EDGES -->
+- [ ] All nodes are reachable from start (no orphans) <!-- req_id: ATR-DOD-11.15-ALL-NODES-REACHABLE-START-ORPHANS -->
+- [ ] All edges reference valid node IDs <!-- req_id: ATR-DOD-11.16-ALL-EDGES-REFERENCE-VALID-NODE-IDS -->
+- [ ] Codergen nodes (shape=box) have non-empty `prompt` attribute (warning if missing) <!-- req_id: ATR-DOD-11.17-CODERGEN-NODES-SHAPE-BOX-HAVE-NON -->
+- [ ] Condition expressions on edges parse without errors <!-- req_id: ATR-DOD-11.18-CONDITION-EXPRESSIONS-EDGES-PARSE-WITHOUT-ERRORS -->
+- [ ] `validate_or_raise()` throws on error-severity violations <!-- req_id: ATR-DOD-11.19-THROWS-ERROR-SEVERITY-VIOLATIONS -->
+- [ ] Lint results include rule name, severity (error/warning), node/edge ID, and message <!-- req_id: ATR-DOD-11.20-LINT-RESULTS-INCLUDE-RULE-NAME-SEVERITY -->
 
 ### 11.3 Execution Engine
 
-- [ ] Engine resolves the start node and begins execution there
-- [ ] Each node's handler is resolved via shape-to-handler-type mapping
-- [ ] Handler is called with (node, context, graph, logs_root) and returns an Outcome
-- [ ] Outcome is written to `{logs_root}/{node_id}/status.json`
-- [ ] Edge selection follows the 5-step priority: condition match -> preferred label -> suggested IDs -> weight -> lexical
-- [ ] Engine loops: execute node -> select edge -> advance to next node -> repeat
-- [ ] Terminal node (shape=Msquare) stops execution
-- [ ] Pipeline outcome is "success" if all goal_gate nodes succeeded, "fail" otherwise
+- [ ] Engine resolves the start node and begins execution there <!-- req_id: ATR-DOD-11.21-ENGINE-RESOLVES-START-NODE-BEGINS-EXECUTION -->
+- [ ] Each node's handler is resolved via shape-to-handler-type mapping <!-- req_id: ATR-DOD-11.22-EACH-NODE-S-HANDLER-RESOLVED-VIA -->
+- [ ] Handler is called with (node, context, graph, logs_root) and returns an Outcome <!-- req_id: ATR-DOD-11.23-HANDLER-CALLED-NODE-CONTEXT-GRAPH-LOGSROOT -->
+- [ ] Outcome is written to `{logs_root}/{node_id}/status.json` <!-- req_id: ATR-DOD-11.24-OUTCOME-WRITTEN -->
+- [ ] Edge selection follows the 5-step priority: condition match -> preferred label -> suggested IDs -> weight -> lexical <!-- req_id: ATR-DOD-11.25-EDGE-SELECTION-FOLLOWS-5-STEP-PRIORITY -->
+- [ ] Engine loops: execute node -> select edge -> advance to next node -> repeat <!-- req_id: ATR-DOD-11.26-ENGINE-LOOPS-EXECUTE-NODE-SELECT-EDGE -->
+- [ ] Terminal node (shape=Msquare) stops execution <!-- req_id: ATR-DOD-11.27-TERMINAL-NODE-SHAPE-MSQUARE-STOPS-EXECUTION -->
+- [ ] Pipeline outcome is "success" if all goal_gate nodes succeeded, "fail" otherwise <!-- req_id: ATR-DOD-11.28-PIPELINE-OUTCOME-SUCCESS-ALL-GOALGATE-NODES -->
 
 ### 11.4 Goal Gate Enforcement
 
-- [ ] Nodes with `goal_gate=true` are tracked throughout execution
-- [ ] Before allowing exit via a terminal node, the engine checks all goal gate nodes have status SUCCESS
-- [ ] If any goal gate node has not succeeded, the engine routes to `retry_target` (if configured) instead of exiting
-- [ ] If no retry_target and goal gates unsatisfied, pipeline outcome is "fail"
+- [ ] Nodes with `goal_gate=true` are tracked throughout execution <!-- req_id: ATR-DOD-11.29-NODES-TRACKED-THROUGHOUT-EXECUTION -->
+- [ ] Before allowing exit via a terminal node, the engine checks all goal gate nodes have status SUCCESS <!-- req_id: ATR-DOD-11.30-BEFORE-ALLOWING-EXIT-VIA-TERMINAL-NODE -->
+- [ ] If any goal gate node has not succeeded, the engine routes to `retry_target` (if configured) instead of exiting <!-- req_id: ATR-DOD-11.31-ANY-GOAL-GATE-NODE-HAS-SUCCEEDED -->
+- [ ] If no retry_target and goal gates unsatisfied, pipeline outcome is "fail" <!-- req_id: ATR-DOD-11.32-RETRYTARGET-GOAL-GATES-UNSATISFIED-PIPELINE-OUTCOME -->
 
 ### 11.5 Retry Logic
 
-- [ ] Nodes with `max_retries > 0` are retried on RETRY or FAIL outcomes
-- [ ] Retry count is tracked per-node and respects the configured limit
-- [ ] Backoff between retries works (constant, linear, or exponential as configured)
-- [ ] Jitter is applied to backoff delays when configured
-- [ ] After retry exhaustion, the node's final outcome is used for edge selection
+- [ ] Nodes with `max_retries > 0` are retried on RETRY or FAIL outcomes <!-- req_id: ATR-DOD-11.33-NODES-RETRIED-RETRY-FAIL-OUTCOMES -->
+- [ ] Retry count is tracked per-node and respects the configured limit <!-- req_id: ATR-DOD-11.34-RETRY-COUNT-TRACKED-PER-NODE-RESPECTS -->
+- [ ] Backoff between retries works (constant, linear, or exponential as configured) <!-- req_id: ATR-DOD-11.35-BACKOFF-BETWEEN-RETRIES-CONSTANT-LINEAR-EXPONENTIAL -->
+- [ ] Jitter is applied to backoff delays when configured <!-- req_id: ATR-DOD-11.36-JITTER-APPLIED-BACKOFF-DELAYS-CONFIGURED -->
+- [ ] After retry exhaustion, the node's final outcome is used for edge selection <!-- req_id: ATR-DOD-11.37-AFTER-RETRY-EXHAUSTION-NODE-S-FINAL -->
 
 ### 11.6 Node Handlers
 
-- [ ] **Start handler:** Returns SUCCESS immediately (no-op)
-- [ ] **Exit handler:** Returns SUCCESS immediately (no-op, engine checks goal gates)
-- [ ] **Codergen handler:** Expands `$goal` in prompt, calls `CodergenBackend.run()`, writes prompt.md and response.md to stage dir
-- [ ] **Wait.human handler:** Presents outgoing edge labels as choices to the interviewer, returns selected label as preferred_label
-- [ ] **Conditional handler:** Passes through; engine evaluates edge conditions against outcome/context
-- [ ] **Parallel handler:** Fans out to multiple target nodes concurrently (or sequentially as fallback)
-- [ ] **Fan-in handler:** Waits for all parallel branches to complete before proceeding
-- [ ] **Tool handler:** Executes configured tool/command and returns result
-- [ ] Custom handlers can be registered by type string
+- [ ] **Start handler:** Returns SUCCESS immediately (no-op) <!-- req_id: ATR-DOD-11.38-START-HANDLER-RETURNS-SUCCESS-IMMEDIATELY-OP -->
+- [ ] **Exit handler:** Returns SUCCESS immediately (no-op, engine checks goal gates) <!-- req_id: ATR-DOD-11.39-EXIT-HANDLER-RETURNS-SUCCESS-IMMEDIATELY-OP -->
+- [ ] **Codergen handler:** Expands `$goal` in prompt, calls `CodergenBackend.run()`, writes prompt.md and response.md to stage dir <!-- req_id: ATR-DOD-11.40-CODERGEN-HANDLER-EXPANDS-PROMPT-CALLS-WRITES -->
+- [ ] **Wait.human handler:** Presents outgoing edge labels as choices to the interviewer, returns selected label as preferred_label <!-- req_id: ATR-DOD-11.41-WAIT-HUMAN-HANDLER-PRESENTS-OUTGOING-EDGE -->
+- [ ] **Conditional handler:** Passes through; engine evaluates edge conditions against outcome/context <!-- req_id: ATR-DOD-11.42-CONDITIONAL-HANDLER-PASSES-THROUGH-ENGINE-EVALUATES -->
+- [ ] **Parallel handler:** Fans out to multiple target nodes concurrently (or sequentially as fallback) <!-- req_id: ATR-DOD-11.43-PARALLEL-HANDLER-FANS-OUT-MULTIPLE-TARGET -->
+- [ ] **Fan-in handler:** Waits for all parallel branches to complete before proceeding <!-- req_id: ATR-DOD-11.44-FAN-HANDLER-WAITS-ALL-PARALLEL-BRANCHES -->
+- [ ] **Tool handler:** Executes configured tool/command and returns result <!-- req_id: ATR-DOD-11.45-TOOL-HANDLER-EXECUTES-CONFIGURED-TOOL-COMMAND -->
+- [ ] Custom handlers can be registered by type string <!-- req_id: ATR-DOD-11.46-CUSTOM-HANDLERS-CAN-REGISTERED-TYPE-STRING -->
 
 ### 11.7 State and Context
 
-- [ ] Context is a key-value store accessible to all handlers
-- [ ] Handlers can read context and return `context_updates` in the Outcome
-- [ ] Context updates are merged after each node execution
-- [ ] Checkpoint is saved after each node completion (current_node, completed_nodes, context, retry counts)
-- [ ] Resume from checkpoint: load checkpoint -> restore state -> continue from current_node
-- [ ] Artifacts are written to `{logs_root}/{node_id}/` (prompt.md, response.md, status.json)
+- [ ] Context is a key-value store accessible to all handlers <!-- req_id: ATR-DOD-11.47-CONTEXT-KEY-VALUE-STORE-ACCESSIBLE-ALL -->
+- [ ] Handlers can read context and return `context_updates` in the Outcome <!-- req_id: ATR-DOD-11.48-HANDLERS-CAN-READ-CONTEXT-RETURN-OUTCOME -->
+- [ ] Context updates are merged after each node execution <!-- req_id: ATR-DOD-11.49-CONTEXT-UPDATES-MERGED-AFTER-EACH-NODE -->
+- [ ] Checkpoint is saved after each node completion (current_node, completed_nodes, context, retry counts) <!-- req_id: ATR-DOD-11.50-CHECKPOINT-SAVED-AFTER-EACH-NODE-COMPLETION -->
+- [ ] Resume from checkpoint: load checkpoint -> restore state -> continue from current_node <!-- req_id: ATR-DOD-11.51-RESUME-CHECKPOINT-LOAD-CHECKPOINT-RESTORE-STATE -->
+- [ ] Artifacts are written to `{logs_root}/{node_id}/` (prompt.md, response.md, status.json) <!-- req_id: ATR-DOD-11.52-ARTIFACTS-WRITTEN-PROMPT-MD-RESPONSE-MD -->
 
 ### 11.8 Human-in-the-Loop
 
-- [ ] Interviewer interface works: `ask(question) -> Answer`
-- [ ] Question supports types: SINGLE_SELECT, MULTI_SELECT, FREE_TEXT, CONFIRM
-- [ ] AutoApproveInterviewer always selects the first option (for automation/testing)
-- [ ] ConsoleInterviewer prompts in terminal and reads user input
-- [ ] CallbackInterviewer delegates to a provided function
-- [ ] QueueInterviewer reads from a pre-filled answer queue (for testing)
+- [ ] Interviewer interface works: `ask(question) -> Answer` <!-- req_id: ATR-DOD-11.53-INTERVIEWER-INTERFACE -->
+- [ ] Question supports types: SINGLE_SELECT, MULTI_SELECT, FREE_TEXT, CONFIRM <!-- req_id: ATR-DOD-11.54-QUESTION-SUPPORTS-TYPES-SINGLESELECT-MULTISELECT-FREETEXT -->
+- [ ] AutoApproveInterviewer always selects the first option (for automation/testing) <!-- req_id: ATR-DOD-11.55-AUTOAPPROVEINTERVIEWER-ALWAYS-SELECTS-FIRST-OPTION-AUTOMATION -->
+- [ ] ConsoleInterviewer prompts in terminal and reads user input <!-- req_id: ATR-DOD-11.56-CONSOLEINTERVIEWER-PROMPTS-TERMINAL-READS-USER-INPUT -->
+- [ ] CallbackInterviewer delegates to a provided function <!-- req_id: ATR-DOD-11.57-CALLBACKINTERVIEWER-DELEGATES-PROVIDED-FUNCTION -->
+- [ ] QueueInterviewer reads from a pre-filled answer queue (for testing) <!-- req_id: ATR-DOD-11.58-QUEUEINTERVIEWER-READS-PRE-FILLED-ANSWER-QUEUE -->
 
 ### 11.9 Condition Expressions
 
-- [ ] `=` (equals) operator works for string comparison
-- [ ] `!=` (not equals) operator works
-- [ ] `&&` (AND) conjunction works with multiple clauses
-- [ ] `outcome` variable resolves to the current node's outcome status
-- [ ] `preferred_label` variable resolves to the outcome's preferred label
-- [ ] `context.*` variables resolve to context values (missing keys = empty string)
-- [ ] Empty condition always evaluates to true (unconditional edge)
+- [ ] `=` (equals) operator works for string comparison <!-- req_id: ATR-DOD-11.59-EQUALS-OPERATOR-STRING-COMPARISON -->
+- [ ] `!=` (not equals) operator works <!-- req_id: ATR-DOD-11.60-EQUALS-OPERATOR -->
+- [ ] `&&` (AND) conjunction works with multiple clauses <!-- req_id: ATR-DOD-11.61-CONJUNCTION-MULTIPLE-CLAUSES -->
+- [ ] `outcome` variable resolves to the current node's outcome status <!-- req_id: ATR-DOD-11.62-VARIABLE-RESOLVES-CURRENT-NODE-S-OUTCOME -->
+- [ ] `preferred_label` variable resolves to the outcome's preferred label <!-- req_id: ATR-DOD-11.63-VARIABLE-RESOLVES-OUTCOME-S-PREFERRED-LABEL -->
+- [ ] `context.*` variables resolve to context values (missing keys = empty string) <!-- req_id: ATR-DOD-11.64-VARIABLES-RESOLVE-CONTEXT-VALUES-MISSING-KEYS -->
+- [ ] Empty condition always evaluates to true (unconditional edge) <!-- req_id: ATR-DOD-11.65-EMPTY-CONDITION-ALWAYS-EVALUATES-TRUE-UNCONDITIONAL -->
 
 ### 11.10 Model Stylesheet
 
-- [ ] Stylesheet is parsed from the graph's `model_stylesheet` attribute
-- [ ] Selectors by shape name work (e.g., `box { model = "claude-opus-4-6" }`)
-- [ ] Selectors by class name work (e.g., `.fast { model = "gemini-3-flash-preview" }`)
-- [ ] Selectors by node ID work (e.g., `#review { reasoning_effort = "high" }`)
-- [ ] Specificity order: universal < shape < class < ID
-- [ ] Stylesheet properties are overridden by explicit node attributes
+- [ ] Stylesheet is parsed from the graph's `model_stylesheet` attribute <!-- req_id: ATR-DOD-11.66-STYLESHEET-PARSED-GRAPH-S-ATTRIBUTE -->
+- [ ] Selectors by shape name work (e.g., `box { model = "claude-opus-4-6" }`) <!-- req_id: ATR-DOD-11.67-SELECTORS-SHAPE-NAME-E-G -->
+- [ ] Selectors by class name work (e.g., `.fast { model = "gemini-3-flash-preview" }`) <!-- req_id: ATR-DOD-11.68-SELECTORS-CLASS-NAME-E-G -->
+- [ ] Selectors by node ID work (e.g., `#review { reasoning_effort = "high" }`) <!-- req_id: ATR-DOD-11.69-SELECTORS-NODE-ID-E-G -->
+- [ ] Specificity order: universal < shape < class < ID <!-- req_id: ATR-DOD-11.70-SPECIFICITY-ORDER-UNIVERSAL-SHAPE-CLASS-ID -->
+- [ ] Stylesheet properties are overridden by explicit node attributes <!-- req_id: ATR-DOD-11.71-STYLESHEET-PROPERTIES-OVERRIDDEN-EXPLICIT-NODE-ATTRIBUTES -->
 
 ### 11.11 Transforms and Extensibility
 
-- [ ] AST transforms can modify the Graph between parsing and validation
-- [ ] Transform interface: `transform(graph) -> graph`
-- [ ] Built-in variable expansion transform replaces `$goal` in prompts
-- [ ] Custom transforms can be registered and run in order
-- [ ] HTTP server mode (if implemented): POST /run starts pipeline, GET /status checks state, POST /answer submits human input
+- [ ] AST transforms can modify the Graph between parsing and validation <!-- req_id: ATR-DOD-11.72-AST-TRANSFORMS-CAN-MODIFY-GRAPH-BETWEEN -->
+- [ ] Transform interface: `transform(graph) -> graph` <!-- req_id: ATR-DOD-11.73-TRANSFORM-INTERFACE -->
+- [ ] Built-in variable expansion transform replaces `$goal` in prompts <!-- req_id: ATR-DOD-11.74-BUILT-VARIABLE-EXPANSION-TRANSFORM-REPLACES-PROMPTS -->
+- [ ] Custom transforms can be registered and run in order <!-- req_id: ATR-DOD-11.75-CUSTOM-TRANSFORMS-CAN-REGISTERED-RUN-ORDER -->
+- [ ] HTTP server mode (if implemented): POST /run starts pipeline, GET /status checks state, POST /answer submits human input <!-- req_id: ATR-DOD-11.76-HTTP-SERVER-MODE-IMPLEMENTED-POST-RUN -->
 
 ### 11.12 Cross-Feature Parity Matrix
 
@@ -2078,6 +2078,6 @@ Every error during pipeline execution falls into one of three categories:
 
 **Retryable errors** are transient failures where re-execution may succeed. Examples: LLM rate limits, network timeouts, temporary service unavailability. The engine retries these automatically per the node's retry policy.
 
-**Terminal errors** are permanent failures where re-execution will not help. Examples: invalid prompt, missing required context, authentication failures. The engine does not retry these; it immediately routes to the failure path.
+**Terminal errors** are permanent failures where re-execution will not help. Examples: invalid prompt, missing required context, authentication failures. The engine does not retry these; it immediately routes to the failure path. <!-- req_id: ATR-REQ-TERMINAL-ERRORS-PERMANENT-FAILURES-RE-EXECUTION -->
 
 **Pipeline errors** are structural failures in the pipeline itself. Examples: no start node, unreachable nodes, invalid conditions. These are detected during validation (before execution) when possible. Runtime detection causes immediate pipeline termination.
