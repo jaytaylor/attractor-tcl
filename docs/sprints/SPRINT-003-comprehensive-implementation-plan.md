@@ -403,41 +403,98 @@ Notes:
 
 ## Phase 3 - Attractor Parity Closure
 ### Deliverables
-- [ ] Complete DOT parser parity in `lib/attractor/main.tcl` for quoted/unquoted values, chained edges, defaults, comments, and supported attributes.
+- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for quoted/unquoted values, chained edges, defaults, comments, and supported attributes.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- Parser parity behavior remains validated by ATR unit/integration/e2e coverage.
 ```
-- [ ] Complete validator parity for start/exit invariants, reachability diagnostics, edge validity, and deterministic rule metadata.
+- [X] Complete validator parity for start/exit invariants, reachability diagnostics, edge validity, and deterministic rule metadata.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-test.log`
+Notes:
+- Validator invariants and diagnostic contracts are covered in ATR parity tests.
 ```
-- [ ] Complete runtime traversal parity in `lib/attractor_core/core.tcl` for handler execution and deterministic edge-selection priority.
+- [X] Complete runtime traversal parity in `lib/attractor_core/core.tcl` for handler execution and deterministic edge-selection priority.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- Traversal and edge-priority semantics are exercised by ATR runtime integration scenarios.
 ```
-- [ ] Complete checkpoint persistence and resume parity across interrupted and resumed runs.
+- [X] Complete checkpoint persistence and resume parity across interrupted and resumed runs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-test.log`
+Notes:
+- Checkpoint write/resume paths remain green under ATR integration and CLI e2e coverage.
 ```
-- [ ] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
+- [X] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- Built-in handler set is validated through unit and integration traversal coverage.
 ```
-- [ ] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, and `Queue` implementations.
+- [X] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, and `Queue` implementations.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- Interviewer behavior parity remains covered by ATR integration and CLI scenarios.
 ```
-- [ ] Complete condition expression and stylesheet application parity.
+- [X] Complete condition expression and stylesheet application parity.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- Condition and stylesheet behavior is exercised in parser/validator/runtime parity cases.
 ```
-- [ ] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` output shape and exit behavior.
+- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` output shape and exit behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- CLI validate/run/resume contract behavior is covered by ATR e2e suite execution.
 ```
-- [ ] Expand ATR unit, integration, and e2e tests for parser, validator, runtime, handler, interviewer, and CLI parity coverage.
+- [X] Expand ATR unit, integration, and e2e tests for parser, validator, runtime, handler, interviewer, and CLI parity coverage.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 test` (exit code 0)
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-test.log`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- ATR coverage remains green for unit, integration, and e2e surfaces after phase verification.
 ```
 
 ### Test Matrix - Phase 3
@@ -458,13 +515,26 @@ Negative cases:
 - Unknown handler types or interviewer options fail with deterministic configuration errors.
 
 ### Acceptance Criteria - Phase 3
-- [ ] ATR parity tests pass for parser, validator, runtime traversal, handlers, interviewer behavior, and CLI contracts.
+- [X] ATR parity tests pass for parser, validator, runtime traversal, handlers, interviewer behavior, and CLI contracts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tests/all.tcl -match *attractor*` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/command-status.tsv`
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-atr.log`
+Notes:
+- ATR parity matrix is green across parser, validator, runtime, handlers, interviewer behavior, and CLI contracts.
 ```
-- [ ] Every ATR requirement ID maps to implementation, tests, and verification evidence.
+- [X] Every ATR requirement ID maps to implementation, tests, and verification evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 tclsh tools/spec_coverage.tcl` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/implementation-complete-2026-02-27/phase-3/logs/p3-spec-coverage.log`
+- `docs/spec-coverage/traceability.md`
+Notes:
+- Coverage checks confirm ATR requirement IDs remain fully mapped with no missing or unknown entries.
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
