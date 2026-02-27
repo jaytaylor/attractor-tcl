@@ -57,29 +57,119 @@ Out of scope:
 
 ## Phase 0 - Baseline and Harness Hardening
 ### Deliverables
-- [ ] Capture baseline outputs for build, full test suite, requirements catalog checks, and spec coverage checks.
+- [X] Capture baseline outputs for build, full test suite, requirements catalog checks, and spec coverage checks.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Build a requirement-family gap ledger grouped by ULLM/CAL/ATR with implementation owner and test owner per requirement slice.
+- [X] Build a requirement-family gap ledger grouped by ULLM/CAL/ATR with implementation owner and test owner per requirement slice.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Harden `tests/support/mock_http_server.tcl` contracts for deterministic request/response and stream replay behavior.
+- [X] Harden `tests/support/mock_http_server.tcl` contracts for deterministic request/response and stream replay behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Standardize fixture schema and naming conventions across provider parity tests.
+- [X] Standardize fixture schema and naming conventions across provider parity tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Create per-phase evidence directories and index files under `.scratch/verification/SPRINT-003/`.
+- [X] Create per-phase evidence directories and index files under `.scratch/verification/SPRINT-003/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Record baseline architecture decisions and assumptions in `docs/ADR.md`.
+- [X] Record baseline architecture decisions and assumptions in `docs/ADR.md`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ### Test Matrix - Phase 0
@@ -98,48 +188,198 @@ Negative cases:
 - Duplicate requirement IDs fail requirement catalog checks.
 
 ### Acceptance Criteria - Phase 0
-- [ ] Gap ledger has no unowned requirement IDs.
+- [X] Gap ledger has no unowned requirement IDs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Baseline evidence index includes command, exit-code, and artifact references for reproducibility.
+- [X] Baseline evidence index includes command, exit-code, and artifact references for reproducibility.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ## Phase 1 - Unified LLM Parity Closure
 ### Deliverables
-- [ ] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
+- [X] Align provider resolution semantics in `lib/unified_llm/main.tcl` for explicit provider selection, default resolution, and deterministic ambiguity errors.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete request validation and normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
+- [X] Complete request validation and normalized content-part handling for `text`, `thinking`, `image_url`, `image_base64`, `image_path`, `tool_call`, and `tool_result`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming interfaces.
+- [X] Close adapter parity in `lib/unified_llm/adapters/openai.tcl`, `lib/unified_llm/adapters/anthropic.tcl`, and `lib/unified_llm/adapters/gemini.tcl` for blocking and streaming interfaces.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Enforce deterministic streaming event ordering and payload visibility guarantees required by downstream CAL consumers.
+- [X] Enforce deterministic streaming event ordering and payload visibility guarantees required by downstream CAL consumers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Implement tool-call continuation semantics for active/passive tools and batched tool-result forwarding.
+- [X] Implement tool-call continuation semantics for active/passive tools and batched tool-result forwarding.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Implement structured output parity for `generate_object` and `stream_object`, including deterministic parse and schema failure behavior.
+- [X] Implement structured output parity for `generate_object` and `stream_object`, including deterministic parse and schema failure behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Normalize usage, reasoning, and caching metadata consistently across adapters.
+- [X] Normalize usage, reasoning, and caching metadata consistently across adapters.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` to close requirement-level gaps for all three providers.
+- [X] Expand `tests/unit/unified_llm.test` and `tests/integration/unified_llm_parity.test` to close requirement-level gaps for all three providers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ### Test Matrix - Phase 1
@@ -164,48 +404,198 @@ Negative cases:
 - Invalid provider options fail validation before adapter transport.
 
 ### Acceptance Criteria - Phase 1
-- [ ] ULLM parity tests pass for OpenAI, Anthropic, and Gemini fixture paths in blocking and streaming modes.
+- [X] ULLM parity tests pass for OpenAI, Anthropic, and Gemini fixture paths in blocking and streaming modes.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Every ULLM requirement ID maps to implementation, tests, and evidence artifacts.
+- [X] Every ULLM requirement ID maps to implementation, tests, and evidence artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ## Phase 2 - Coding Agent Loop Parity Closure
 ### Deliverables
-- [ ] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
+- [X] Finalize `ExecutionEnvironment` and `LocalExecutionEnvironment` contracts in `lib/coding_agent_loop/tools/core.tcl`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, round limits, turn limits, and cancellation.
+- [X] Complete loop lifecycle semantics in `lib/coding_agent_loop/main.tcl` for completion, round limits, turn limits, and cancellation.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Align truncation behavior so events retain full payload while surfaced summaries remain bounded.
+- [X] Align truncation behavior so events retain full payload while surfaced summaries remain bounded.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request.
+- [X] Implement queued `steer` and `follow_up` semantics affecting the next eligible model request.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Implement lifecycle event-kind and payload parity, including deterministic warning/event emission for loop detection.
+- [X] Implement lifecycle event-kind and payload parity, including deterministic warning/event emission for loop detection.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl`, including environment and project-document context behavior.
+- [X] Complete profile prompt parity in `lib/coding_agent_loop/profiles/*.tcl`, including environment and project-document context behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete subagent lifecycle parity with shared execution environment and isolated histories.
+- [X] Complete subagent lifecycle parity with shared execution environment and isolated histories.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Expand CAL unit and integration tests for lifecycle, tool execution, steering queue semantics, subagent depth, and terminal states.
+- [X] Expand CAL unit and integration tests for lifecycle, tool execution, steering queue semantics, subagent depth, and terminal states.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ### Test Matrix - Phase 2
@@ -226,52 +616,217 @@ Negative cases:
 - Subagent depth overflow fails with deterministic depth-limit error.
 
 ### Acceptance Criteria - Phase 2
-- [ ] CAL parity tests pass for lifecycle, tools, steering, subagents, and event contracts.
+- [X] CAL parity tests pass for lifecycle, tools, steering, subagents, and event contracts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Every CAL requirement ID maps to implementation, tests, and evidence artifacts.
+- [X] Every CAL requirement ID maps to implementation, tests, and evidence artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ## Phase 3 - Attractor Parity Closure
 ### Deliverables
-- [ ] Complete DOT parser parity in `lib/attractor/main.tcl` for quoted/unquoted values, chained edges, defaults, comments, and supported attributes.
+- [X] Complete DOT parser parity in `lib/attractor/main.tcl` for quoted/unquoted values, chained edges, defaults, comments, and supported attributes.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete validator parity for start/exit invariants, reachability diagnostics, edge validity, and deterministic rule metadata.
+- [X] Complete validator parity for start/exit invariants, reachability diagnostics, edge validity, and deterministic rule metadata.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete runtime traversal parity in `lib/attractor_core/core.tcl` for handler execution and deterministic edge selection priority.
+- [X] Complete runtime traversal parity in `lib/attractor_core/core.tcl` for handler execution and deterministic edge selection priority.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete checkpoint persistence and resume parity across interrupted and resumed runs.
+- [X] Complete checkpoint persistence and resume parity across interrupted and resumed runs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
+- [X] Complete built-in handler parity for `start`, `exit`, `codergen`, `wait.human`, `conditional`, `parallel`, `fan-in`, `tool`, and `stack.manager_loop`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, and `Queue` implementations.
+- [X] Complete interviewer parity for `AutoApprove`, `Console`, `Callback`, and `Queue` implementations.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete condition-expression and stylesheet application parity.
+- [X] Complete condition-expression and stylesheet application parity.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` output shape and exit behavior.
+- [X] Complete CLI contract parity in `bin/attractor` for `validate`, `run`, and `resume` output shape and exit behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Expand ATR unit, integration, and e2e tests for parser, validator, runtime, handlers, interviewer behavior, and CLI parity.
+- [X] Expand ATR unit, integration, and e2e tests for parser, validator, runtime, handlers, interviewer behavior, and CLI parity.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ### Test Matrix - Phase 3
@@ -293,36 +848,141 @@ Negative cases:
 - Invalid interviewer selection fails with deterministic configuration error.
 
 ### Acceptance Criteria - Phase 3
-- [ ] ATR parity tests pass for parser, validator, runtime traversal, handlers, interviewer behavior, and CLI contracts.
+- [X] ATR parity tests pass for parser, validator, runtime traversal, handlers, interviewer behavior, and CLI contracts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Every ATR requirement ID maps to implementation, tests, and evidence artifacts.
+- [X] Every ATR requirement ID maps to implementation, tests, and evidence artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ## Phase 4 - Cross-Runtime Integration Closure
 ### Deliverables
-- [ ] Add deterministic end-to-end scenarios spanning ATR traversal, CAL tool loop behavior, and ULLM provider fixtures.
+- [X] Add deterministic end-to-end scenarios spanning ATR traversal, CAL tool loop behavior, and ULLM provider fixtures.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Add integration assertions for artifact layout, checkpoint integrity, and event-stream continuity across runtime boundaries.
+- [X] Add integration assertions for artifact layout, checkpoint integrity, and event-stream continuity across runtime boundaries.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Expand CLI e2e matrix to cover success and failure behavior for `validate`, `run`, and `resume`.
+- [X] Expand CLI e2e matrix to cover success and failure behavior for `validate`, `run`, and `resume`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Ensure integration suite runs OpenAI, Anthropic, and Gemini fixture paths end-to-end.
+- [X] Ensure integration suite runs OpenAI, Anthropic, and Gemini fixture paths end-to-end.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Add cross-runtime failure-propagation tests for typed errors traversing ULLM -> CAL -> ATR surfaces.
+- [X] Add cross-runtime failure-propagation tests for typed errors traversing ULLM -> CAL -> ATR surfaces.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ### Test Matrix - Phase 4
@@ -340,44 +1000,179 @@ Negative cases:
 - CLI invalid argument combinations fail deterministically with stable error output.
 
 ### Acceptance Criteria - Phase 4
-- [ ] Integrated ULLM + CAL + ATR suites pass in deterministic offline mode.
+- [X] Integrated ULLM + CAL + ATR suites pass in deterministic offline mode.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Integration evidence index captures commands, exit codes, and artifact references per scenario.
+- [X] Integration evidence index captures commands, exit codes, and artifact references per scenario.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ## Phase 5 - Traceability, ADR, and Closeout
 ### Deliverables
-- [ ] Update `docs/spec-coverage/traceability.md` so every Sprint #003 requirement maps to implementation, tests, and evidence.
+- [X] Update `docs/spec-coverage/traceability.md` so every Sprint #003 requirement maps to implementation, tests, and evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Refresh requirement catalog outputs and reconcile catalog versus traceability consistency.
+- [X] Refresh requirement catalog outputs and reconcile catalog versus traceability consistency.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Append architecture-significant decisions to `docs/ADR.md` with context and consequences.
+- [X] Append architecture-significant decisions to `docs/ADR.md` with context and consequences.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Run sprint evidence lint and resolve checklist/evidence inconsistencies in this document.
+- [X] Run sprint evidence lint and resolve checklist/evidence inconsistencies in this document.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Finalize per-phase evidence indexes with command tables and stable artifact references.
+- [X] Finalize per-phase evidence indexes with command tables and stable artifact references.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Re-render appendix Mermaid diagrams and store outputs in `.scratch/diagram-renders/sprint-003/`.
+- [X] Re-render appendix Mermaid diagrams and store outputs in `.scratch/diagram-renders/sprint-003/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Produce final Sprint #003 closeout summary with unresolved risks and follow-up actions.
+- [X] Produce final Sprint #003 closeout summary with unresolved risks and follow-up actions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ### Test Matrix - Phase 5
@@ -394,13 +1189,43 @@ Negative cases:
 - Broken Mermaid syntax fails local rendering and blocks closeout.
 
 ### Acceptance Criteria - Phase 5
-- [ ] Requirement catalog and spec coverage checks pass with no missing, unknown, duplicate, or malformed mapping failures.
+- [X] Requirement catalog and spec coverage checks pass with no missing, unknown, duplicate, or malformed mapping failures.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
-- [ ] Sprint evidence is reproducible using only phase index files and referenced artifacts.
+- [X] Sprint evidence is reproducible using only phase index files and referenced artifacts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 180 make -j10 build` (exit code 0)
+- `timeout 180 make -j10 test` (exit code 0)
+Evidence:
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/command-status.tsv`
+- `.scratch/verification/SPRINT-003/close-spec-execution-2026-02-27/logs/`
+- `.scratch/diagram-renders/sprint-003/close-spec-execution-2026-02-27/`
+Extended checks:
+- `tclsh tools/requirements_catalog.tcl --check-ids` (exit code 0)
+- `tclsh tools/requirements_catalog.tcl --summary` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm*` (exit code 0)
+- `tclsh tests/all.tcl -match *coding_agent_loop*` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor*` (exit code 0)
+Notes:
+- Logs and command statuses are reproducible and map to Sprint #003 parity closure gates.
 ```
 
 ## Canonical Verification Commands
