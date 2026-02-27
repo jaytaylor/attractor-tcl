@@ -1,7 +1,7 @@
 digraph humangate {
-  start [shape=start];
+  start [shape=Mdiamond];
   approval [handler=wait.human, question="Approve deployment?"];
-  exit [shape=doublecircle];
+  exit [shape=Msquare];
   start -> approval;
   approval -> exit [label=approved, weight=1];
 }

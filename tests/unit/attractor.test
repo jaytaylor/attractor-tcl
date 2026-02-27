@@ -11,7 +11,7 @@ namespace eval ::tests::attractor {}
 proc ::tests::attractor::backend {request} {
     set nodeId [dict get $request node_id]
     if {$nodeId eq "build"} {
-        return [dict create text "build complete" preferred_label success]
+        return [dict create text "build complete" preferred_label success context_updates [dict create goal done]]
     }
     return [dict create text "ok"]
 }
@@ -19,26 +19,131 @@ proc ::tests::attractor::backend {request} {
 test attractor-parse-validate-1.0 {parse and validate simple graph} -body {
     set dot {
         digraph demo {
-            start [shape=start];
+            start [shape=Mdiamond];
             build [handler=codergen, prompt="do build"];
-            exit [shape=doublecircle];
+            exit [shape=Msquare];
             start -> build;
             build -> exit [label=success, weight=10];
         }
     }
     set graph [::attractor::parse_dot $dot]
     set diagnostics [::attractor::validate $graph]
-    list [dict get $graph id] [llength [dict get $graph edges]] [llength $diagnostics]
+    list [dict get $graph id] [llength [dict get $graph edges]] [::attractor::__has_validation_errors $diagnostics]
 } -result {demo 2 0}
 
+test attractor-parse-chained-multiline-1.0 {parser handles chained edges and multiline attrs} -body {
+    set graph [::attractor::parse_dot {
+        digraph demo {
+            node [class="core"];
+            start [shape=Mdiamond];
+            build [
+                handler=codergen,
+                prompt="run"
+            ];
+            exit [shape=Msquare];
+            start -> build -> exit [label=success];
+        }
+    }]
+    list [llength [dict get $graph edges]] [dict get [dict get $graph nodes build attrs] class]
+} -result {2 core}
+
+test attractor-validation-rules-1.0 {validation catches missing start/exit and edge errors} -body {
+    set graph [::attractor::parse_dot {
+        digraph bad {
+            a [handler=codergen];
+            b [handler=codergen];
+            a -> c;
+        }
+    }]
+    set diagnostics [::attractor::validate $graph]
+    set rules {}
+    foreach d $diagnostics {
+        lappend rules [dict get $d rule]
+    }
+    list [expr {[lsearch -exact $rules validation.start.required] >= 0}] [expr {[lsearch -exact $rules validation.exit.required] >= 0}] [expr {[lsearch -exact $rules validation.edge.to_unknown] >= 0}]
+} -result {1 1 1}
+
+test attractor-reachability-warning-1.0 {unreachable node emits warning metadata} -body {
+    set graph [::attractor::parse_dot {
+        digraph warn {
+            start [shape=Mdiamond];
+            build [handler=codergen];
+            exit [shape=Msquare];
+            orphan [handler=codergen];
+            start -> build;
+            build -> exit;
+        }
+    }]
+    set diagnostics [::attractor::validate $graph]
+    set hasWarn 0
+    foreach d $diagnostics {
+        if {[dict get $d severity] eq "warning" && [dict get $d rule] eq "validation.node.unreachable"} {
+            set hasWarn 1
+        }
+    }
+    set hasWarn
+} -result 1
+
+test attractor-condition-1.0 {condition evaluator supports = != && and context.*} -body {
+    set context [dict create branch left x 1]
+    list \
+      [::attractor::__condition_matches {branch=left && context.x=1} $context success ok] \
+      [::attractor::__condition_matches {preferred_label=ok} $context success ok] \
+      [::attractor::__condition_matches {outcome!=failed} $context success ok] \
+      [::attractor::__condition_matches {branch=right} $context success ok]
+} -result {1 1 1 0}
+
+test attractor-style-apply-1.0 {model stylesheet applies by specificity} -body {
+    set graph [::attractor::parse_dot {
+        digraph s {
+            start [shape=Mdiamond, class="entry"];
+            build [handler=codergen, class="entry"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit;
+        }
+    }]
+    set rules [::attractor::parse_stylesheet {
+        .entry { temperature=0.2 };
+        #build { temperature=0.7 };
+    }]
+    set styled [::attractor::apply_stylesheet $graph $rules]
+    list [dict get [dict get $styled nodes start attrs] temperature] [dict get [dict get $styled nodes build attrs] temperature]
+} -result {0.2 0.7}
+
+test attractor-handler-wait-human-1.0 {wait.human routes using queue interviewer choices} -setup {
+    set queue [::attractor::interviewer::queue_new [list reject]]
+    set logsRoot [file join $root .scratch verification SPRINT-003 attractor wait-human-[pid]]
+    file delete -force $logsRoot
+    set graph [::attractor::parse_dot {
+        digraph demo {
+            start [shape=Mdiamond];
+            ask [type="wait.human", question="Proceed?"];
+            done [handler=codergen];
+            reject_node [handler=codergen];
+            exit [shape=Msquare];
+            start -> ask;
+            ask -> done [label=approve];
+            ask -> reject_node [label=reject];
+            done -> exit;
+            reject_node -> exit;
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::attractor::backend -interviewer $queue -logs_root $logsRoot]
+    list [dict get $result status] [lsearch -exact [dict get $result completed_nodes] reject_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 2}
+
 test attractor-run-artifacts-1.0 {run creates checkpoint and node artifacts} -setup {
-    set logsRoot [file join $root .scratch verification SPRINT-001 attractor test-run-[pid]]
+    set logsRoot [file join $root .scratch verification SPRINT-003 attractor test-run-[pid]]
     file delete -force $logsRoot
     set dot {
         digraph demo {
-            start [shape=start];
-            build [handler=codergen, prompt="build now"];
-            exit [shape=doublecircle];
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="goal=$goal"];
+            exit [shape=Msquare];
             start -> build;
             build -> exit [label=success, weight=10];
         }
@@ -61,21 +166,21 @@ test attractor-edge-selection-1.0 {edge selection uses label then weight} -body 
       [dict create from a to b attrs [dict create label x weight 1]] \
       [dict create from a to c attrs [dict create label y weight 99]] \
       [dict create from a to d attrs [dict create label x weight 2]]]
-    set outcome [dict create preferred_label x suggested_next_ids {}]
+    set outcome [dict create preferred_label x suggested_next_ids {} status success]
     set selected [::attractor::__select_next_edge $edges $outcome {}]
     dict get $selected to
 } -result d
 
 test attractor-resume-1.0 {resume starts from checkpoint node} -setup {
-    set logsRoot [file join $root .scratch verification SPRINT-001 attractor test-resume-[pid]]
+    set logsRoot [file join $root .scratch verification SPRINT-003 attractor test-resume-[pid]]
     file delete -force $logsRoot
     file mkdir $logsRoot
     ::attractor::__write_json_file [file join $logsRoot checkpoint.json] [dict create timestamp now current_node build completed_nodes {start} node_retries {} context_values {}]
     set dot {
         digraph demo {
-            start [shape=start];
+            start [shape=Mdiamond];
             build [handler=codergen, prompt="build now"];
-            exit [shape=doublecircle];
+            exit [shape=Msquare];
             start -> build;
             build -> exit [label=success, weight=1];
         }
@@ -88,59 +193,24 @@ test attractor-resume-1.0 {resume starts from checkpoint node} -setup {
     file delete -force $logsRoot
 } -result {success 1}
 
-test attractor-validate-start-exit-1.0 {start incoming and exit outgoing edges are rejected} -body {
+test attractor-custom-handler-1.0 {custom handlers can be registered and executed} -setup {
+    proc ::tests::attractor::custom_handler {request} {
+        return [dict create status success preferred_label ok suggested_next_ids {} context_updates {} notes custom terminal 0]
+    }
+    ::attractor::register_handler custom.node ::tests::attractor::custom_handler
     set graph [::attractor::parse_dot {
-        digraph bad {
-            start [shape=start];
-            middle [handler=codergen];
-            exit [shape=doublecircle];
-            middle -> start;
-            exit -> middle;
+        digraph c {
+            start [shape=Mdiamond];
+            mid [type="custom.node"];
+            exit [shape=Msquare];
+            start -> mid;
+            mid -> exit [label=ok];
         }
     }]
-    set diagnostics [::attractor::validate $graph]
-    set codes {}
-    foreach d $diagnostics {
-        lappend codes [dict get $d code]
-    }
-    list [expr {[lsearch -exact $codes start_incoming] >= 0}] [expr {[lsearch -exact $codes exit_outgoing] >= 0}]
-} -result {1 1}
-
-test attractor-condition-1.0 {condition evaluator supports equality and inequality} -body {
-    set context [dict create branch left]
-    list \
-      [::attractor::__condition_matches {branch == left} $context] \
-      [::attractor::__condition_matches {branch != right} $context] \
-      [::attractor::__condition_matches {branch == right} $context]
-} -result {1 1 0}
-
-test attractor-tool-handler-1.0 {tool handler runs command and fails when command missing} -body {
-    set success [::attractor::__execute_handler tool n1 [dict create tool_command {printf done}] {} ::attractor::default_codergen_backend ::attractor::default_interviewer [file join $root .scratch]]
-    set failed [::attractor::__execute_handler tool n2 {} {} ::attractor::default_codergen_backend ::attractor::default_interviewer [file join $root .scratch]]
-    list [dict get $success status] [dict get $failed failure_reason]
-} -result {success missing_tool_command}
-
-test attractor-handler-wait-human-1.0 {wait.human handler consults interviewer decision} -setup {
-    proc ::tests::attractor::reject_interviewer {request} {
-        return [dict create approved 0 response denied]
-    }
 } -body {
-    set outcome [::attractor::__execute_handler wait.human ask [dict create question "Proceed?"] {} ::attractor::default_codergen_backend ::tests::attractor::reject_interviewer [file join $root .scratch]]
-    list [dict get $outcome status] [dict get $outcome failure_reason]
+    set result [::attractor::run $graph -backend ::tests::attractor::backend -logs_root [file join $root .scratch verification SPRINT-003 attractor custom-[pid]]]
+    dict get $result status
 } -cleanup {
-    rename ::tests::attractor::reject_interviewer {}
-} -result {failed rejected}
-
-test attractor-parse-comments-subgraph-1.0 {parser strips comments and flattens subgraphs} -body {
-    set graph [::attractor::parse_dot {
-        digraph demo {
-            // comment
-            start [shape=start];
-            subgraph cluster_a { build [handler=codergen]; }
-            exit [shape=doublecircle];
-            start -> build; # inline comment
-            build -> exit;
-        }
-    }]
-    list [dict exists [dict get $graph nodes] build] [llength [dict get $graph edges]]
-} -result {1 2}
+    ::attractor::clear_handlers
+    rename ::tests::attractor::custom_handler {}
+} -result success

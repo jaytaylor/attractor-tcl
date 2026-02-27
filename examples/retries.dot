@@ -1,7 +1,7 @@
 digraph retries {
-  start [shape=start];
+  start [shape=Mdiamond];
   work [handler=tool, tool_command="printf retryable"];
-  exit [shape=doublecircle];
+  exit [shape=Msquare];
   start -> work;
   work -> exit [weight=1];
 }

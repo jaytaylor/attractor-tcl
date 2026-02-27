@@ -26,13 +26,13 @@ proc ::tests::integration::attractor::cal_backend {request} {
 }
 
 test integration-attractor-ullm-backend-1.0 {attractor codergen backend works with unified_llm generate} -setup {
-    set logsRoot [file join $root .scratch verification SPRINT-001 integration attractor-ullm-[pid]]
+    set logsRoot [file join $root .scratch verification SPRINT-003 integration attractor-ullm-[pid]]
     file delete -force $logsRoot
     set graph [::attractor::parse_dot {
         digraph demo {
-            start [shape=start];
+            start [shape=Mdiamond];
             build [handler=codergen, prompt="compile"]; 
-            exit [shape=doublecircle];
+            exit [shape=Msquare];
             start -> build;
             build -> exit [label=success, weight=1];
         }
@@ -45,13 +45,13 @@ test integration-attractor-ullm-backend-1.0 {attractor codergen backend works wi
 } -result {success 1 1}
 
 test integration-attractor-cal-backend-1.0 {attractor codergen backend works with coding_agent_loop session} -setup {
-    set logsRoot [file join $root .scratch verification SPRINT-001 integration attractor-cal-[pid]]
+    set logsRoot [file join $root .scratch verification SPRINT-003 integration attractor-cal-[pid]]
     file delete -force $logsRoot
     set graph [::attractor::parse_dot {
         digraph demo {
-            start [shape=start];
+            start [shape=Mdiamond];
             edit [handler=codergen, prompt="update file"]; 
-            exit [shape=doublecircle];
+            exit [shape=Msquare];
             start -> edit;
             edit -> exit [label=success, weight=1];
         }
