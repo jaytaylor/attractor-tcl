@@ -75,6 +75,24 @@ Evidence artifacts:
 - `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/evidence_guardrail.log`
 ```
 
+- [X] C3 - Full implementation verification rerun completed after comprehensive plan execution sync, including required `timeout 180` build/test gates and streaming selectors.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_full_implementation_verification.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/make_build.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/make_test.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/spec_coverage.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/docs_lint.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/evidence_lint_source.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/evidence_lint_plan.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T054624Z/evidence_guardrail.log`
+```
+
 ## Context
 Historical baseline at sprint start (codex-3):
 - Unified LLM `stream()` synthesizes streaming by chunking a completed response; it does not parse provider-native streaming formats (SSE/JSON chunks).
