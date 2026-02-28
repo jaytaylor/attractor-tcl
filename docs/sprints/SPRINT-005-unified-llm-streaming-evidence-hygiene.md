@@ -7,8 +7,20 @@ _Evidence for every completed checklist item must include the exact verification
 ## Objective
 Make Unified LLM streaming spec-faithful (provider-native streaming translation with correct StreamEvent types and ordering) and restore the repo's evidence/traceability hygiene so streaming compliance is provable against the NLSpecs.
 
+## Completion Sync (2026-02-28)
+- [X] C0 - Full sprint implementation refresh verification completed with required build and test gates.
+```text
+Verification commands:
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log timeout 180 make build` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log timeout 180 make test` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log`
+- `.scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log`
+```
+
 ## Context
-Current state (codex-3 baseline):
+Historical baseline at sprint start (codex-3):
 - Unified LLM `stream()` synthesizes streaming by chunking a completed response; it does not parse provider-native streaming formats (SSE/JSON chunks).
 - The stream event model is incomplete versus `unified-llm-spec.md` (missing TEXT_START/TEXT_END, tool-call deltas, reasoning blocks).
 - The repo has strong spec coverage gates, but streaming-related traceability mappings are currently too coarse to be trustworthy.
@@ -20,8 +32,8 @@ Improvements available from other branches:
 
 This sprint ports the *substance* of those improvements into the codex-3 foundation while keeping deterministic offline testing as the default.
 
-## Current State Snapshot (Code Audit)
-Key gaps and the specific places they currently exist:
+## Historical Baseline Snapshot (Code Audit)
+Key gaps identified at sprint start:
 - `lib/unified_llm/main.tcl`: `__stream_from_response` synthesizes streaming by chunking a completed response text (not provider-native streaming translation).
 - `lib/unified_llm/adapters/openai.tcl`: `stream` calls `complete` and then chunks text; no SSE parsing or provider-native event mapping.
 - `lib/unified_llm/adapters/anthropic.tcl`: `stream` calls `complete` and then chunks text; no Anthropic SSE event mapping.
