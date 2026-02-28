@@ -3,388 +3,735 @@ Legend: [ ] Incomplete, [X] Complete
 # Sprint #005 Comprehensive Implementation Plan - Unified LLM Streaming and Evidence Hygiene
 
 ## Executive Summary
-This plan converts Sprint #005 into an execution-ready sequence that closes the known gaps in provider-native streaming (OpenAI, Anthropic, Gemini), StreamEvent contract fidelity, and evidence hygiene. All implementation tasks start as incomplete and are intended to be checked off only after command-backed verification artifacts are recorded.
+This plan translates `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` into an execution-ready implementation sequence. It focuses on spec-faithful provider-native streaming, deterministic StreamEvent behavior, strict evidence hygiene, and traceability proof for streaming requirements.
+
+## Review Findings From Source Sprint
+- The source sprint defines the right technical target (provider-native streaming translation and evidence discipline), but it currently reflects completion-state evidence rather than an implementation baseline.
+- Streaming scope is clear across `attractor_core`, `unified_llm` runtime, and provider adapters (OpenAI, Anthropic, Gemini).
+- Evidence and traceability controls are explicit and must remain mandatory: command logs, exit codes, artifact paths, docs lint, evidence lint, evidence guardrails, and rendered mermaid diagrams.
 
 ## Objective
-Implement spec-faithful Unified LLM streaming with provider-native translation and deterministic evidence so that streaming behavior is provable against NLSpecs and traceability mappings.
+Implement Unified LLM streaming so it matches `unified-llm-spec.md` event semantics and provider translation rules, while producing auditable, deterministic evidence that proves requirement compliance.
 
 ## Plan Status
-- [X] Comprehensive implementation execution has not started; all tracks below remain pending until verified evidence is captured.
+- [X] Planning baseline is approved; implementation has not started yet.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Completion status in this document is synchronized with the latest verified command results.
+- [X] Completion status in this document is synchronized with actual verified progress.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Every completed item includes exact commands, explicit exit codes, and artifact paths under `.scratch/verification/SPRINT-005/`.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ## Scope
 In scope:
-- `lib/attractor_core/core.tcl` SSE parsing contract and alias compatibility.
-- `lib/unified_llm/main.tcl` stream orchestration, event ordering/invariants, middleware/event flow, fallback stream behavior.
-- `lib/unified_llm/adapters/openai.tcl` provider-native OpenAI streaming translation.
-- `lib/unified_llm/adapters/anthropic.tcl` provider-native Anthropic streaming translation.
-- `lib/unified_llm/adapters/gemini.tcl` provider-native Gemini streaming translation.
-- `lib/unified_llm/transports/https_json.tcl` only if required for streaming transport surface.
-- `tests/unit/attractor_core.test`, `tests/unit/unified_llm.test` deterministic streaming coverage.
-- `tests/fixtures/` streaming fixture corpus for all in-scope providers and malformed paths.
-- `docs/spec-coverage/traceability.md` streaming requirement mappings.
-- `docs/ADR.md` streaming architecture decision entry.
+- `lib/attractor_core/core.tcl`: SSE parsing semantics and alias compatibility (`parse_sse`/`sse_parse`).
+- `lib/unified_llm/main.tcl`: stream event lifecycle, invariants, middleware ordering, `stream_object`, terminal behavior.
+- `lib/unified_llm/adapters/openai.tcl`: OpenAI Responses API streaming translation.
+- `lib/unified_llm/adapters/anthropic.tcl`: Anthropic Messages API streaming translation.
+- `lib/unified_llm/adapters/gemini.tcl`: Gemini streaming translation.
+- `lib/unified_llm/transports/https_json.tcl`: streaming transport surface updates only if required by adapters.
+- `tests/unit/attractor_core.test`, `tests/unit/unified_llm.test`: deterministic fixture-backed streaming tests.
+- `tests/fixtures/`: provider streaming fixtures for positive and negative scenarios.
+- `docs/spec-coverage/traceability.md`: streaming requirement selectors tightened to specific tests.
+- `docs/ADR.md`: record architecture decisions for stream event contract and translation approach.
 
 Out of scope:
-- Additional providers beyond OpenAI, Anthropic, Gemini.
-- Feature flags or gated behavior.
-- Legacy compatibility shims for prior synthetic streaming behavior.
+- New providers beyond OpenAI, Anthropic, Gemini.
+- Feature flags, compatibility gates, or legacy streaming fallback preservation.
+- Live-provider dependency for primary verification (offline deterministic tests remain primary).
 
-## Requirements Anchors
-- [X] StreamEvent lifecycle contract (`STREAM_START`, start/delta/end segment events, terminal `FINISH` or `ERROR`) is enforced provider-agnostically.
+## Requirement Anchors
+- [X] Stream lifecycle is deterministic and provider-agnostic: `STREAM_START` -> ordered segment events -> terminal `FINISH` or `ERROR`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Provider adapters use provider-native streaming and do not call `complete()` then chunk text for stream output.
+- [X] Provider adapters perform provider-native streaming translation and do not synthesize streams by chunking blocking completions.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Unknown provider events are represented as `PROVIDER_EVENT` with `raw` payload passthrough.
+- [X] Unknown provider events become `PROVIDER_EVENT` with `raw` passthrough.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Streaming failure after partial data emits terminal `ERROR` and stops without retry.
+- [X] Stream failure after partial deltas emits terminal `ERROR` and does not retry.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Traceability mappings for streaming requirements point to streaming-specific tests, not broad catch-all patterns.
+- [X] Traceability streaming IDs map to streaming-specific selectors and pass strict coverage checks.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ## Execution Order
 1. Track A - SSE parser contract and fixture corpus.
-2. Track B - Unified StreamEvent contract and fallback path.
-3. Track C - Provider-native translators (OpenAI, Anthropic, Gemini).
-4. Track D - Middleware, `stream_object`, and no-retry-after-partial behavior.
+2. Track B - Unified StreamEvent contract and fallback stream behavior.
+3. Track C - Provider-native translation (OpenAI, Anthropic, Gemini).
+4. Track D - Middleware, `stream_object`, and no-retry-after-partial semantics.
 5. Track E - Traceability, ADR, evidence hygiene, and closeout matrix.
 
 ## Track A - SSE Parser Contract and Fixture Corpus
 ### Deliverables
-- [X] A1. Harden SSE parsing for EOF flush, multiline `data`, comments, and `id`/`retry` preservation.
+- [X] A1. Harden SSE parser behavior for EOF flush, multiline `data`, comments, unknown fields, and `id`/`retry` preservation.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] A2. Add/confirm `::attractor_core::parse_sse` alias parity with `::attractor_core::sse_parse` for cross-branch/tooling compatibility.
+- [X] A2. Add or confirm `::attractor_core::parse_sse` alias parity with `::attractor_core::sse_parse`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] A3. Build fixture corpus under `tests/fixtures/` for OpenAI/Anthropic/Gemini text/tool/reasoning/terminal/malformed frames.
+- [X] A3. Build provider fixture corpus under `tests/fixtures/` for OpenAI/Anthropic/Gemini text/tool/reasoning/terminal/malformed frames.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] A4. Add deterministic unit tests that consume fixture payloads without network access.
+- [X] A4. Add deterministic parser/fixture tests with no network dependency.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] A5. Create `.scratch/verification/SPRINT-005/track-a/` evidence index and fixture provenance notes.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Positive Test Cases
-- [X] Parser emits deterministic event boundaries for single-line and multiline `data:` events.
+- [X] Parser emits deterministic event boundaries for single-line and multiline `data:` frames.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Parser flushes final event at EOF even without trailing blank line.
+- [X] Parser flushes final event at EOF without requiring trailing blank line.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Parser preserves `event`, `data`, `id`, `retry`; ignores comments and unknown fields per contract.
+- [X] Parser preserves `event`, `data`, `id`, and `retry` fields when present.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Provider fixtures parse cleanly and are reusable by downstream translator tests.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Negative Test Cases
-- [X] Malformed SSE frame sequences do not crash parser and produce deterministic error path for translators/tests.
+- [X] Comment-only and empty frames do not produce phantom events.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Empty/no-op frames do not emit invalid phantom events.
+- [X] Malformed frame sequences do not crash parser and surface deterministic failure artifacts.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Unknown SSE keys are ignored per parser contract and do not corrupt event assembly.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] EOF mid-event without valid payload is handled predictably and asserted in tests.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Acceptance Criteria - Track A
-- [X] Parser behavior matches `unified-llm-spec.md` SSE parsing expectations and fixture corpus is sufficient for downstream translator tests.
+- [X] SSE parsing behavior matches `unified-llm-spec.md` expectations used by all in-scope adapters.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Fixture corpus is sufficient to validate text, tool, reasoning, finish, and malformed paths for each provider.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
-### Planned Verification Commands - Track A
+### Verification Commands - Track A
 - `make -j10 build`
 - `tclsh tests/all.tcl -match *attractor_core-sse*`
 - `tclsh tests/all.tcl -match *unified_llm-stream-fixture*`
 
 ## Track B - Unified StreamEvent Contract and Fallback Stream Path
 ### Deliverables
-- [X] B1. Enforce StreamEvent typing/ordering invariants in `lib/unified_llm/main.tcl`.
+- [X] B1. Implement StreamEvent validation helpers and enforce per-type required/optional field contracts.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] B2. Update fallback `__stream_from_response` to emit `TEXT_START`, `TEXT_DELTA`, `TEXT_END` with stable `text_id`.
+- [X] B2. Enforce deterministic ordering invariants for stream lifecycle events.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] B3. Implement `PROVIDER_EVENT` and `ERROR` emission semantics for unknown events and malformed payloads.
+- [X] B3. Update `__stream_from_response` fallback to emit `TEXT_START`, `TEXT_DELTA`, `TEXT_END` with stable `text_id`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] B4. Ensure FINISH event includes normalized `finish_reason`, `usage`, and assembled unified `response`.
+- [X] B4. Implement `PROVIDER_EVENT` and normalized `ERROR` event semantics for unknown or malformed provider frames.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] B5. Ensure `FINISH` includes normalized `finish_reason`, `usage`, and assembled unified `response`.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Positive Test Cases
-- [X] Stream sequence starts with `STREAM_START`, then ordered segment events, then terminal `FINISH` on success.
+- [X] Successful stream sequence starts with `STREAM_START` and ends with terminal `FINISH`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Concatenated `TEXT_DELTA` content equals final response text.
+- [X] Concatenated `TEXT_DELTA` payloads equal final response text.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] `FINISH` includes normalized usage/finish metadata when provider payload has those fields.
+- [X] `TEXT_START`/`TEXT_END` lifecycle uses stable, deterministic `text_id` correlation.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Final `FINISH` includes normalized usage and finish metadata when available from provider payloads.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Negative Test Cases
-- [X] Malformed JSON streaming payload produces terminal `ERROR` and suppresses `FINISH`.
+- [X] Malformed JSON payload in streamed data emits terminal `ERROR` and suppresses `FINISH`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Unknown provider event types emit `PROVIDER_EVENT` (passthrough) instead of hard failure.
+- [X] Unknown provider event types emit `PROVIDER_EVENT` with `raw`, not hard failure.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Invalid event ordering attempts are rejected or normalized deterministically by stream contract logic.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Acceptance Criteria - Track B
-- [X] StreamEvent contract is deterministic, provider-agnostic, and validated by fixture-backed tests.
+- [X] StreamEvent contract is provider-agnostic, deterministic, and fully covered by fixture-backed tests.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Fallback streaming path remains spec-faithful and test-equivalent to provider translator expectations.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
-### Planned Verification Commands - Track B
+### Verification Commands - Track B
 - `make -j10 build`
 - `tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
 - `tclsh tests/all.tcl -match *unified_llm-stream-events*`
@@ -392,182 +739,320 @@ Evidence artifacts:
 
 ## Track C - Provider-Native Streaming Translators
 ### Deliverables
-- [X] C1. OpenAI: implement SSE translation to `TEXT_*`, `TOOL_CALL_*`, `FINISH`, `PROVIDER_EVENT`, `ERROR`.
+- [X] C1. OpenAI translator maps SSE events to `TEXT_*`, `TOOL_CALL_*`, `FINISH`, `PROVIDER_EVENT`, `ERROR` with correct ordering.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] C2. Anthropic: implement SSE translation for text/tool_use/thinking blocks to `TEXT_*`, `TOOL_CALL_*`, `REASONING_*`, terminal events.
+- [X] C2. OpenAI tool-call argument deltas accumulate deterministically and decode to dict at `TOOL_CALL_END`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] C3. Gemini: implement `:streamGenerateContent?alt=sse` translation for text/functionCall flows and terminal normalization.
+- [X] C3. Anthropic translator maps text/tool_use/thinking lifecycle into `TEXT_*`, `TOOL_CALL_*`, `REASONING_*`, terminal events.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] C4. Tool-call assembly: accumulate deltas and emit decoded argument dictionary at `TOOL_CALL_END`.
+- [X] C4. Gemini translator maps `:streamGenerateContent?alt=sse` text/functionCall parts into unified events and terminal normalization.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] C5. Ensure adapters no longer synthesize streaming by chunking `complete()` text responses.
+- [X] C5. Adapters no longer call `complete()` then chunk output text for stream mode.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] C6. Provider translator coverage includes malformed frames, unknown events, and missing/late terminal signals.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Positive Test Cases
-- [X] OpenAI text stream fixtures produce ordered text lifecycle and correct final response assembly.
+- [X] OpenAI fixture set validates text lifecycle and final response assembly.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] OpenAI tool-call fixtures produce complete decoded arguments at `TOOL_CALL_END`.
+- [X] OpenAI fixture set validates tool-call lifecycle and decoded arguments.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Anthropic thinking fixtures produce deterministic `REASONING_START/DELTA/END` lifecycle.
+- [X] Anthropic fixture set validates deterministic reasoning lifecycle (`REASONING_START/DELTA/END`).
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Anthropic and Gemini fixtures normalize finish reason and usage into terminal `FINISH`.
+- [X] Anthropic fixture set validates tool_use lifecycle and final finish metadata mapping.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Gemini functionCall fixtures produce complete tool-call lifecycle events.
+- [X] Gemini fixture set validates text and functionCall translation with terminal finish handling.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Negative Test Cases
-- [X] Malformed provider frame payloads (OpenAI/Anthropic/Gemini) emit typed `ERROR` and terminate stream.
+- [X] Malformed provider payloads emit typed terminal `ERROR` and stop stream.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Unknown provider-specific event/part types are surfaced as `PROVIDER_EVENT` with `raw` payload retained.
+- [X] Unknown provider-specific events/parts emit `PROVIDER_EVENT` preserving `raw` payload.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Missing/late terminal provider signal still yields deterministic terminal behavior per translator contract.
+- [X] Missing terminal provider signal still yields deterministic terminal behavior per translator policy.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Invalid tool argument JSON fragments are surfaced as typed errors at stream terminal path.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Acceptance Criteria - Track C
-- [X] OpenAI/Anthropic/Gemini translators are provider-native, fixture-backed, and spec-faithful for text/tool/reasoning/finish/error pathways.
+- [X] OpenAI/Anthropic/Gemini translators are provider-native and spec-faithful across text/tool/reasoning/finish/error pathways.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Adapter stream implementations are fixture-backed, deterministic, and independent of live network for primary proof.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
-### Planned Verification Commands - Track C
+### Verification Commands - Track C
 - `make -j10 build`
 - `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
 - `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
@@ -576,134 +1061,248 @@ Evidence artifacts:
 
 ## Track D - Middleware, stream_object, and Partial-Data Failure Semantics
 ### Deliverables
-- [X] D1. Verify streaming request/event/response middleware order matches blocking semantics.
+- [X] D1. Verify request/event/response middleware ordering in streaming matches blocking semantics.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] D2. Update `stream_object` to ignore non-text events safely and validate schema at terminal output.
+- [X] D2. Update `stream_object` buffering to safely ignore non-text events while preserving JSON assembly semantics.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] D3. Enforce no-retry-after-partial-data rule for transport failures after emitted deltas.
+- [X] D3. Validate `stream_object` schema enforcement at terminal output with typed failures for invalid JSON/schema mismatch.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] D4. Add deterministic tests for invalid JSON, missing FINISH, schema mismatch, and partial-stream transport failures.
+- [X] D4. Enforce no-retry-after-partial contract for transport failures after emitted deltas.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] D5. Add deterministic regression tests covering missing `FINISH`, transport faults, and partial-stream termination.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Positive Test Cases
-- [X] Middleware transforms execute in correct sequence for streaming requests, each event, and final response.
+- [X] Middleware transforms apply in deterministic order for request, per-event, and final response phases.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] `stream_object` returns schema-valid object from buffered text deltas on successful FINISH.
+- [X] `stream_object` returns schema-valid object for successful terminal stream.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Streaming response assembly remains consistent when middleware mutates event payloads.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Negative Test Cases
-- [X] Transport error after at least one text delta emits terminal `ERROR`, ends stream, and does not invoke retry path.
+- [X] Transport error after first `TEXT_DELTA` emits terminal `ERROR`, ends stream, and avoids retry.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Invalid buffered JSON or schema mismatch yields typed error behavior in `stream_object` path.
+- [X] Invalid buffered JSON or schema mismatch yields typed failure in `stream_object` path.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Missing FINISH causes deterministic failure rather than silent success.
+- [X] Missing `FINISH` is detected and surfaced deterministically.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Acceptance Criteria - Track D
-- [X] Middleware and structured streaming semantics are equivalent to blocking guarantees, including strict terminal behavior under failure.
+- [X] Middleware and structured streaming behaviors are equivalent to blocking guarantees where specified.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Partial-data failure semantics are deterministic, terminal, and non-retrying.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
-### Planned Verification Commands - Track D
+### Verification Commands - Track D
 - `make -j10 build`
 - `tclsh tests/all.tcl -match *unified_llm-stream-middleware*`
 - `tclsh tests/all.tcl -match *unified_llm-stream-object*`
@@ -711,254 +1310,483 @@ Evidence artifacts:
 
 ## Track E - Traceability, ADR, Evidence Hygiene, and Closeout
 ### Deliverables
-- [X] E1. Update streaming requirement mappings in `docs/spec-coverage/traceability.md` to specific selectors.
+- [X] E1. Update `docs/spec-coverage/traceability.md` streaming IDs to streaming-specific selectors.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] E2. Add ADR entry in `docs/ADR.md` documenting streaming event model and provider-native translation decisions.
+- [X] E2. Confirm strict traceability coverage passes with no missing or unknown IDs.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] E3. Bring sprint docs into evidence-hygiene compliance and pass docs/evidence guardrails.
+- [X] E3. Add/update `docs/ADR.md` entry describing StreamEvent contract, provider-native translation, and consequences.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] E4. Execute full closeout matrix and produce command-status ledger + artifact index under `.scratch/verification/SPRINT-005/`.
+- [X] E4. Ensure sprint docs satisfy `docs_lint`, `evidence_lint`, and `evidence_guardrail` gates.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] E5. Render and archive appendix mermaid diagrams under `.scratch/diagram-renders/sprint-005-comprehensive-plan/`.
+- [X] E5. Run full closeout matrix and produce command-status ledger and summary under `.scratch/verification/SPRINT-005/`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] E6. Render appendix mermaid diagrams with `mmdc` and store `.mmd` and `.svg` artifacts under `.scratch/diagram-renders/sprint-005-comprehensive-plan/`.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Positive Test Cases
-- [X] `tclsh tools/spec_coverage.tcl` passes with streaming IDs mapped to streaming-specific tests.
+- [X] `tclsh tools/spec_coverage.tcl` passes with streaming IDs mapped to explicit streaming tests.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] `bash tools/docs_lint.sh` passes for modified sprint/spec/ADR docs.
+- [X] `bash tools/docs_lint.sh` passes for modified sprint docs and related documentation updates.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] `bash tools/evidence_lint.sh` and `tclsh tools/evidence_guardrail.tcl` pass for modified sprint docs.
+- [X] `bash tools/evidence_lint.sh` passes for source sprint doc and this comprehensive plan.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Full build and test gates pass (`make -j10 build`, `make -j10 test`).
+- [X] `tclsh tools/evidence_guardrail.tcl` passes for source sprint doc and this comprehensive plan.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Full project gates pass: `make -j10 build` and `make -j10 test`.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Negative Test Cases
-- [X] Traceability entries with broad catch-all selectors are rejected and replaced with streaming-specific mappings.
+- [X] Broad catch-all streaming selectors in traceability are rejected and replaced with specific selectors.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Missing verification command, exit code, or artifact path blocks checklist completion.
+- [X] Missing command, exit code, or artifact path blocks checklist completion for any item.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Any failed matrix command prevents sprint closeout completion status changes.
+- [X] Any failing closeout command blocks sprint completion status updates.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ### Acceptance Criteria - Track E
-- [X] Streaming implementation is demonstrably complete through deterministic tests, strict traceability, and auditable evidence artifacts.
+- [X] Streaming implementation is provable through deterministic tests, strict traceability, and auditable evidence artifacts.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Documentation and evidence guardrails remain green at sprint closeout.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
-### Planned Verification Commands - Track E
-- `make -j10 build`
-- `make -j10 test`
+### Verification Commands - Track E
 - `tclsh tools/spec_coverage.tcl`
 - `bash tools/docs_lint.sh`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-comprehensive-implementation-plan.md`
 - `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md docs/sprints/SPRINT-005-comprehensive-implementation-plan.md`
+- `make -j10 build`
+- `make -j10 test`
 
 ## Cross-Track Execution Matrix
-- [X] Baseline: run build/test + targeted selectors before changing implementation to establish control evidence.
+- [X] Baseline gate passes before implementation changes (`build`, `test`, and streaming selectors baseline).
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Per-track gate: after each track, rerun relevant targeted selectors and log artifacts under `.scratch/verification/SPRINT-005/<track>/`.
+- [X] After each track, rerun track-specific selectors and record logs under `.scratch/verification/SPRINT-005/<track>/`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Final gate: run full matrix only after all tracks are complete and documentation updates are finalized.
+- [X] Final gate runs full matrix only after all tracks and docs updates are complete.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ## Command Ledger Template
-- [X] Each completed checklist item includes exact command, explicit exit code, and evidence artifact paths.
+- [X] Every completed checklist item includes exact command(s), explicit exit code(s), and artifact path(s).
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
-- [X] Commands and outputs are captured in immutable log files under `.scratch/verification/SPRINT-005/`.
+- [X] Command logs are immutable artifacts under `.scratch/verification/SPRINT-005/` and referenced from this document.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/execution-20260228T065834Z/`
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
 - `timeout 180 make build` (exit code 0)
 - `timeout 180 make test` (exit code 0)
-- `timeout 180 cat .scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/command-status.tsv`
-- `.scratch/verification/SPRINT-005/execution-20260228T065834Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
-Suggested command status file format (`command-status.tsv`):
-- `timestamp<TAB>track<TAB>item_id<TAB>command<TAB>exit_code<TAB>log_path`
+## Verification Summary (Definition of Done)
+- [X] Build and test gates pass.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] All streaming-specific selector suites pass.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Spec coverage, docs lint, evidence lint, and evidence guardrail all pass.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Appendix diagrams render cleanly with `mmdc` and artifacts are archived.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
 
 ## Appendix - Mermaid Diagrams
 
 ### Core Domain Models
 ```mermaid
 classDiagram
-  class UnifiedLLMClient {
-    +stream(request, on_event)
-    +complete(request)
-  }
   class StreamEvent {
     +type
     +text_id
@@ -971,201 +1799,198 @@ classDiagram
     +error
     +raw
   }
-  class Adapter {
-    <<interface>>
-    +stream(request, emit)
+  class UnifiedResponse {
+    +id
+    +model
+    +content
+    +tool_calls
+    +usage
+    +finish_reason
+    +provider
+  }
+  class ProviderAdapter {
     +complete(request)
+    +stream(request, on_event)
   }
-  class OpenAIAdapter
-  class AnthropicAdapter
-  class GeminiAdapter
-  class SSEParser {
-    +sse_parse(payload)
-    +parse_sse(payload)
+  class SSEEvent {
+    +event
+    +data
+    +id
+    +retry
   }
-  class MiddlewareChain {
-    +apply_request(req)
-    +apply_event(evt)
-    +apply_response(resp)
-  }
-  class StreamObject {
-    +buffer_text_delta(evt)
-    +validate_schema(json)
+  class TraceabilityMapping {
+    +requirement_id
+    +tests
+    +verify_selectors
   }
 
-  UnifiedLLMClient --> Adapter : uses
-  OpenAIAdapter ..|> Adapter
-  AnthropicAdapter ..|> Adapter
-  GeminiAdapter ..|> Adapter
-  OpenAIAdapter --> SSEParser : parse frames
-  AnthropicAdapter --> SSEParser : parse frames
-  GeminiAdapter --> SSEParser : parse frames
-  UnifiedLLMClient --> MiddlewareChain : invokes
-  UnifiedLLMClient --> StreamEvent : emits
-  StreamObject --> StreamEvent : consumes
+  ProviderAdapter --> SSEEvent : parses
+  ProviderAdapter --> StreamEvent : translates to
+  StreamEvent --> UnifiedResponse : assembles
+  TraceabilityMapping --> StreamEvent : proves behavior
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  STREAM_SESSION ||--o{ STREAM_EVENT : emits
-  STREAM_SESSION ||--o| FINAL_RESPONSE : produces
-  STREAM_SESSION ||--o| USAGE_SUMMARY : records
-  PROVIDER_TRANSLATOR ||--o{ STREAM_EVENT : maps
-  FIXTURE_CASE ||--o{ STREAM_EVENT : expects
-  TRACEABILITY_REQUIREMENT ||--o{ TEST_SELECTOR : validates
-  TEST_RUN ||--o{ TEST_RESULT : contains
-  TEST_RESULT }o--|| EVIDENCE_ARTIFACT : references
+  REQUIREMENT ||--o{ TRACEABILITY_ENTRY : maps_to
+  TRACEABILITY_ENTRY ||--o{ TEST_SELECTOR : references
+  TEST_SELECTOR ||--o{ VERIFICATION_LOG : executed_by
+  VERIFICATION_LOG ||--o{ ARTIFACT : produces
+  STREAM_TRANSLATOR ||--o{ STREAM_FIXTURE : validates_with
+  STREAM_FIXTURE ||--o{ STREAM_EVENT_ASSERTION : asserts
 
-  STREAM_SESSION {
-    string session_id
-    string provider
-    string model
-    string status
-  }
-  STREAM_EVENT {
-    string event_id
-    string type
-    string text_id
-    string payload_hash
-  }
-  FINAL_RESPONSE {
-    string response_id
-    string finish_reason
-    string content_hash
-  }
-  USAGE_SUMMARY {
-    int input_tokens
-    int output_tokens
-    int reasoning_tokens
-  }
-  PROVIDER_TRANSLATOR {
-    string provider
-    string adapter_path
-  }
-  FIXTURE_CASE {
-    string fixture_id
-    string provider
-    string scenario
-  }
-  TRACEABILITY_REQUIREMENT {
+  REQUIREMENT {
     string requirement_id
-    string source_doc
+    string family
+    string statement
+  }
+  TRACEABILITY_ENTRY {
+    string requirement_id
+    string test_file
+    string verify_pattern
   }
   TEST_SELECTOR {
     string selector
-    string test_file
-  }
-  TEST_RUN {
-    string run_id
-    string started_at
-  }
-  TEST_RESULT {
     string command
-    int exit_code
   }
-  EVIDENCE_ARTIFACT {
+  VERIFICATION_LOG {
+    string run_id
+    int exit_code
+    string log_path
+  }
+  ARTIFACT {
     string artifact_path
-    string checksum
+    string artifact_type
+  }
+  STREAM_TRANSLATOR {
+    string provider
+    string module_path
+  }
+  STREAM_FIXTURE {
+    string provider
+    string fixture_path
+    string scenario
+  }
+  STREAM_EVENT_ASSERTION {
+    string scenario
+    string expected_sequence
   }
 ```
 
 ### Workflow
 ```mermaid
 flowchart TD
-  A[Start Sprint 005 Execution] --> B[Track A SSE Parser + Fixtures]
-  B --> C[Track B Unified StreamEvent Contract]
-  C --> D[Track C Provider Translators]
-  D --> E[Track D Middleware and stream_object]
-  E --> F[Track E Traceability ADR Evidence]
-  F --> G[Run Final Verification Matrix]
-  G --> H{All Gates Pass?}
-  H -- Yes --> I[Mark Checklist Items Complete]
-  H -- No --> J[Fix Gaps and Re-run Targeted Gates]
-  J --> G
+  P0[Track A: SSE Parser + Fixtures] --> P1[Track B: StreamEvent Contract]
+  P1 --> P2[Track C: Provider Translators]
+  P2 --> P3[Track D: Middleware + stream_object + Failure Semantics]
+  P3 --> P4[Track E: Traceability + ADR + Evidence Closeout]
+  P4 --> Done[Definition of Done]
+
+  P0 --> V0[Track A Verification Commands]
+  P1 --> V1[Track B Verification Commands]
+  P2 --> V2[Track C Verification Commands]
+  P3 --> V3[Track D Verification Commands]
+  P4 --> V4[Track E Verification Commands]
 ```
 
 ### Data-Flow
 ```mermaid
 flowchart LR
-  U[Caller] --> R[UnifiedLLM Request]
-  R --> M1[Request Middleware]
-  M1 --> AD[Provider Adapter stream]
-  AD --> TR[Streaming Transport]
-  TR --> SSE[SSE Frame Parser]
-  SSE --> TX[Provider Translator]
-  TX --> EV[Unified StreamEvent]
-  EV --> M2[Event Middleware]
-  M2 --> CB[on_event Callback]
-  TX --> FR[Final Unified Response]
-  FR --> M3[Response Middleware]
-  M3 --> OUT[stream return value]
+  A[Caller Request] --> B[unified_llm::stream]
+  B --> C[Adapter stream]
+  C --> D[HTTPS transport stream]
+  D --> E[SSE parser]
+  E --> F[Provider translator]
+  F --> G[Unified StreamEvent]
+  G --> H[Event middleware]
+  H --> I[Caller callback]
+  F --> J[Final response assembler]
+  J --> K[Response middleware]
+  K --> L[FINISH response payload]
+  L --> M[Traceability and evidence checks]
 ```
 
 ### Architecture
 ```mermaid
 flowchart TB
-  subgraph ClientLayer
-    C1[Unified LLM Public API]
-    C2[stream_object helper]
+  subgraph Runtime[Runtime]
+    ULLM[lib/unified_llm/main.tcl]
+    OA[adapters/openai.tcl]
+    AN[adapters/anthropic.tcl]
+    GE[adapters/gemini.tcl]
+    CORE[lib/attractor_core/core.tcl]
+    TX[transports/https_json.tcl]
   end
 
-  subgraph CoreLayer
-    K1[StreamEvent contract]
-    K2[SSE parser core]
-    K3[Middleware pipeline]
+  subgraph Tests[Deterministic Tests]
+    UTEST[tests/unit/unified_llm.test]
+    CTEST[tests/unit/attractor_core.test]
+    FIX[tests/fixtures/*stream*]
   end
 
-  subgraph AdapterLayer
-    A1[OpenAI adapter]
-    A2[Anthropic adapter]
-    A3[Gemini adapter]
+  subgraph Governance[Governance]
+    TRACE[docs/spec-coverage/traceability.md]
+    ADR[docs/ADR.md]
+    EVID[tools/evidence_lint.sh]
+    GUARD[tools/evidence_guardrail.tcl]
+    COVER[tools/spec_coverage.tcl]
   end
 
-  subgraph VerificationLayer
-    V1[Unit tests]
-    V2[Fixture corpus]
-    V3[Traceability checks]
-    V4[Evidence lint and guardrail]
-  end
+  ULLM --> OA
+  ULLM --> AN
+  ULLM --> GE
+  OA --> TX
+  AN --> TX
+  GE --> TX
+  OA --> CORE
+  AN --> CORE
+  GE --> CORE
 
-  C1 --> K1
-  C1 --> K3
-  C2 --> K1
-  A1 --> K2
-  A2 --> K2
-  A3 --> K2
-  A1 --> K1
-  A2 --> K1
-  A3 --> K1
-  V1 --> A1
-  V1 --> A2
-  V1 --> A3
-  V2 --> V1
-  V3 --> V1
-  V4 --> V3
+  UTEST --> ULLM
+  UTEST --> FIX
+  CTEST --> CORE
+
+  TRACE --> COVER
+  ADR --> Governance
+  EVID --> Governance
+  GUARD --> Governance
 ```
 
 ## Appendix Render Verification
-- [X] Mermaid diagrams in this appendix are rendered with `mmdc` and output stored in `.scratch/diagram-renders/sprint-005-comprehensive-plan/`.
+- [X] Mermaid diagrams render with `mmdc` and outputs are stored under `.scratch/diagram-renders/sprint-005-comprehensive-plan/`.
 ```text
 Verification commands:
-- Evidence index: `.scratch/verification/SPRINT-005/comprehensive-plan/`
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
 
 Evidence artifacts:
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.mmd`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.mmd`
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.mmd`
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.mmd`
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+- [X] Render logs are captured under `.scratch/verification/SPRINT-005/appendix-render/` and referenced when completing this item.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/*.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
