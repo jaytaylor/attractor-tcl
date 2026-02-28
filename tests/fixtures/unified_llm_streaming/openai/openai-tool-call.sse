@@ -1,0 +1,14 @@
+event: message
+data: {"type":"response.created","response":{"id":"resp-openai-tool"}}
+
+event: message
+data: {"type":"response.function_call_arguments.delta","item_id":"tool-1","name":"calc","delta":"{\"x\":"}
+
+event: message
+data: {"type":"response.function_call_arguments.delta","item_id":"tool-1","name":"calc","delta":"1}"}
+
+event: message
+data: {"type":"response.output_item.done","item":{"type":"function_call","id":"tool-1","name":"calc","arguments":"{\"x\":1}"}}
+
+event: message
+data: {"type":"response.completed","response":{"id":"resp-openai-tool","usage":{"input_tokens":1,"output_tokens":1}}}

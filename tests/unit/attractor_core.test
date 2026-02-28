@@ -52,6 +52,29 @@ test attractor_core-sse-parse-1.0 {parse SSE frames} -body {
     list [llength $events] [dict get [lindex $events 0] data] [dict get [lindex $events 1] event]
 } -result {2 hello done}
 
+test attractor_core-sse-parse-eof-flush-1.0 {flush final event at EOF without trailing separator} -body {
+    set payload "event: message\ndata: trailing"
+    set events [::attractor_core::sse_parse $payload]
+    list [llength $events] [dict get [lindex $events 0] event] [dict get [lindex $events 0] data]
+} -result {1 message trailing}
+
+test attractor_core-sse-parse-multiline-1.0 {join multiline data fields with newline} -body {
+    set payload "event: message\ndata: hello\ndata: world\n\n"
+    set events [::attractor_core::sse_parse $payload]
+    dict get [lindex $events 0] data
+} -result "hello\nworld"
+
+test attractor_core-sse-parse-id-retry-1.0 {preserve id and retry fields} -body {
+    set payload "event: ping\nid: abc\nretry: 250\ndata: ok\n\n"
+    set events [::attractor_core::sse_parse $payload]
+    list [dict get [lindex $events 0] id] [dict get [lindex $events 0] retry]
+} -result {abc 250}
+
+test attractor_core-sse-parse-alias-1.0 {parse_sse alias matches sse_parse output} -body {
+    set payload "event: message\ndata: alias\n\n"
+    expr {[::attractor_core::parse_sse $payload] eq [::attractor_core::sse_parse $payload]}
+} -result 1
+
 test attractor_core-exec-success-1.0 {exec helper success path} -body {
     set result [::attractor_core::exec_with_control -command [list sh -lc {printf hello}] -max_ms 5000]
     list [dict get $result exit_code] [string trim [dict get $result stdout]] [dict get $result timed_out]

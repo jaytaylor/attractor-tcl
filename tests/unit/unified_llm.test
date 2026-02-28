@@ -244,8 +244,23 @@ test unified_llm-stream-object-1.0 {stream_object validates and emits object cal
         lappend ::tests::unified_llm::stream_objects $obj
     }
     proc ::tests::unified_llm::transport_stream_obj {req} {
-        set body [dict create output_text {{"ok":true,"n":2}} usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
-        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+        set body [join [list \
+            "event: message" \
+            "data: {\"type\":\"response.created\",\"response\":{\"id\":\"resp-stream-obj\"}}" \
+            "" \
+            "event: message" \
+            "data: {\"type\":\"response.output_text.delta\",\"item_id\":\"msg-1\",\"delta\":\"{\\\"ok\\\":true,\"}" \
+            "" \
+            "event: message" \
+            "data: {\"type\":\"response.output_text.delta\",\"item_id\":\"msg-1\",\"delta\":\"\\\"n\\\":2}\"}" \
+            "" \
+            "event: message" \
+            "data: {\"type\":\"response.output_item.done\",\"item\":{\"type\":\"text\",\"id\":\"msg-1\"}}" \
+            "" \
+            "event: message" \
+            "data: {\"type\":\"response.completed\",\"response\":{\"id\":\"resp-stream-obj\",\"usage\":{\"input_tokens\":1,\"output_tokens\":1}}}" \
+            ""] "\n"]
+        return [dict create status_code 200 headers {} body $body]
     }
     set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_stream_obj]
 } -body {

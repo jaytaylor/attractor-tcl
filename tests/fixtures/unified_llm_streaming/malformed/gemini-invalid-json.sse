@@ -1,0 +1,3 @@
+data: {"id":"gem-bad","candidates":[{"content":{"parts":[{"text":"hi"}]}}]}
+
+data: {not-json

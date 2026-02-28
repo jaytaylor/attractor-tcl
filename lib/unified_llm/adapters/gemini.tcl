@@ -213,15 +213,163 @@ proc ::unified_llm::adapters::gemini::complete {state request} {
         request [dict create endpoint $endpoint payload $payload headers [::unified_llm::adapters::__redact_headers $headers]]]
 }
 
+proc ::unified_llm::adapters::gemini::__dict_get_or {payload default args} {
+    if {[catch {dict get $payload {*}$args} value]} {
+        return $default
+    }
+    return $value
+}
+
 proc ::unified_llm::adapters::gemini::stream {state request} {
-    set response [::unified_llm::adapters::gemini::complete $state $request]
-    set events [list [dict create type STREAM_START provider gemini response_id [dict get $response response_id]]]
-    foreach chunk [::unified_llm::adapters::__chunk_text [dict get $response text] 16] {
-        lappend events [dict create type TEXT_DELTA delta $chunk]
+    set model "gemini-1.5-pro"
+    if {[dict exists $request model] && [dict get $request model] ne ""} {
+        set model [dict get $request model]
     }
-    foreach call [dict get $response tool_calls] {
-        lappend events [dict create type TOOL_CALL_END tool_call $call]
+
+    set endpoint "/v1beta/models/${model}:streamGenerateContent?alt=sse"
+    set payload [::unified_llm::adapters::gemini::translate_request $request]
+
+    set headers [dict create Content-Type application/json Accept text/event-stream]
+    if {[dict get $state api_key] ne ""} {
+        dict set headers x-goog-api-key [dict get $state api_key]
     }
-    lappend events [dict create type FINISH response $response usage [dict get $response usage]]
+    if {[dict exists $request provider_options extra_headers]} {
+        foreach key [dict keys [dict get $request provider_options extra_headers]] {
+            dict set headers $key [dict get $request provider_options extra_headers $key]
+        }
+    }
+
+    set transport [::unified_llm::adapters::__invoke_transport $state gemini $endpoint $payload $headers]
+    ::unified_llm::adapters::__raise_if_error gemini $transport
+    set parsedEvents [::attractor_core::parse_sse [dict get $transport body]]
+
+    set responseId gemini-response-1
+    set usage [dict create input_tokens 0 output_tokens 0 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]
+    set metadata [dict create]
+    if {[dict exists $transport headers]} {
+        set h [dict get $transport headers]
+        foreach key {x-request-id x-ratelimit-limit-requests} {
+            if {[dict exists $h $key]} {
+                dict set metadata $key [dict get $h $key]
+            }
+        }
+    }
+
+    set textId text-1
+    set textStarted 0
+    set textEnded 0
+    set text ""
+
+    set toolSeq 0
+    set finalizedToolCalls {}
+    set translated {}
+    set rawEvents {}
+    set finalRaw {}
+    set streamFailed 0
+
+    foreach sseEvent $parsedEvents {
+        if {$streamFailed} {
+            break
+        }
+
+        set data [::unified_llm::adapters::gemini::__dict_get_or $sseEvent "" data]
+        if {$data eq "" || $data eq "\[DONE\]"} {
+            continue
+        }
+
+        if {[catch {::attractor_core::json_decode $data} chunk]} {
+            lappend translated [::unified_llm::__stream_event ERROR error [dict create code STREAM_INVALID_JSON provider gemini message "invalid JSON frame in Gemini stream" raw $data]]
+            set streamFailed 1
+            continue
+        }
+
+        lappend rawEvents $chunk
+        if {[dict exists $chunk usageMetadata]} {
+            set usage [::unified_llm::adapters::gemini::__translate_usage $chunk]
+        }
+        if {[dict exists $chunk id]} {
+            set responseId [dict get $chunk id]
+        }
+        if {[dict exists $chunk error]} {
+            set errPayload [dict get $chunk error]
+            lappend translated [::unified_llm::__stream_event ERROR error [dict merge [dict create code STREAM_PROVIDER_ERROR provider gemini] $errPayload]]
+            set streamFailed 1
+            continue
+        }
+
+        set recognized 0
+        if {[dict exists $chunk candidates]} {
+            foreach candidate [dict get $chunk candidates] {
+                if {[dict exists $candidate content parts]} {
+                    foreach part [dict get $candidate content parts] {
+                        if {[dict exists $part text]} {
+                            if {!$textStarted} {
+                                set textStarted 1
+                                lappend translated [::unified_llm::__stream_event TEXT_START text_id $textId]
+                            }
+                            set delta [dict get $part text]
+                            append text $delta
+                            lappend translated [::unified_llm::__stream_event TEXT_DELTA text_id $textId delta $delta]
+                            set recognized 1
+                        }
+                        if {[dict exists $part functionCall]} {
+                            set functionCall [dict get $part functionCall]
+                            set toolId [::unified_llm::adapters::gemini::__dict_get_or $functionCall "" id]
+                            if {$toolId eq ""} {
+                                incr toolSeq
+                                set toolId "gemini-tool-$toolSeq"
+                            }
+                            set toolName [::unified_llm::adapters::gemini::__dict_get_or $functionCall "" name]
+                            set args [::unified_llm::adapters::gemini::__dict_get_or $functionCall {} args]
+                            set toolCall [dict create id $toolId name $toolName arguments $args]
+                            lappend finalizedToolCalls $toolCall
+                            lappend translated [::unified_llm::__stream_event TOOL_CALL_START tool_call [dict create id $toolId name $toolName]]
+                            lappend translated [::unified_llm::__stream_event TOOL_CALL_END tool_call $toolCall]
+                            set recognized 1
+                        }
+                    }
+                }
+                if {[dict exists $candidate finishReason] && $textStarted && !$textEnded} {
+                    set textEnded 1
+                    lappend translated [::unified_llm::__stream_event TEXT_END text_id $textId]
+                    set recognized 1
+                }
+            }
+        }
+
+        if {!$recognized} {
+            lappend translated [::unified_llm::__stream_event PROVIDER_EVENT raw $chunk]
+        }
+        set finalRaw $chunk
+    }
+
+    if {!$streamFailed && $textStarted && !$textEnded} {
+        set textEnded 1
+        lappend translated [::unified_llm::__stream_event TEXT_END text_id $textId]
+    }
+
+    set responseRaw $finalRaw
+    if {$responseRaw eq {} || $responseRaw eq ""} {
+        set responseRaw $rawEvents
+    }
+
+    set response [dict create \
+        provider gemini \
+        response_id $responseId \
+        text $text \
+        tool_calls $finalizedToolCalls \
+        usage $usage \
+        metadata $metadata \
+        raw $responseRaw \
+        request [dict create endpoint $endpoint payload $payload headers [::unified_llm::adapters::__redact_headers $headers]]]
+
+    set events [list [::unified_llm::__stream_event STREAM_START provider gemini response_id $responseId]]
+    foreach event $translated {
+        lappend events $event
+    }
+    if {!$streamFailed} {
+        lappend events [::unified_llm::__stream_event FINISH response $response usage $usage]
+    }
+
     return [dict create events $events response $response]
 }

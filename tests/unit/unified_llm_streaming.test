@@ -1,0 +1,359 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require unified_llm
+package require attractor_core
+
+namespace eval ::tests::unified_llm_streaming {
+    variable events {}
+    variable call_count 0
+    variable middleware_log {}
+}
+
+proc ::tests::unified_llm_streaming::fixture_path {rel} {
+    set root [file normalize [file join [file dirname [info script]] .. ..]]
+    return [file join $root tests fixtures unified_llm_streaming {*}[split $rel /]]
+}
+
+proc ::tests::unified_llm_streaming::read_file {path} {
+    set fh [open $path r]
+    set data [read $fh]
+    close $fh
+    return $data
+}
+
+proc ::tests::unified_llm_streaming::transport_fixture {fixture req} {
+    set body [::tests::unified_llm_streaming::read_file $fixture]
+    return [dict create status_code 200 headers {} body $body]
+}
+
+proc ::tests::unified_llm_streaming::capture_event {event} {
+    variable events
+    lappend events $event
+}
+
+proc ::tests::unified_llm_streaming::has_event_type {events targetType} {
+    foreach event $events {
+        if {[dict get $event type] eq $targetType} {
+            return 1
+        }
+    }
+    return 0
+}
+
+proc ::tests::unified_llm_streaming::collect_text_from_deltas {events} {
+    set out ""
+    foreach event $events {
+        if {[dict get $event type] eq "TEXT_DELTA" && [dict exists $event delta]} {
+            append out [dict get $event delta]
+        }
+    }
+    return $out
+}
+
+proc ::tests::unified_llm_streaming::mw1 {phase payload} {
+    variable middleware_log
+    switch -- $phase {
+        request {
+            lappend middleware_log req1
+            return $payload
+        }
+        event {
+            lappend middleware_log ev1
+            if {[dict get $payload type] eq "TEXT_DELTA"} {
+                dict set payload delta [string toupper [dict get $payload delta]]
+            }
+            return $payload
+        }
+        response {
+            lappend middleware_log resp1
+            dict set payload text "[dict get $payload text]-r1"
+            return $payload
+        }
+    }
+    return $payload
+}
+
+proc ::tests::unified_llm_streaming::mw2 {phase payload} {
+    variable middleware_log
+    switch -- $phase {
+        request {
+            lappend middleware_log req2
+            return $payload
+        }
+        event {
+            lappend middleware_log ev2
+            return $payload
+        }
+        response {
+            lappend middleware_log resp2
+            dict set payload text "[dict get $payload text]-r2"
+            return $payload
+        }
+    }
+    return $payload
+}
+
+test unified_llm-stream-fixture-load-1.0 {stream fixtures exist and are readable} -body {
+    set p [::tests::unified_llm_streaming::fixture_path openai/openai-text.sse]
+    set payload [::tests::unified_llm_streaming::read_file $p]
+    list [file exists $p] [string match "*response.output_text.delta*" $payload]
+} -result {1 1}
+
+test unified_llm-stream-event-model-1.0 {synthetic stream follows start/delta/end contract} -setup {
+    set client [::unified_llm::client_new -provider mock]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    ::unified_llm::stream -client $client -provider mock -prompt hello -model mock-1 -on_event ::tests::unified_llm_streaming::capture_event
+    set types {}
+    foreach event $::tests::unified_llm_streaming::events {
+        lappend types [dict get $event type]
+    }
+    list [lindex $types 0] [lindex $types 1] [lindex $types end-1] [lindex $types end]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {STREAM_START TEXT_START TEXT_END FINISH}
+
+test unified_llm-stream-events-concatenate-1.0 {text deltas concatenate to FINISH response text} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-text.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set result [::unified_llm::stream -client $client -provider openai -prompt x -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    set collected [::tests::unified_llm_streaming::collect_text_from_deltas $::tests::unified_llm_streaming::events]
+    set finishedText [dict get [dict get $result response] text]
+    list $collected $finishedText
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {Hello Hello}
+
+test unified_llm-stream-error-invalid-json-1.0 {malformed stream JSON emits ERROR and no FINISH} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path malformed/openai-invalid-json-after-partial.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set _ [::unified_llm::stream -client $client -provider openai -prompt x -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    set hasFinish [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events FINISH]
+    list [dict get [lindex $::tests::unified_llm_streaming::events end] type] $hasFinish
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {ERROR 0}
+
+test unified_llm-openai-stream-translation-text-1.0 {openai text stream maps to unified events and usage} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-text.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set result [::unified_llm::stream -client $client -provider openai -prompt hi -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    list \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TEXT_START] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TEXT_END] \
+      [dict get [dict get $result response] text] \
+      [dict get [dict get [dict get $result response] usage] reasoning_tokens]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {1 1 Hello 1}
+
+test unified_llm-openai-stream-translation-provider-event-1.0 {unmapped openai event surfaces as PROVIDER_EVENT} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-unknown-event.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set _ [::unified_llm::stream -client $client -provider openai -prompt hi -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    ::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events PROVIDER_EVENT
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result 1
+
+test unified_llm-openai-stream-translation-tool-1.0 {openai tool-call deltas are assembled and decoded} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-tool-call.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set result [::unified_llm::stream -client $client -provider openai -prompt hi -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    set call [lindex [dict get [dict get $result response] tool_calls] 0]
+    list \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TOOL_CALL_START] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TOOL_CALL_DELTA] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TOOL_CALL_END] \
+      [dict get $call name] \
+      [dict get [dict get $call arguments] x]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {1 1 1 calc 1}
+
+test unified_llm-anthropic-stream-translation-1.0 {anthropic stream maps text, reasoning, and tool call blocks} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path anthropic/anthropic-text-tool-thinking.sse]
+    set client [::unified_llm::client_new -provider anthropic -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set result [::unified_llm::stream -client $client -provider anthropic -prompt hi -model claude-sonnet -on_event ::tests::unified_llm_streaming::capture_event]
+    set call [lindex [dict get [dict get $result response] tool_calls] 0]
+    list \
+      [dict get [dict get $result response] text] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events REASONING_DELTA] \
+      [dict get [dict get [dict get $result response] usage] input_tokens] \
+      [dict get [dict get [dict get $result response] usage] output_tokens] \
+      [dict get [dict get $call arguments] x]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {Hi 1 5 7 1}
+
+test unified_llm-anthropic-stream-translation-provider-event-1.0 {anthropic unknown block type maps to PROVIDER_EVENT} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path anthropic/anthropic-unknown-block.sse]
+    set client [::unified_llm::client_new -provider anthropic -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set _ [::unified_llm::stream -client $client -provider anthropic -prompt hi -model claude-sonnet -on_event ::tests::unified_llm_streaming::capture_event]
+    ::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events PROVIDER_EVENT
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result 1
+
+test unified_llm-gemini-stream-translation-1.0 {gemini stream maps text and functionCall parts} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path gemini/gemini-text-tool.sse]
+    set client [::unified_llm::client_new -provider gemini -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set result [::unified_llm::stream -client $client -provider gemini -prompt hi -model gemini-2.5-flash -on_event ::tests::unified_llm_streaming::capture_event]
+    set call [lindex [dict get [dict get $result response] tool_calls] 0]
+    list \
+      [dict get [dict get $result response] text] \
+      [dict get $call id] \
+      [dict get [dict get $result response usage] reasoning_tokens] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TEXT_END]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {Hello fc-1 1 1}
+
+test unified_llm-gemini-stream-translation-eof-finish-1.0 {gemini emits FINISH and TEXT_END on end-of-stream without explicit finishReason} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path gemini/gemini-no-explicit-finish.sse]
+    set client [::unified_llm::client_new -provider gemini -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set _ [::unified_llm::stream -client $client -provider gemini -prompt hi -model gemini-2.5-flash -on_event ::tests::unified_llm_streaming::capture_event]
+    list \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events TEXT_END] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events FINISH]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {1 1}
+
+test unified_llm-gemini-stream-translation-invalid-json-1.0 {gemini malformed chunk emits ERROR terminal event} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path malformed/gemini-invalid-json.sse]
+    set client [::unified_llm::client_new -provider gemini -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set _ [::unified_llm::stream -client $client -provider gemini -prompt hi -model gemini-2.5-flash -on_event ::tests::unified_llm_streaming::capture_event]
+    dict get [lindex $::tests::unified_llm_streaming::events end] type
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result ERROR
+
+test unified_llm-stream-tool-call-assembly-1.0 {tool-call streaming assembly decodes arguments dictionary} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-tool-call.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set result [::unified_llm::stream -client $client -provider openai -prompt hi -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    set call [lindex [dict get [dict get $result response] tool_calls] 0]
+    list [dict get $call id] [dict get [dict get $call arguments] x]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {tool-1 1}
+
+test unified_llm-stream-middleware-1.0 {stream middleware order and transforms are preserved} -setup {
+    set ::tests::unified_llm_streaming::middleware_log {}
+    set ::tests::unified_llm_streaming::events {}
+    set client [::unified_llm::client_new -provider mock -middlewares [list ::tests::unified_llm_streaming::mw1 ::tests::unified_llm_streaming::mw2]]
+} -body {
+    set result [::unified_llm::stream -client $client -provider mock -prompt hi -model mock-1 -on_event ::tests::unified_llm_streaming::capture_event]
+    set deltaText [::tests::unified_llm_streaming::collect_text_from_deltas $::tests::unified_llm_streaming::events]
+    set finishText [dict get [dict get $result response] text]
+    set hasEv1 [expr {[lsearch -exact $::tests::unified_llm_streaming::middleware_log ev1] >= 0}]
+    set hasEv2 [expr {[lsearch -exact $::tests::unified_llm_streaming::middleware_log ev2] >= 0}]
+    list [lrange $::tests::unified_llm_streaming::middleware_log 0 3] [string match "MOCK:*" $deltaText] $hasEv1 $hasEv2 $finishText
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::middleware_log
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {{req1 req2 resp2 resp1} 1 1 1 mock:hi-r2-r1}
+
+test unified_llm-stream-object-expanded-1.0 {stream_object parses buffered JSON after expanded event flow} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-json-object.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::stream_obj {}
+    proc ::tests::unified_llm_streaming::capture_obj {obj} {
+        set ::tests::unified_llm_streaming::stream_obj $obj
+    }
+} -body {
+    set schema [dict create type object required [list ok n] properties [dict create ok [dict create type boolean] n [dict create type integer]]]
+    set _ [::unified_llm::stream_object -client $client -provider openai -prompt x -model gpt-4.1 -schema $schema -on_object ::tests::unified_llm_streaming::capture_obj]
+    dict get $::tests::unified_llm_streaming::stream_obj n
+} -cleanup {
+    rename ::tests::unified_llm_streaming::capture_obj {}
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::stream_obj
+} -result 2
+
+test unified_llm-stream-object-invalid-json-2.0 {stream_object invalid JSON returns typed error} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-invalid-object-json.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    proc ::tests::unified_llm_streaming::noop_obj {obj} {
+        return
+    }
+} -body {
+    set schema [dict create type object required [list ok] properties [dict create ok [dict create type boolean]]]
+    catch {::unified_llm::stream_object -client $client -provider openai -prompt x -model gpt-4.1 -schema $schema -on_object ::tests::unified_llm_streaming::noop_obj} err opts
+    dict get $opts -errorcode
+} -cleanup {
+    rename ::tests::unified_llm_streaming::noop_obj {}
+    $client close
+} -result {UNIFIED_LLM OBJECT INVALID_JSON}
+
+test unified_llm-stream-object-stream-error-1.0 {stream_object returns STREAM_ERROR when stream terminates with ERROR} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path malformed/openai-invalid-json-after-partial.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    proc ::tests::unified_llm_streaming::noop_obj_2 {obj} {
+        return
+    }
+} -body {
+    catch {::unified_llm::stream_object -client $client -provider openai -prompt x -model gpt-4.1 -on_object ::tests::unified_llm_streaming::noop_obj_2} err opts
+    dict get $opts -errorcode
+} -cleanup {
+    rename ::tests::unified_llm_streaming::noop_obj_2 {}
+    $client close
+} -result {UNIFIED_LLM OBJECT STREAM_ERROR}
+
+test unified_llm-stream-no-retry-after-partial-1.0 {stream does not retry transport after partial data then error} -setup {
+    set ::tests::unified_llm_streaming::call_count 0
+    set ::tests::unified_llm_streaming::events {}
+    set fixture [::tests::unified_llm_streaming::fixture_path malformed/openai-invalid-json-after-partial.sse]
+    proc ::tests::unified_llm_streaming::transport_counting {fixture req} {
+        incr ::tests::unified_llm_streaming::call_count
+        return [dict create status_code 200 headers {} body [::tests::unified_llm_streaming::read_file $fixture]]
+    }
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_counting $fixture]]
+} -body {
+    set _ [::unified_llm::stream -client $client -provider openai -prompt hi -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
+    list $::tests::unified_llm_streaming::call_count [dict get [lindex $::tests::unified_llm_streaming::events end] type]
+} -cleanup {
+    rename ::tests::unified_llm_streaming::transport_counting {}
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::call_count
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {1 ERROR}

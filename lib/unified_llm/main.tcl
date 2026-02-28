@@ -212,6 +212,121 @@ proc ::unified_llm::__apply_response_middlewares {middlewares response} {
     return $current
 }
 
+proc ::unified_llm::__stream_event_required_keys {eventType} {
+    switch -- $eventType {
+        STREAM_START { return {provider response_id} }
+        TEXT_START { return {text_id} }
+        TEXT_DELTA { return {text_id delta} }
+        TEXT_END { return {text_id} }
+        REASONING_START { return {} }
+        REASONING_DELTA { return {reasoning_delta} }
+        REASONING_END { return {} }
+        TOOL_CALL_START - TOOL_CALL_DELTA - TOOL_CALL_END { return {tool_call} }
+        FINISH { return {response} }
+        ERROR { return {error} }
+        PROVIDER_EVENT { return {raw} }
+        default { return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_TYPE] "unsupported stream event type: $eventType" }
+    }
+}
+
+proc ::unified_llm::__stream_event {eventType args} {
+    set allowedKeys {type provider response_id text_id delta reasoning_delta tool_call finish_reason usage response error raw}
+    if {[expr {[llength $args] % 2}] != 0} {
+        return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT] "stream event fields must be key/value pairs"
+    }
+
+    set event [dict create type $eventType]
+    foreach {k v} $args {
+        if {$k ni $allowedKeys} {
+            return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT] "unsupported stream event key: $k"
+        }
+        dict set event $k $v
+    }
+
+    foreach key [::unified_llm::__stream_event_required_keys $eventType] {
+        if {![dict exists $event $key]} {
+            return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT] "stream event $eventType missing required key: $key"
+        }
+    }
+
+    return $event
+}
+
+proc ::unified_llm::__stream_validate_order {events} {
+    if {[llength $events] == 0} {
+        return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "stream emitted no events"
+    }
+
+    if {[dict get [lindex $events 0] type] ne "STREAM_START"} {
+        return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "first stream event must be STREAM_START"
+    }
+
+    set terminalType ""
+    set openText {}
+    set sawText {}
+    set openTool {}
+    foreach event $events {
+        set eventType [dict get $event type]
+        if {$terminalType ne ""} {
+            return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "events emitted after terminal stream event"
+        }
+        switch -- $eventType {
+            TEXT_START {
+                set textId [dict get $event text_id]
+                dict set openText $textId 1
+                dict set sawText $textId 1
+            }
+            TEXT_DELTA {
+                set textId [dict get $event text_id]
+                if {![dict exists $openText $textId]} {
+                    return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "TEXT_DELTA emitted before TEXT_START for text_id=$textId"
+                }
+            }
+            TEXT_END {
+                set textId [dict get $event text_id]
+                if {![dict exists $openText $textId]} {
+                    return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "TEXT_END emitted before TEXT_START for text_id=$textId"
+                }
+                dict unset openText $textId
+            }
+            TOOL_CALL_START {
+                set toolCall [dict get $event tool_call]
+                set toolId [dict get $toolCall id]
+                dict set openTool $toolId 1
+            }
+            TOOL_CALL_DELTA - TOOL_CALL_END {
+                set toolCall [dict get $event tool_call]
+                set toolId [dict get $toolCall id]
+                if {![dict exists $openTool $toolId]} {
+                    return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "$eventType emitted before TOOL_CALL_START for tool_call.id=$toolId"
+                }
+                if {$eventType eq "TOOL_CALL_END"} {
+                    dict unset openTool $toolId
+                }
+            }
+            FINISH {
+                set terminalType FINISH
+            }
+            ERROR {
+                set terminalType ERROR
+            }
+            default {
+                # Other event types do not participate in strict ordering checks.
+            }
+        }
+    }
+
+    if {$terminalType eq ""} {
+        return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "stream is missing terminal FINISH/ERROR event"
+    }
+    if {$terminalType eq "FINISH" && [dict size $openText] > 0} {
+        return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "stream terminated with unclosed TEXT segment(s)"
+    }
+    if {$terminalType eq "FINISH" && [dict size $openTool] > 0} {
+        return -code error -errorcode [list UNIFIED_LLM STREAM INVALID_EVENT_ORDER] "stream terminated with unclosed TOOL_CALL segment(s)"
+    }
+}
+
 proc ::unified_llm::__client_complete {id request} {
     variable clients
 
@@ -254,20 +369,26 @@ proc ::unified_llm::__client_complete {id request} {
 }
 
 proc ::unified_llm::__stream_from_response {provider response} {
-    set events [list [dict create type STREAM_START provider $provider response_id [dict get $response response_id]]]
+    set events [list [::unified_llm::__stream_event STREAM_START provider $provider response_id [dict get $response response_id]]]
     set text ""
     if {[dict exists $response text]} {
         set text [dict get $response text]
     }
-    foreach chunk [::unified_llm::adapters::__chunk_text $text 16] {
-        lappend events [dict create type TEXT_DELTA delta $chunk]
+    if {$text ne ""} {
+        set textId text-1
+        lappend events [::unified_llm::__stream_event TEXT_START text_id $textId]
+        foreach chunk [::unified_llm::adapters::__chunk_text $text 16] {
+            lappend events [::unified_llm::__stream_event TEXT_DELTA text_id $textId delta $chunk]
+        }
+        lappend events [::unified_llm::__stream_event TEXT_END text_id $textId]
     }
     if {[dict exists $response tool_calls]} {
         foreach tc [dict get $response tool_calls] {
-            lappend events [dict create type TOOL_CALL_END tool_call $tc]
+            lappend events [::unified_llm::__stream_event TOOL_CALL_START tool_call $tc]
+            lappend events [::unified_llm::__stream_event TOOL_CALL_END tool_call $tc]
         }
     }
-    lappend events [dict create type FINISH response $response usage [dict get $response usage]]
+    lappend events [::unified_llm::__stream_event FINISH response $response usage [dict get $response usage]]
     return [dict create events $events response $response]
 }
 
@@ -320,6 +441,8 @@ proc ::unified_llm::__client_stream {id request args} {
     }
 
     set response [::unified_llm::__apply_response_middlewares $middlewares [dict get $streamResult response]]
+
+    ::unified_llm::__stream_validate_order [dict get $streamResult events]
 
     set emitted {}
     foreach event [dict get $streamResult events] {
@@ -730,15 +853,29 @@ proc ::unified_llm::__stream_object_collect {token event} {
     variable stream_object_buffer
     variable stream_object_finished
     variable stream_object_response
+    variable stream_object_text_id
+    variable stream_object_error
 
     if {![info exists stream_object_buffer($token)]} {
         return
     }
 
-    if {[dict get $event type] eq "TEXT_DELTA" && [dict exists $event delta]} {
-        append stream_object_buffer($token) [dict get $event delta]
+    set eventType [dict get $event type]
+    if {$eventType eq "TEXT_START" && [dict exists $event text_id] && $stream_object_text_id($token) eq ""} {
+        set stream_object_text_id($token) [dict get $event text_id]
     }
-    if {[dict get $event type] eq "FINISH" && [dict exists $event response]} {
+    if {$eventType eq "TEXT_DELTA" && [dict exists $event delta] && [dict exists $event text_id]} {
+        if {$stream_object_text_id($token) eq ""} {
+            set stream_object_text_id($token) [dict get $event text_id]
+        }
+        if {[dict get $event text_id] eq $stream_object_text_id($token)} {
+            append stream_object_buffer($token) [dict get $event delta]
+        }
+    }
+    if {$eventType eq "ERROR" && [dict exists $event error]} {
+        set stream_object_error($token) [dict get $event error]
+    }
+    if {$eventType eq "FINISH" && [dict exists $event response]} {
         set stream_object_response($token) [dict get $event response]
         set stream_object_finished($token) 1
     }
@@ -757,10 +894,14 @@ proc ::unified_llm::stream_object {args} {
     variable stream_object_buffer
     variable stream_object_finished
     variable stream_object_response
+    variable stream_object_text_id
+    variable stream_object_error
     set token "stream-object-[clock clicks]"
     set stream_object_buffer($token) ""
     set stream_object_finished($token) 0
     set stream_object_response($token) {}
+    set stream_object_text_id($token) ""
+    set stream_object_error($token) {}
 
     set forwardArgs {}
     foreach {k v} $args {
@@ -774,16 +915,20 @@ proc ::unified_llm::stream_object {args} {
         ::unified_llm::stream {*}$forwardArgs -on_event [list ::unified_llm::__stream_object_collect $token]
     } err errOpts]
     if {$code} {
-        unset -nocomplain stream_object_buffer($token) stream_object_finished($token) stream_object_response($token)
+        unset -nocomplain stream_object_buffer($token) stream_object_finished($token) stream_object_response($token) stream_object_text_id($token) stream_object_error($token)
         return -options $errOpts $err
     }
 
     set buffered $stream_object_buffer($token)
     set gotFinish $stream_object_finished($token)
     set finalResponse $stream_object_response($token)
-    unset -nocomplain stream_object_buffer($token) stream_object_finished($token) stream_object_response($token)
+    set streamError $stream_object_error($token)
+    unset -nocomplain stream_object_buffer($token) stream_object_finished($token) stream_object_response($token) stream_object_text_id($token) stream_object_error($token)
 
     if {!$gotFinish} {
+        if {$streamError ne ""} {
+            return -code error -errorcode [list UNIFIED_LLM OBJECT STREAM_ERROR] $streamError
+        }
         return -code error -errorcode [list UNIFIED_LLM OBJECT INVALID_STREAM] "stream finished without terminal event"
     }
 

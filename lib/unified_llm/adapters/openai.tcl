@@ -312,15 +312,268 @@ proc ::unified_llm::adapters::openai::complete {state request} {
         request [dict create endpoint $endpoint payload $payload headers [::unified_llm::adapters::__redact_headers $headers]]]
 }
 
+proc ::unified_llm::adapters::openai::__dict_get_or {payload default args} {
+    if {[catch {dict get $payload {*}$args} value]} {
+        return $default
+    }
+    return $value
+}
+
+proc ::unified_llm::adapters::openai::__event_type {sseEvent chunk} {
+    if {[dict exists $chunk type] && [dict get $chunk type] ne ""} {
+        return [dict get $chunk type]
+    }
+    if {[dict exists $sseEvent event]} {
+        return [dict get $sseEvent event]
+    }
+    return message
+}
+
+proc ::unified_llm::adapters::openai::__stream_text_id {chunk} {
+    foreach path {{item_id} {output_item_id} {output_item id} {item id} {response output 0 id}} {
+        set value [::unified_llm::adapters::openai::__dict_get_or $chunk "" {*}$path]
+        if {$value ne ""} {
+            return $value
+        }
+    }
+    set outputIndex [::unified_llm::adapters::openai::__dict_get_or $chunk "" output_index]
+    if {$outputIndex ne ""} {
+        return "text-$outputIndex"
+    }
+    return text-1
+}
+
+proc ::unified_llm::adapters::openai::__stream_tool_id {chunk} {
+    foreach path {{item_id} {output_item_id} {item id} {output_item id} {id}} {
+        set value [::unified_llm::adapters::openai::__dict_get_or $chunk "" {*}$path]
+        if {$value ne ""} {
+            return $value
+        }
+    }
+    return openai-tool-1
+}
+
+proc ::unified_llm::adapters::openai::__usage_from_chunk {chunk} {
+    if {[dict exists $chunk usage]} {
+        return [::unified_llm::adapters::openai::__translate_usage $chunk]
+    }
+    return [dict create input_tokens 0 output_tokens 0 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]
+}
+
 proc ::unified_llm::adapters::openai::stream {state request} {
-    set response [::unified_llm::adapters::openai::complete $state $request]
-    set events [list [dict create type STREAM_START provider openai response_id [dict get $response response_id]]]
-    foreach chunk [::unified_llm::adapters::__chunk_text [dict get $response text] 16] {
-        lappend events [dict create type TEXT_DELTA delta $chunk]
+    set endpoint "/v1/responses"
+    set payload [::unified_llm::adapters::openai::translate_request $request]
+    dict set payload stream true
+
+    set headers [dict create Content-Type application/json Accept text/event-stream]
+    if {[dict get $state api_key] ne ""} {
+        dict set headers Authorization "Bearer [dict get $state api_key]"
     }
-    foreach call [dict get $response tool_calls] {
-        lappend events [dict create type TOOL_CALL_END tool_call $call]
+    if {[dict exists $request provider_options extra_headers]} {
+        foreach key [dict keys [dict get $request provider_options extra_headers]] {
+            dict set headers $key [dict get $request provider_options extra_headers $key]
+        }
     }
-    lappend events [dict create type FINISH response $response usage [dict get $response usage]]
+
+    set transport [::unified_llm::adapters::__invoke_transport $state openai $endpoint $payload $headers]
+    ::unified_llm::adapters::__raise_if_error openai $transport
+    set parsedEvents [::attractor_core::parse_sse [dict get $transport body]]
+
+    set responseId openai-response-1
+    set usage [dict create input_tokens 0 output_tokens 0 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]
+    set metadata [dict create]
+    if {[dict exists $transport headers]} {
+        set h [dict get $transport headers]
+        foreach key {x-request-id openai-processing-ms openai-version} {
+            if {[dict exists $h $key]} {
+                dict set metadata $key [dict get $h $key]
+            }
+        }
+    }
+
+    array set textStarted {}
+    array set textEnded {}
+    array set textBuffer {}
+    set textOrder {}
+
+    array set toolStarted {}
+    array set toolRaw {}
+    array set toolName {}
+    set toolOrder {}
+    set finalizedToolCalls {}
+
+    set translated {}
+    set rawEvents {}
+    set finalRaw {}
+    set streamFailed 0
+
+    foreach sseEvent $parsedEvents {
+        if {$streamFailed} {
+            break
+        }
+
+        set data [::unified_llm::adapters::openai::__dict_get_or $sseEvent "" data]
+        if {$data eq "" || $data eq "\[DONE\]"} {
+            continue
+        }
+
+        if {[catch {::attractor_core::json_decode $data} chunk]} {
+            lappend translated [::unified_llm::__stream_event ERROR error [dict create code STREAM_INVALID_JSON provider openai message "invalid JSON frame in OpenAI stream" raw $data]]
+            set streamFailed 1
+            continue
+        }
+
+        lappend rawEvents $chunk
+        set eventType [::unified_llm::adapters::openai::__event_type $sseEvent $chunk]
+        switch -- $eventType {
+            response.created {
+                set newId [::unified_llm::adapters::openai::__dict_get_or $chunk "" response id]
+                if {$newId eq ""} {
+                    set newId [::unified_llm::adapters::openai::__dict_get_or $chunk "" id]
+                }
+                if {$newId ne ""} {
+                    set responseId $newId
+                }
+            }
+            response.output_text.delta {
+                set textId [::unified_llm::adapters::openai::__stream_text_id $chunk]
+                if {![info exists textStarted($textId)]} {
+                    set textStarted($textId) 1
+                    set textEnded($textId) 0
+                    set textBuffer($textId) ""
+                    lappend textOrder $textId
+                    lappend translated [::unified_llm::__stream_event TEXT_START text_id $textId]
+                }
+                set delta [::unified_llm::adapters::openai::__dict_get_or $chunk "" delta]
+                append textBuffer($textId) $delta
+                lappend translated [::unified_llm::__stream_event TEXT_DELTA text_id $textId delta $delta]
+            }
+            response.function_call_arguments.delta {
+                set toolId [::unified_llm::adapters::openai::__stream_tool_id $chunk]
+                if {![info exists toolStarted($toolId)]} {
+                    set toolStarted($toolId) 1
+                    set toolRaw($toolId) ""
+                    set toolName($toolId) [::unified_llm::adapters::openai::__dict_get_or $chunk "" name]
+                    lappend toolOrder $toolId
+                    lappend translated [::unified_llm::__stream_event TOOL_CALL_START tool_call [dict create id $toolId name $toolName($toolId)]]
+                }
+                set delta [::unified_llm::adapters::openai::__dict_get_or $chunk "" delta]
+                append toolRaw($toolId) $delta
+                lappend translated [::unified_llm::__stream_event TOOL_CALL_DELTA tool_call [dict create id $toolId name $toolName($toolId) arguments_json $toolRaw($toolId)]]
+            }
+            response.output_item.done {
+                set item [::unified_llm::adapters::openai::__dict_get_or $chunk {} item]
+                if {$item eq ""} {
+                    set item [::unified_llm::adapters::openai::__dict_get_or $chunk {} output_item]
+                }
+                set itemType [::unified_llm::adapters::openai::__dict_get_or $item "" type]
+                if {$itemType in {text output_text message}} {
+                    set textId [::unified_llm::adapters::openai::__dict_get_or $item "" id]
+                    if {$textId eq ""} {
+                        set textId [::unified_llm::adapters::openai::__stream_text_id $chunk]
+                    }
+                    if {![info exists textStarted($textId)]} {
+                        set textStarted($textId) 1
+                        set textEnded($textId) 0
+                        set textBuffer($textId) ""
+                        lappend textOrder $textId
+                        lappend translated [::unified_llm::__stream_event TEXT_START text_id $textId]
+                    }
+                    if {!$textEnded($textId)} {
+                        set textEnded($textId) 1
+                        lappend translated [::unified_llm::__stream_event TEXT_END text_id $textId]
+                    }
+                } elseif {$itemType eq "function_call"} {
+                    set toolId [::unified_llm::adapters::openai::__dict_get_or $item "" id]
+                    if {$toolId eq ""} {
+                        set toolId [::unified_llm::adapters::openai::__stream_tool_id $chunk]
+                    }
+                    if {![info exists toolStarted($toolId)]} {
+                        set toolStarted($toolId) 1
+                        set toolRaw($toolId) ""
+                        set toolName($toolId) [::unified_llm::adapters::openai::__dict_get_or $item "" name]
+                        lappend toolOrder $toolId
+                        lappend translated [::unified_llm::__stream_event TOOL_CALL_START tool_call [dict create id $toolId name $toolName($toolId)]]
+                    }
+                    if {[dict exists $item name] && [dict get $item name] ne ""} {
+                        set toolName($toolId) [dict get $item name]
+                    }
+                    if {[dict exists $item arguments]} {
+                        set toolRaw($toolId) [dict get $item arguments]
+                    }
+                    set decodedArgs {}
+                    if {[string length $toolRaw($toolId)] > 0} {
+                        if {[catch {::attractor_core::json_decode $toolRaw($toolId)} decodedArgs]} {
+                            lappend translated [::unified_llm::__stream_event ERROR error [dict create code STREAM_INVALID_TOOL_ARGS provider openai message "invalid OpenAI tool-call arguments JSON" raw $toolRaw($toolId)]]
+                            set streamFailed 1
+                            continue
+                        }
+                    }
+                    set finalized [dict create id $toolId name $toolName($toolId) arguments $decodedArgs]
+                    lappend finalizedToolCalls $finalized
+                    lappend translated [::unified_llm::__stream_event TOOL_CALL_END tool_call $finalized]
+                } else {
+                    lappend translated [::unified_llm::__stream_event PROVIDER_EVENT raw $chunk]
+                }
+            }
+            response.completed {
+                set responseObj [::unified_llm::adapters::openai::__dict_get_or $chunk {} response]
+                if {$responseObj ne "" && $responseObj ne {}} {
+                    set responseId [::unified_llm::adapters::openai::__dict_get_or $responseObj $responseId id]
+                    set usage [::unified_llm::adapters::openai::__translate_usage $responseObj]
+                    set finalRaw $responseObj
+                } else {
+                    set usage [::unified_llm::adapters::openai::__usage_from_chunk $chunk]
+                    set finalRaw $chunk
+                }
+            }
+            error - response.error {
+                set errPayload [::unified_llm::adapters::openai::__dict_get_or $chunk {} error]
+                if {$errPayload eq "" || $errPayload eq {}} {
+                    set errPayload [dict create message "provider emitted stream error event" raw $chunk]
+                }
+                lappend translated [::unified_llm::__stream_event ERROR error [dict merge [dict create code STREAM_PROVIDER_ERROR provider openai] $errPayload]]
+                set streamFailed 1
+            }
+            default {
+                lappend translated [::unified_llm::__stream_event PROVIDER_EVENT raw $chunk]
+            }
+        }
+    }
+
+    set text ""
+    foreach textId $textOrder {
+        if {[info exists textBuffer($textId)]} {
+            append text $textBuffer($textId)
+            if {!$streamFailed && [info exists textEnded($textId)] && !$textEnded($textId)} {
+                set textEnded($textId) 1
+                lappend translated [::unified_llm::__stream_event TEXT_END text_id $textId]
+            }
+        }
+    }
+
+    set responseRaw $finalRaw
+    if {$responseRaw eq {} || $responseRaw eq ""} {
+        set responseRaw $rawEvents
+    }
+
+    set response [dict create \
+        provider openai \
+        response_id $responseId \
+        text $text \
+        tool_calls $finalizedToolCalls \
+        usage $usage \
+        metadata $metadata \
+        raw $responseRaw \
+        request [dict create endpoint $endpoint payload $payload headers [::unified_llm::adapters::__redact_headers $headers]]]
+
+    set events [list [::unified_llm::__stream_event STREAM_START provider openai response_id $responseId]]
+    foreach event $translated {
+        lappend events $event
+    }
+    if {!$streamFailed} {
+        lappend events [::unified_llm::__stream_event FINISH response $response usage $usage]
+    }
+
     return [dict create events $events response $response]
 }

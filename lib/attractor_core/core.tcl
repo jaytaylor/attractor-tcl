@@ -295,7 +295,23 @@ proc ::attractor_core::sse_parse {payload} {
         }
     }
 
+    set dataLines [dict get $current data]
+    if {[llength $dataLines] > 0 || [dict exists $current id] || [dict exists $current retry]} {
+        set emitted [dict create event [dict get $current event] data [join $dataLines "\n"]]
+        if {[dict exists $current id]} {
+            dict set emitted id [dict get $current id]
+        }
+        if {[dict exists $current retry]} {
+            dict set emitted retry [dict get $current retry]
+        }
+        lappend events $emitted
+    }
+
     return $events
+}
+
+proc ::attractor_core::parse_sse {payload} {
+    return [::attractor_core::sse_parse $payload]
 }
 
 proc ::attractor_core::__shell_quote {value} {

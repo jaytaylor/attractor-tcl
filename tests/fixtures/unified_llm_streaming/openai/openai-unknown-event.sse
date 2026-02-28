@@ -1,0 +1,14 @@
+event: message
+data: {"type":"response.created","response":{"id":"resp-openai-unknown"}}
+
+event: message
+data: {"type":"response.custom_event","foo":"bar"}
+
+event: message
+data: {"type":"response.output_text.delta","item_id":"msg-1","delta":"ok"}
+
+event: message
+data: {"type":"response.output_item.done","item":{"type":"text","id":"msg-1"}}
+
+event: message
+data: {"type":"response.completed","response":{"id":"resp-openai-unknown","usage":{"input_tokens":1,"output_tokens":1}}}

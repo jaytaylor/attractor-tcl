@@ -1,0 +1,8 @@
+event: message
+data: {"type":"response.created","response":{"id":"resp-openai-bad"}}
+
+event: message
+data: {"type":"response.output_text.delta","item_id":"msg-1","delta":"he"}
+
+event: message
+data: {bad-json

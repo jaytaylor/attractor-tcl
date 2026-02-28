@@ -1,0 +1,14 @@
+event: message
+data: {"type":"response.created","response":{"id":"resp-openai-1"}}
+
+event: message
+data: {"type":"response.output_text.delta","item_id":"msg-1","delta":"Hel"}
+
+event: message
+data: {"type":"response.output_text.delta","item_id":"msg-1","delta":"lo"}
+
+event: message
+data: {"type":"response.output_item.done","item":{"type":"text","id":"msg-1"}}
+
+event: message
+data: {"type":"response.completed","response":{"id":"resp-openai-1","usage":{"input_tokens":2,"output_tokens":3,"output_tokens_details":{"reasoning_tokens":1}}}}
