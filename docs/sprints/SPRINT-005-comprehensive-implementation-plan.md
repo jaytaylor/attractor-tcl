@@ -135,6 +135,22 @@ Evidence artifacts:
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
+- [X] S6 - Post-sync closeout verification rerun passed after final sprint-doc synchronization update.
+```text
+Verification commands:
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-post-sync-20260228T072727Z.log timeout 180 make build` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-post-sync-20260228T072727Z.log timeout 180 make test` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/docs-lint-post-sync-20260228T072727Z.log timeout 180 bash tools/docs_lint.sh` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/evidence-lint-plan-post-sync-20260228T072727Z.log timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/evidence-guardrail-post-sync-20260228T072727Z.log timeout 180 tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` (exit code 0)
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/final/make-build-post-sync-20260228T072727Z.log`
+- `.scratch/verification/SPRINT-005/final/make-test-post-sync-20260228T072727Z.log`
+- `.scratch/verification/SPRINT-005/final/docs-lint-post-sync-20260228T072727Z.log`
+- `.scratch/verification/SPRINT-005/final/evidence-lint-plan-post-sync-20260228T072727Z.log`
+- `.scratch/verification/SPRINT-005/final/evidence-guardrail-post-sync-20260228T072727Z.log`
+```
+
 ## Execution Order
 1. Track A: SSE parser contract and fixture corpus.
 2. Track B: Unified StreamEvent model and ordering invariants.
