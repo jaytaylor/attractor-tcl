@@ -50,6 +50,18 @@ Notes:
   - If streaming fails after partial deltas have been delivered, emit `ERROR` and stop (do not retry).
   - Unmapped provider events should be surfaced as `PROVIDER_EVENT` with `raw` populated.
 
+## Expected Touchpoints
+- `lib/attractor_core/core.tcl` (SSE parsing contract, `parse_sse` alias if added)
+- `lib/unified_llm/main.tcl` (stream event emission, middleware application, `stream_object` buffering)
+- `lib/unified_llm/adapters/openai.tcl`
+- `lib/unified_llm/adapters/anthropic.tcl`
+- `lib/unified_llm/adapters/gemini.tcl`
+- `lib/unified_llm/transports/https_json.tcl` (if transport needs SSE-specific headers or streaming surface)
+- `tests/unit/attractor_core.test` (SSE parser tests)
+- `tests/unit/unified_llm.test` (streaming translation and invariants)
+- `docs/spec-coverage/traceability.md` (streaming mappings become specific and truthful)
+- `docs/ADR.md` (streaming ADR entry)
+
 ## Plan
 Execution order: Track A -> Track B -> Track C -> Track D -> Track E.
 
@@ -64,7 +76,7 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse.log`
 ```
 
-- [ ] A2 - Add an offline fixture corpus of minimal SSE frames for OpenAI/Anthropic/Gemini that covers: text deltas, tool call deltas, reasoning blocks, terminal frames, and malformed frames.
+- [ ] A2 - Add an offline fixture corpus of minimal SSE frames for OpenAI/Anthropic/Gemini (under `tests/fixtures/`) that covers: text deltas, tool call deltas, reasoning blocks, terminal frames, and malformed frames.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
@@ -245,13 +257,7 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage.log`
 ```
 
-- [ ] E2 - Update traceability for streaming-specific IDs (minimum set) to point to the new streaming tests and keep mappings truthful:
-  - `ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS`
-  - `ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING`
-  - `ULLM-DOD-8.29-YIELDS-EVENTS-CONCATENATE-FULL-RESPONSE-TEXT`
-  - `ULLM-DOD-8.30-YIELDS-EVENTS-CORRECT-METADATA`
-  - `ULLM-DOD-8.31-STREAMING-FOLLOWS-START-DELTA-END-PATTERN`
-  - `ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA`
+- [ ] E2 - Update traceability for streaming-specific IDs (minimum set) to point to the new streaming tests and keep mappings truthful.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
@@ -259,6 +265,14 @@ Planned verification:
 - `tclsh tools/spec_coverage.tcl`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage-streaming-ids.log`
+
+Scope IDs (minimum set):
+- `ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS`
+- `ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING`
+- `ULLM-DOD-8.29-YIELDS-EVENTS-CONCATENATE-FULL-RESPONSE-TEXT`
+- `ULLM-DOD-8.30-YIELDS-EVENTS-CORRECT-METADATA`
+- `ULLM-DOD-8.31-STREAMING-FOLLOWS-START-DELTA-END-PATTERN`
+- `ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA`
 ```
 
 - [ ] E3 - Bring sprint documentation evidence blocks into conformance with `tools/evidence_lint.sh` and add a small regression harness that runs docs lint + evidence lint + evidence guardrail for the current sprint doc before closeout.
@@ -293,6 +307,8 @@ Planned verification:
 - `tclsh tools/build_check.tcl` (exit code 0)
 - `tclsh tests/all.tcl` (exit code 0)
 - `bash tools/docs_lint.sh` (exit code 0)
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
+- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
 - Live optional: `tclsh tests/e2e_live.tcl -match *unified-llm*` (exit code 0) when provider secrets are configured.
 
 ## Appendix - Mermaid Diagrams
