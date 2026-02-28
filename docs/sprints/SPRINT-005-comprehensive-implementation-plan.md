@@ -6,14 +6,14 @@ Legend: [ ] Incomplete, [X] Complete
 Implement provider-native Unified LLM streaming with spec-faithful StreamEvent semantics and close the traceability/evidence hygiene gaps so streaming compliance is auditable from requirements to tests to artifacts.
 
 ## Source Sprint Review Summary
-- `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` defines the correct tracks and intent, but execution needs a tighter file-by-file sequence and test-by-test ownership to reduce integration risk.
-- Current runtime behavior still synthesizes stream events from completed responses in:
-  - `lib/unified_llm/main.tcl`
+- `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` defines the right tracks and acceptance intent, but the implementation pass must be execution-ordered with explicit ownership and evidence capture at each phase.
+- Current code audit (this worktree) shows provider-native streaming adapters and `parse_sse` alias already exist in:
   - `lib/unified_llm/adapters/openai.tcl`
   - `lib/unified_llm/adapters/anthropic.tcl`
   - `lib/unified_llm/adapters/gemini.tcl`
-- SSE parsing exists in `lib/attractor_core/core.tcl` (`sse_parse`) but still needs parser contract hardening and alias compatibility coverage for `parse_sse`.
-- Existing streaming traceability mappings are broad (`*unified*`) and must become streaming-specific to remain truthful.
+  - `lib/attractor_core/core.tcl`
+- Stream event validation/order checking is present in `lib/unified_llm/main.tcl`; remaining risk is not baseline functionality but proof quality (traceability precision, deterministic evidence, and closeout consistency).
+- Existing sprint execution documentation uses checked items that must be reconciled against fresh, reproducible evidence artifacts before closeout is considered complete.
 
 ## Scope
 In scope:
@@ -34,7 +34,7 @@ Out of scope:
 {placeholder for verification justification/reasoning and evidence log}
 ```
 
-- [ ] Completion ratio is updated in-place whenever a phase item changes state (current baseline: 0 completed / 52 total).
+- [ ] Completion ratio is updated in-place whenever a phase item changes state (current baseline: 0 completed / 89 total).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 ```
@@ -79,6 +79,13 @@ Out of scope:
 5. Phase 4 - Anthropic and Gemini Provider-Native Streaming Translation
 6. Phase 5 - Middleware, `stream_object`, and Error/Termination Semantics
 7. Phase 6 - Traceability, ADR, Evidence Hygiene, and Final Verification
+
+## Track-to-Phase Mapping
+- Track A (SSE parser contract): Phase 1.
+- Track B (unified StreamEvent model): Phase 2.
+- Track C (provider-native translation): Phases 3 and 4.
+- Track D (middleware, stream_object, no-retry): Phase 5.
+- Track E (traceability + evidence closure): Phase 6.
 
 ## Phase 0 - Baseline, Harness, and Fixture Foundation
 ### Deliverables
@@ -574,20 +581,21 @@ Out of scope:
 ```
 
 ## Verification Matrix (Execution-Time Commands)
-- `tclsh tools/build_check.tcl`
-- `tclsh tests/all.tcl -match *attractor_core-sse*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
-- `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
-- `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
-- `tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-tool-call*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-middleware*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-object*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`
-- `tclsh tools/spec_coverage.tcl`
-- `bash tools/docs_lint.sh`
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
-- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/build-check.log tclsh tools/build_check.tcl`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-attractor-core-sse.log tclsh tests/all.tcl -match *attractor_core-sse*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-stream-event-model.log tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-openai-stream-translation.log tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-anthropic-stream-translation.log tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-gemini-stream-translation.log tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-stream-tool-call.log tclsh tests/all.tcl -match *unified_llm-stream-tool-call*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-stream-middleware.log tclsh tests/all.tcl -match *unified_llm-stream-middleware*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-stream-object.log tclsh tests/all.tcl -match *unified_llm-stream-object*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-no-retry-after-partial.log tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/spec-coverage.log tclsh tools/spec_coverage.tcl`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/docs-lint.log bash tools/docs_lint.sh`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/evidence-lint-sprint-005.log bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/evidence-guardrail-sprint-005.log tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+- Optional live verification (when credentials are configured): `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/e2e-live-unified-llm.log tclsh tests/e2e_live.tcl -match *unified-llm*`
 
 ## Appendix - Required Mermaid Diagrams
 
