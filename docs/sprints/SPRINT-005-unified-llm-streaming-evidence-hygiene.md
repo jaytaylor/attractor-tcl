@@ -25,6 +25,23 @@ This sprint ports the *substance* of those improvements into the codex-3 foundat
 - No compatibility shims (e.g., OpenAI Chat Completions as the primary path).
 - No feature flags.
 
+## StreamEvent Contract (Target)
+This sprint aligns the Tcl implementation with `unified-llm-spec.md` Section 3.13/3.14 by representing each stream event as a Tcl dict with:
+- `type` (required): `STREAM_START`, `TEXT_START`, `TEXT_DELTA`, `TEXT_END`, `REASONING_START`, `REASONING_DELTA`, `REASONING_END`, `TOOL_CALL_START`, `TOOL_CALL_DELTA`, `TOOL_CALL_END`, `FINISH`, `ERROR`, `PROVIDER_EVENT`.
+- `text_id` (optional): stable identifier that correlates TEXT_* deltas to a segment.
+- `delta` (optional): incremental text (TEXT_DELTA).
+- `reasoning_delta` (optional): incremental thinking/reasoning text (REASONING_DELTA).
+- `tool_call` (optional): partial or complete tool call dict (TOOL_CALL_*).
+- `finish_reason` (optional): unified finish reason dict at FINISH.
+- `usage` (optional): unified usage dict at FINISH.
+- `response` (optional): final accumulated unified response dict at FINISH.
+- `error` (optional): normalized error dict at ERROR.
+- `raw` (optional): raw provider event dict for passthrough/debug.
+
+Notes:
+- For providers that do not naturally expose multiple concurrent text segments, a single `text_id` (e.g., `text-1`) is sufficient.
+- For OpenAI Responses API, prefer the provider's output item ID when available to populate `text_id`.
+
 ## Plan
 Execution order: Track A -> Track B -> Track C -> Track D -> Track E.
 
@@ -54,7 +71,7 @@ Planned verification:
 - Fixtures are sufficient to test each provider translator without any live network calls.
 
 ### Track B - Unified StreamEvent Model (Spec Parity)
-- [ ] B1 - Define the full StreamEvent surface required by `unified-llm-spec.md` and implement a Tcl dict representation that preserves ordering, allows middleware transforms, and supports deterministic tests.
+- [ ] B1 - Implement StreamEvent emission helpers and invariants (type/field validation, text_id lifecycle, and deterministic ordering) so adapters can be tested against the spec contract.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
@@ -79,7 +96,7 @@ Planned verification:
 - TEXT_DELTA events concatenate to the final response text (ULLM-DOD-8.29).
 
 ### Track C - Provider-Native Streaming Translation
-- [ ] C1 - OpenAI Responses API: implement real streaming translation by parsing SSE events and mapping them to the unified StreamEvent model (text deltas, tool call argument deltas, output item boundaries, final usage including reasoning tokens).
+- [ ] C1 - OpenAI Responses API: implement real streaming translation by parsing SSE events and mapping them to StreamEvent types per `unified-llm-spec.md` Section 7.7 (OpenAI Streaming).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
@@ -89,7 +106,14 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-c/openai/tests-all-unified-llm-openai-stream-translation.log`
 ```
 
-- [ ] C2 - Anthropic Messages API: implement real streaming translation for text/tool_use/thinking blocks, preserving thinking/redacted_thinking round-trip behavior and mapping usage correctly at FINISH.
+Implementation notes (must be covered by unit tests using fixtures):
+- `response.output_text.delta` -> TEXT_START (first delta for a text_id) + TEXT_DELTA.
+- `response.function_call_arguments.delta` -> TOOL_CALL_DELTA (retain raw partial JSON string until TOOL_CALL_END).
+- `response.output_item.done` (text) -> TEXT_END.
+- `response.output_item.done` (function_call) -> TOOL_CALL_END (tool_call dict must be complete and JSON arguments decoded).
+- `response.completed` -> FINISH (usage must include reasoning_tokens when present).
+
+- [ ] C2 - Anthropic Messages API: implement real streaming translation for text/tool_use/thinking blocks per `unified-llm-spec.md` Section 7.7 (Anthropic Streaming).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
@@ -99,7 +123,15 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-c/anthropic/tests-all-unified-llm-anthropic-stream-translation.log`
 ```
 
-- [ ] C3 - Gemini Streaming: implement `:streamGenerateContent?alt=sse` translation for text and functionCall parts, emitting TOOL_CALL_START + TOOL_CALL_END when Gemini delivers full calls in one chunk.
+Implementation notes (must be covered by unit tests using fixtures):
+- `content_block_start` (text) -> TEXT_START with stable `text_id` derived from block index/id.
+- `content_block_delta` (text) -> TEXT_DELTA.
+- `content_block_stop` (text) -> TEXT_END.
+- `content_block_start/delta/stop` (tool_use) -> TOOL_CALL_START/DELTA/END.
+- `content_block_start/delta/stop` (thinking) -> REASONING_START/DELTA/END.
+- `message_stop` -> FINISH with accumulated response + usage.
+
+- [ ] C3 - Gemini Streaming: implement `:streamGenerateContent?alt=sse` translation for text and functionCall parts per `unified-llm-spec.md` Section 7.7 (Gemini Streaming).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
@@ -108,6 +140,12 @@ Planned verification:
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-c/gemini/tests-all-unified-llm-gemini-stream-translation.log`
 ```
+
+Implementation notes (must be covered by unit tests using fixtures):
+- `data: {"candidates":[...]}` with `parts[].text` -> TEXT_START (first delta for text_id) + TEXT_DELTA.
+- `parts[].functionCall` -> TOOL_CALL_START + TOOL_CALL_END (Gemini typically provides full calls in one chunk).
+- `candidate.finishReason` present -> TEXT_END.
+- Final chunk -> FINISH with accumulated response + usage (usageMetadata fields mapped when present).
 
 #### Acceptance Criteria - Track C
 - Provider-native streaming payloads are parsed and translated without buffering a full `complete()` response first.
@@ -134,6 +172,16 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-d/stream-object/tests-all-unified-llm-stream-object.log`
 ```
 
+- [ ] D3 - Record an ADR for the streaming changes (expanded StreamEvent contract + provider-native streaming translation approach + any transport API extensions).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `rg -n \"ADR-\" docs/ADR.md`
+- Expect: exit code 0
+- Evidence: `.scratch/verification/SPRINT-005/track-d/adr/adr-streaming-entry.txt`
+```
+
 #### Acceptance Criteria - Track D
 - Stream middleware can observe/transform events without breaking final response assembly.
 - Structured output streaming continues to validate schema and fails with typed errors on invalid JSON.
@@ -149,20 +197,49 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage.log`
 ```
 
-- [ ] E2 - Bring sprint documentation evidence blocks into conformance with `tools/evidence_lint.sh` and add a small regression harness that runs docs lint + evidence lint for the current sprint doc before closeout.
+- [ ] E2 - Update traceability for streaming-specific IDs (minimum set) to point to the new streaming tests and keep mappings truthful:
+  - `ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS`
+  - `ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING`
+  - `ULLM-DOD-8.29-YIELDS-EVENTS-CONCATENATE-FULL-RESPONSE-TEXT`
+  - `ULLM-DOD-8.30-YIELDS-EVENTS-CORRECT-METADATA`
+  - `ULLM-DOD-8.31-STREAMING-FOLLOWS-START-DELTA-END-PATTERN`
+  - `ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA`
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `tclsh tools/spec_coverage.tcl`
+- Expect: exit code 0
+- Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage-streaming-ids.log`
+```
+
+- [ ] E3 - Bring sprint documentation evidence blocks into conformance with `tools/evidence_lint.sh` and add a small regression harness that runs docs lint + evidence lint + evidence guardrail for the current sprint doc before closeout.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
 Planned verification:
 - `bash tools/docs_lint.sh`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
 - Expect: exit code 0
-- Evidence: `.scratch/verification/SPRINT-005/track-e/evidence/docs-lint.log`
+- Evidence: `.scratch/verification/SPRINT-005/track-e/evidence/docs-and-evidence-lint.log`
+```
+
+- [ ] E4 - Render the Appendix Mermaid diagrams with `mmdc` and store outputs under `.scratch/diagram-renders/sprint-005/` (these renders become evidence artifacts referenced by completed items).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `mmdc -i .scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.mmd -o .scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.svg`
+- `mmdc -i .scratch/diagram-renders/sprint-005/event-ordering-contract.mmd -o .scratch/diagram-renders/sprint-005/event-ordering-contract.svg`
+- `ls .scratch/diagram-renders/sprint-005`
+- Expect: exit code 0
+- Evidence: `.scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.svg`
 ```
 
 #### Acceptance Criteria - Track E
 - `tools/spec_coverage.tcl` remains strict and streaming requirements map to streaming-specific tests.
-- Evidence lint passes for the SPRINT-005 doc (and for any sprint docs modified as part of the sprint).
+- Evidence lint and evidence guardrail pass for the SPRINT-005 doc (and for any sprint docs modified as part of the sprint).
 
 ## Verification Summary (What "Done" Looks Like)
 - `tclsh tools/build_check.tcl` (exit code 0)
