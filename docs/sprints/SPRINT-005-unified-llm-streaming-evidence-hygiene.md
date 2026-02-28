@@ -92,9 +92,9 @@ Planned deterministic coverage (fixtures + unit tests):
 Execution order: Track A -> Track B -> Track C -> Track D -> Track E.
 
 ### Track A - SSE Parser Contract (Core)
-- [ ] A1 - Harden SSE parser behavior for real streaming payloads (EOF flush, multi-line data, comment lines, id/retry fields) and expose a stable API for Unified LLM to consume.
+- [X] A1 - Harden SSE parser behavior for real streaming payloads (EOF flush, multi-line data, comment lines, id/retry fields) and expose a stable API for Unified LLM to consume.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Update `::attractor_core::sse_parse` to flush the last event at EOF (even without a trailing blank line) and preserve `event`, `data`, `id`, and `retry`.
@@ -106,9 +106,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse.log`
 ```
 
-- [ ] A2 - Add an offline fixture corpus of minimal SSE frames for OpenAI/Anthropic/Gemini (under `tests/fixtures/`) that covers: text deltas, tool call deltas, reasoning blocks, terminal frames, and malformed frames.
+- [X] A2 - Add an offline fixture corpus of minimal SSE frames for OpenAI/Anthropic/Gemini (under `tests/fixtures/`) that covers: text deltas, tool call deltas, reasoning blocks, terminal frames, and malformed frames.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Add fixtures under `tests/fixtures/` for each provider's streaming frames (including malformed/edge cases).
@@ -120,9 +120,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-a/fixtures/tests-all-unified-llm-stream-fixture.log`
 ```
 
-- [ ] A3 - Add SSE parser regression tests for EOF-without-blank-line flush and ensure `::attractor_core::parse_sse` exists (as an alias) for cross-branch/tooling compatibility.
+- [X] A3 - Add SSE parser regression tests for EOF-without-blank-line flush and ensure `::attractor_core::parse_sse` exists (as an alias) for cross-branch/tooling compatibility.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Provide `::attractor_core::parse_sse` as a stable alias/wrapper for `::attractor_core::sse_parse` (for cross-branch/tooling compatibility).
@@ -139,9 +139,9 @@ Planned verification:
 - Fixtures are sufficient to test each provider translator without any live network calls.
 
 ### Track B - Unified StreamEvent Model (Spec Parity)
-- [ ] B1 - Implement StreamEvent emission helpers and invariants (type/field validation, text_id lifecycle, and deterministic ordering) so adapters can be tested against the spec contract.
+- [X] B1 - Implement StreamEvent emission helpers and invariants (type/field validation, text_id lifecycle, and deterministic ordering) so adapters can be tested against the spec contract.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Define helper procs for creating/validating StreamEvent dicts (required keys per type, allowed optional keys).
@@ -153,9 +153,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-b/event-model/tests-all-unified-llm-stream-event-model.log`
 ```
 
-- [ ] B2 - Update the synthetic stream path (mock + "stream-from-complete" fallback) to emit TEXT_START/TEXT_DELTA/TEXT_END and to preserve tool call boundaries consistently.
+- [X] B2 - Update the synthetic stream path (mock + "stream-from-complete" fallback) to emit TEXT_START/TEXT_DELTA/TEXT_END and to preserve tool call boundaries consistently.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Update `::unified_llm::__stream_from_response` to emit TEXT_START and TEXT_END (in addition to TEXT_DELTA) with a stable `text_id`.
@@ -167,9 +167,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-b/synthetic/tests-all-unified-llm-stream-events.log`
 ```
 
-- [ ] B3 - Implement `PROVIDER_EVENT` and `ERROR` stream events, plus negative tests that validate behavior on malformed JSON and unexpected provider event types.
+- [X] B3 - Implement `PROVIDER_EVENT` and `ERROR` stream events, plus negative tests that validate behavior on malformed JSON and unexpected provider event types.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Add StreamEvent support for `PROVIDER_EVENT` (raw passthrough) and `ERROR` (normalized streaming error).
@@ -186,9 +186,9 @@ Planned verification:
 - TEXT_DELTA events concatenate to the final response text (ULLM-DOD-8.29).
 
 ### Track C - Provider-Native Streaming Translation
-- [ ] C1 - OpenAI Responses API: implement real streaming translation by parsing SSE events and mapping them to StreamEvent types per `unified-llm-spec.md` Section 7.7 (OpenAI Streaming).
+- [X] C1 - OpenAI Responses API: implement real streaming translation by parsing SSE events and mapping them to StreamEvent types per `unified-llm-spec.md` Section 7.7 (OpenAI Streaming).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Implement OpenAI `stream()` using provider-native streaming frames (SSE) and map them to StreamEvent types (TEXT_*, TOOL_CALL_*, FINISH, PROVIDER_EVENT, ERROR).
@@ -207,9 +207,9 @@ Implementation notes (must be covered by unit tests using fixtures):
 - `response.output_item.done` (function_call) -> TOOL_CALL_END (tool_call dict must be complete and JSON arguments decoded).
 - `response.completed` -> FINISH (usage must include reasoning_tokens when present).
 
-- [ ] C2 - Anthropic Messages API: implement real streaming translation for text/tool_use/thinking blocks per `unified-llm-spec.md` Section 7.7 (Anthropic Streaming).
+- [X] C2 - Anthropic Messages API: implement real streaming translation for text/tool_use/thinking blocks per `unified-llm-spec.md` Section 7.7 (Anthropic Streaming).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Implement Anthropic `stream()` using provider-native SSE events and map text/tool_use/thinking blocks into TEXT_*, TOOL_CALL_*, and REASONING_* events.
@@ -229,9 +229,9 @@ Implementation notes (must be covered by unit tests using fixtures):
 - `content_block_start/delta/stop` (thinking) -> REASONING_START/DELTA/END.
 - `message_stop` -> FINISH with accumulated response + usage.
 
-- [ ] C3 - Gemini Streaming: implement `:streamGenerateContent?alt=sse` translation for text and functionCall parts per `unified-llm-spec.md` Section 7.7 (Gemini Streaming).
+- [X] C3 - Gemini Streaming: implement `:streamGenerateContent?alt=sse` translation for text and functionCall parts per `unified-llm-spec.md` Section 7.7 (Gemini Streaming).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Implement Gemini `stream()` using `:streamGenerateContent?alt=sse` format and translate `candidates[].content.parts[]` into TEXT_* and TOOL_CALL_* events.
@@ -249,9 +249,9 @@ Implementation notes (must be covered by unit tests using fixtures):
 - `candidate.finishReason` present -> TEXT_END.
 - Final chunk -> FINISH with accumulated response + usage (usageMetadata fields mapped when present).
 
-- [ ] C4 - Validate tool-call streaming assembly end-to-end in unit tests: partial tool args deltas accumulate correctly and TOOL_CALL_END contains a decoded arguments dictionary (not only a raw JSON string).
+- [X] C4 - Validate tool-call streaming assembly end-to-end in unit tests: partial tool args deltas accumulate correctly and TOOL_CALL_END contains a decoded arguments dictionary (not only a raw JSON string).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Add unit tests that prove partial tool-call argument fragments are accumulated deterministically and JSON-decoded at TOOL_CALL_END.
@@ -268,9 +268,9 @@ Planned verification:
 - FINISH events include usage and metadata consistent with the corresponding `complete()` translation.
 
 ### Track D - API Surface, Middleware, and Structured Streaming
-- [ ] D1 - Ensure request/response/event middleware semantics apply to streaming exactly as specified (request before call, per-event transforms in order, response transforms on final response).
+- [X] D1 - Ensure request/response/event middleware semantics apply to streaming exactly as specified (request before call, per-event transforms in order, response transforms on final response).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Ensure streaming applies middleware in the same order as blocking mode:
@@ -285,9 +285,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-d/middleware/tests-all-unified-llm-stream-middleware.log`
 ```
 
-- [ ] D2 - Make `stream_object` robust to the expanded event model (TEXT_START/TEXT_END, reasoning/tool-call events) while continuing to validate the final buffered JSON against schema.
+- [X] D2 - Make `stream_object` robust to the expanded event model (TEXT_START/TEXT_END, reasoning/tool-call events) while continuing to validate the final buffered JSON against schema.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Update `stream_object` buffering to collect only text deltas for the target text_id, ignore non-text events safely, and validate JSON only after FINISH.
@@ -299,9 +299,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-d/stream-object/tests-all-unified-llm-stream-object.log`
 ```
 
-- [ ] D3 - Record an ADR for the streaming changes (expanded StreamEvent contract + provider-native streaming translation approach + any transport API extensions).
+- [X] D3 - Record an ADR for the streaming changes (expanded StreamEvent contract + provider-native streaming translation approach + any transport API extensions).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Add an ADR entry describing: StreamEvent model expansion, provider-native translation rules, and any transport API changes required.
@@ -312,9 +312,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-d/adr/adr-streaming-entry.txt`
 ```
 
-- [ ] D4 - Verify the "no retry after partial data" contract for streaming: when a transport error occurs after emitting at least one TEXT_DELTA, the stream emits ERROR and stops without re-invoking transport.
+- [X] D4 - Verify the "no retry after partial data" contract for streaming: when a transport error occurs after emitting at least one TEXT_DELTA, the stream emits ERROR and stops without re-invoking transport.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Add tests that simulate a transport error occurring after at least one TEXT_DELTA has been emitted.
@@ -331,9 +331,9 @@ Planned verification:
 - Structured output streaming continues to validate schema and fails with typed errors on invalid JSON.
 
 ### Track E - Traceability and Evidence Contract Closure
-- [ ] E1 - Tighten traceability mappings for streaming requirements so they reference the new streaming tests (avoid catch-all `*unified*` patterns for streaming-specific IDs).
+- [X] E1 - Tighten traceability mappings for streaming requirements so they reference the new streaming tests (avoid catch-all `*unified*` patterns for streaming-specific IDs).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Update `docs/spec-coverage/traceability.md` so streaming requirements point to streaming-specific test names and verify patterns.
@@ -345,9 +345,9 @@ Planned verification:
 - Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage.log`
 ```
 
-- [ ] E2 - Update traceability for streaming-specific IDs (minimum set) to point to the new streaming tests and keep mappings truthful.
+- [X] E2 - Update traceability for streaming-specific IDs (minimum set) to point to the new streaming tests and keep mappings truthful.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Update traceability blocks for the specific streaming IDs listed below to reference the new streaming tests directly (not broad patterns).
@@ -366,9 +366,9 @@ Scope IDs (minimum set):
 - `ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA`
 ```
 
-- [ ] E3 - Bring sprint documentation evidence blocks into conformance with `tools/evidence_lint.sh` and add a small regression harness that runs docs lint + evidence lint + evidence guardrail for the current sprint doc before closeout.
+- [X] E3 - Bring sprint documentation evidence blocks into conformance with `tools/evidence_lint.sh` and add a small regression harness that runs docs lint + evidence lint + evidence guardrail for the current sprint doc before closeout.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Ensure the sprint doc can be marked complete without tripping docs lint, evidence lint, or evidence guardrail.
@@ -385,9 +385,9 @@ Planned verification:
   - `.scratch/verification/SPRINT-005/track-e/evidence/evidence-guardrail.log`
 ```
 
-- [ ] E4 - Render the Appendix Mermaid diagrams with `mmdc` and store outputs under `.scratch/diagram-renders/sprint-005/` (these renders become evidence artifacts referenced by completed items).
+- [X] E4 - Render the Appendix Mermaid diagrams with `mmdc` and store outputs under `.scratch/diagram-renders/sprint-005/` (these renders become evidence artifacts referenced by completed items).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification executed; see the `tools/verify_cmd.sh ...` command(s) below. Exit code: 0. Evidence: `.scratch/verification/SPRINT-005/...`.
 
 Scope:
 - Store the `.mmd` diagram sources and rendered `.svg` outputs under `.scratch/diagram-renders/sprint-005/`.

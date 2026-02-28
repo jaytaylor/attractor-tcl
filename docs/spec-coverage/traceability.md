@@ -1134,15 +1134,15 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS
 spec: unified-llm-spec.md#L1644
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/attractor_core/core.tcl, lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl
+tests: tests/unit/attractor_core.test, tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *attractor_core-sse*`
 ---
 id: ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING
 spec: unified-llm-spec.md#L1675
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/adapters/openai.tcl, tests/fixtures/unified_llm_streaming/openai/openai-text.sse
+tests: tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation-text*`
 ---
 id: ULLM-REQ-SUMMARY-PROVIDER-SPECIFIC-BEHAVIORS-ADAPTERS-MUST
 spec: unified-llm-spec.md#L1730
@@ -1326,21 +1326,21 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-DOD-8.29-YIELDS-EVENTS-CONCATENATE-FULL-RESPONSE-TEXT
 spec: unified-llm-spec.md#L2012
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, tests/fixtures/unified_llm_streaming/openai/openai-text.sse
+tests: tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-stream-events-concatenate*`
 ---
 id: ULLM-DOD-8.30-YIELDS-EVENTS-CORRECT-METADATA
 spec: unified-llm-spec.md#L2013
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl
+tests: tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation-text*`
 ---
 id: ULLM-DOD-8.31-STREAMING-FOLLOWS-START-DELTA-END-PATTERN
 spec: unified-llm-spec.md#L2014
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl
+tests: tests/unit/unified_llm.test, tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
 ---
 id: ULLM-DOD-8.32-RETURNS-PARSED-VALIDATED-STRUCTURED-OUTPUT
 spec: unified-llm-spec.md#L2015
@@ -1572,6 +1572,6 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA
 spec: unified-llm-spec.md#L2065
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, tests/fixtures/unified_llm_streaming/malformed/openai-invalid-json-after-partial.sse
+tests: tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`

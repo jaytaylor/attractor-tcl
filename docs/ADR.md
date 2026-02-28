@@ -332,3 +332,33 @@ Positive:
 Tradeoffs:
 - JSON encoding compatibility logic is more nuanced and requires continued regression coverage.
 - Provider payload translation now contains more provider-specific normalization behavior.
+
+## ADR-013: Provider-Native Unified LLM Streaming Translation and Evidence-Backed Stream Contract
+- Date: 2026-02-28
+- Status: Accepted
+
+### Context
+Unified LLM `stream()` behavior previously synthesized `TEXT_DELTA` events from blocking `complete()` responses. This obscured provider-native streaming semantics (SSE frame translation, event ordering, tool-call deltas, reasoning blocks) and weakened proof for streaming-related requirements in traceability.
+
+### Decision
+- Adopt provider-native streaming translation for OpenAI, Anthropic, and Gemini adapters:
+  - OpenAI: parse `/v1/responses` SSE event payloads and map `response.*` event types into unified StreamEvents.
+  - Anthropic: parse `content_block_*` + `message_*` SSE event payloads into text/tool/reasoning unified StreamEvents.
+  - Gemini: parse `:streamGenerateContent?alt=sse` candidate parts into text/tool StreamEvents and emit FINISH at clean end-of-stream even without explicit finish marker.
+- Expand runtime stream contract in `lib/unified_llm/main.tcl`:
+  - explicit StreamEvent constructor/validation helper
+  - ordering invariants for text/tool lifecycles
+  - terminal semantics allowing `FINISH` or `ERROR` as terminal event
+- Upgrade synthetic fallback stream behavior to emit `TEXT_START` and `TEXT_END` around `TEXT_DELTA`.
+- Update `stream_object` collection logic to track target `text_id`, ignore non-text events safely, and return typed streaming errors when streams terminate with `ERROR`.
+- Treat fixture-driven translator tests as the primary deterministic verification path for streaming parity, with targeted traceability verify patterns for streaming requirement IDs.
+
+### Consequences
+Positive:
+- Unified streaming behavior now reflects provider-native event semantics and ordering.
+- Tool-call argument deltas can be verified end-to-end as decoded argument dictionaries at `TOOL_CALL_END`.
+- Streaming requirement mappings are now specific and auditable instead of broad catch-all patterns.
+
+Tradeoffs:
+- Adapter stream translators are more complex and require ongoing fixture maintenance as provider event formats evolve.
+- Streaming failure handling is explicit (`ERROR` terminal) and places more responsibility on callers to handle non-FINISH terminal paths.
