@@ -42,6 +42,14 @@ Notes:
 - For providers that do not naturally expose multiple concurrent text segments, a single `text_id` (e.g., `text-1`) is sufficient.
 - For OpenAI Responses API, prefer the provider's output item ID when available to populate `text_id`.
 
+## Design Notes
+- Public API shape remains callback-driven (`::unified_llm::stream -on_event ...`) for Tcl 8.5 compatibility; the work in this sprint is about correctness of event typing/ordering and provider translation, not introducing a new async iterator abstraction.
+- Provider adapters must implement `stream()` by enabling provider-native streaming on the request and translating SSE/JSON chunks; they must not call `complete()` and then chunk a full response string.
+- Deterministic offline tests are the default: provider streaming translators are validated against fixture payloads and mock transports.
+- Error semantics:
+  - If streaming fails after partial deltas have been delivered, emit `ERROR` and stop (do not retry).
+  - Unmapped provider events should be surfaced as `PROVIDER_EVENT` with `raw` populated.
+
 ## Plan
 Execution order: Track A -> Track B -> Track C -> Track D -> Track E.
 
@@ -64,6 +72,16 @@ Planned verification:
 - `tclsh tests/all.tcl -match *unified_llm-stream-fixture*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-a/fixtures/tests-all-unified-llm-stream-fixture.log`
+```
+
+- [ ] A3 - Add SSE parser regression tests for EOF-without-blank-line flush and ensure `::attractor_core::parse_sse` exists (as an alias) for cross-branch/tooling compatibility.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `tclsh tests/all.tcl -match *attractor_core-sse*`
+- Expect: exit code 0
+- Evidence: `.scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse-regressions.log`
 ```
 
 #### Acceptance Criteria - Track A
@@ -89,6 +107,16 @@ Planned verification:
 - `tclsh tests/all.tcl -match *unified_llm-stream-events*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-b/synthetic/tests-all-unified-llm-stream-events.log`
+```
+
+- [ ] B3 - Implement `PROVIDER_EVENT` and `ERROR` stream events, plus negative tests that validate behavior on malformed JSON and unexpected provider event types.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `tclsh tests/all.tcl -match *unified_llm-stream-error*`
+- Expect: exit code 0
+- Evidence: `.scratch/verification/SPRINT-005/track-b/errors/tests-all-unified-llm-stream-error.log`
 ```
 
 #### Acceptance Criteria - Track B
@@ -147,6 +175,16 @@ Implementation notes (must be covered by unit tests using fixtures):
 - `candidate.finishReason` present -> TEXT_END.
 - Final chunk -> FINISH with accumulated response + usage (usageMetadata fields mapped when present).
 
+- [ ] C4 - Validate tool-call streaming assembly end-to-end in unit tests: partial tool args deltas accumulate correctly and TOOL_CALL_END contains a decoded arguments dictionary (not only a raw JSON string).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `tclsh tests/all.tcl -match *unified_llm-stream-tool-call*`
+- Expect: exit code 0
+- Evidence: `.scratch/verification/SPRINT-005/track-c/tool-calls/tests-all-unified-llm-stream-tool-call.log`
+```
+
 #### Acceptance Criteria - Track C
 - Provider-native streaming payloads are parsed and translated without buffering a full `complete()` response first.
 - FINISH events include usage and metadata consistent with the corresponding `complete()` translation.
@@ -180,6 +218,16 @@ Planned verification:
 - `rg -n \"ADR-\" docs/ADR.md`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-d/adr/adr-streaming-entry.txt`
+```
+
+- [ ] D4 - Verify the "no retry after partial data" contract for streaming: when a transport error occurs after emitting at least one TEXT_DELTA, the stream emits ERROR and stops without re-invoking transport.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+
+Planned verification:
+- `tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`
+- Expect: exit code 0
+- Evidence: `.scratch/verification/SPRINT-005/track-d/no-retry/tests-all-unified-llm-stream-no-retry-after-partial.log`
 ```
 
 #### Acceptance Criteria - Track D
