@@ -332,6 +332,49 @@ Evidence artifacts:
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
+- [X] C12 - Sprint #005 comprehensive implementation plan was fully executed for this request and synchronized to completed state against a fresh end-to-end matrix with required `timeout 180 make build` and `timeout 180 make test` gates.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` (exit code 0)
+- `timeout 180 cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
+- `timeout 180 bash tools/evidence_lint.sh docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` (exit code 0)
+- `timeout 180 tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/make_build.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/make_test.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/sse_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/stream_event_model_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/stream_concat_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/openai_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/anthropic_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/gemini_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/stream_tool_call_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/stream_middleware_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/stream_object_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/no_retry_selector.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/spec_coverage.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/docs_lint.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/evidence_lint_source.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/evidence_lint_plan.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/evidence_guardrail.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/mmdc_core_domain.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/mmdc_er.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/mmdc_workflow.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/mmdc_data_flow.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T070812Z/mmdc_arch.log`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/core-domain-models.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/workflow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/data-flow.svg`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+```
+
 ## Context
 Historical baseline at sprint start (codex-3):
 - Unified LLM `stream()` synthesizes streaming by chunking a completed response; it does not parse provider-native streaming formats (SSE/JSON chunks).
