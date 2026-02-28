@@ -13,10 +13,14 @@ Make Unified LLM streaming spec-faithful (provider-native streaming translation 
 Verification commands:
 - `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log timeout 180 make build` (exit code 0)
 - `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log timeout 180 make test` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-user-request-2026-02-28.log timeout 180 make build` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-user-request-2026-02-28.log timeout 180 make test` (exit code 0)
 
 Evidence artifacts:
 - `.scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log`
 - `.scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log`
+- `.scratch/verification/SPRINT-005/final/make-build-user-request-2026-02-28.log`
+- `.scratch/verification/SPRINT-005/final/make-test-user-request-2026-02-28.log`
 ```
 
 ## Context
