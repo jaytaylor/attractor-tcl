@@ -20,6 +20,17 @@ Improvements available from other branches:
 
 This sprint ports the *substance* of those improvements into the codex-3 foundation while keeping deterministic offline testing as the default.
 
+## Current State Snapshot (Code Audit)
+Key gaps and the specific places they currently exist:
+- `lib/unified_llm/main.tcl`: `__stream_from_response` synthesizes streaming by chunking a completed response text (not provider-native streaming translation).
+- `lib/unified_llm/adapters/openai.tcl`: `stream` calls `complete` and then chunks text; no SSE parsing or provider-native event mapping.
+- `lib/unified_llm/adapters/anthropic.tcl`: `stream` calls `complete` and then chunks text; no Anthropic SSE event mapping.
+- `lib/unified_llm/adapters/gemini.tcl`: `stream` calls `complete` and then chunks text; no Gemini streaming mapping.
+- `lib/attractor_core/core.tcl`: SSE parsing exists as `::attractor_core::sse_parse` but there is no `::attractor_core::parse_sse` alias (used by other branches/tooling).
+- `tests/unit/unified_llm.test`: streaming assertions are primarily against mock/synthetic streams, not provider-native streaming fixtures.
+- `tests/e2e_live/unified_llm_live.test`: live smoke checks exist, but do not validate streaming translation.
+- `docs/spec-coverage/traceability.md`: streaming-related IDs currently map to broad verify patterns; this is not strong enough proof for streaming compliance.
+
 ## Non-Goals
 - No new providers beyond OpenAI, Anthropic, and Gemini.
 - No compatibility shims (e.g., OpenAI Chat Completions as the primary path).
@@ -62,6 +73,21 @@ Notes:
 - `docs/spec-coverage/traceability.md` (streaming mappings become specific and truthful)
 - `docs/ADR.md` (streaming ADR entry)
 
+## Evidence + Verification Logging Plan
+- Evidence root: `.scratch/verification/SPRINT-005/` with one subdirectory per track and deliverable.
+- Always capture command output to a log file and include an explicit "exit code N" line in the sprint doc evidence block when marking items complete.
+- Prefer using `tools/verify_cmd.sh` to record verification logs deterministically:
+  - Example: `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse.log tclsh tests/all.tcl -match *attractor_core-sse*`
+- Fixture source of truth lives under `tests/fixtures/`; evidence logs should reference the fixture file paths used for the run.
+- Mermaid diagram sources and renders must live under `.scratch/diagram-renders/sprint-005/` (store both `.mmd` and rendered `.svg`).
+
+## Test Matrix (Streaming)
+Planned deterministic coverage (fixtures + unit tests):
+- Streaming text-only translation: OpenAI, Anthropic, Gemini.
+- Streaming tool call translation: OpenAI argument deltas -> complete tool call dict; Anthropic tool_use blocks; Gemini functionCall parts.
+- Streaming reasoning translation: Anthropic thinking blocks at minimum; other providers emit PROVIDER_EVENT if not applicable.
+- Failure cases: malformed SSE frames, malformed JSON payloads, unknown provider event types, and transport error after partial deltas (no retry).
+
 ## Plan
 Execution order: Track A -> Track B -> Track C -> Track D -> Track E.
 
@@ -70,8 +96,12 @@ Execution order: Track A -> Track B -> Track C -> Track D -> Track E.
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Update `::attractor_core::sse_parse` to flush the last event at EOF (even without a trailing blank line) and preserve `event`, `data`, `id`, and `retry`.
+- Define behavior for: comment lines (`:` prefix), multi-line `data:` accumulation, ignored fields, and empty events.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *attractor_core-sse*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse.log tclsh tests/all.tcl -match *attractor_core-sse*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse.log`
 ```
@@ -80,8 +110,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Add fixtures under `tests/fixtures/` for each provider's streaming frames (including malformed/edge cases).
+- Add unit tests that consume fixture payloads and assert per-provider translator output deterministically (no network).
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-fixture*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-a/fixtures/tests-all-unified-llm-stream-fixture.log tclsh tests/all.tcl -match *unified_llm-stream-fixture*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-a/fixtures/tests-all-unified-llm-stream-fixture.log`
 ```
@@ -90,8 +124,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Provide `::attractor_core::parse_sse` as a stable alias/wrapper for `::attractor_core::sse_parse` (for cross-branch/tooling compatibility).
+- Add regression tests that cover EOF flushing and multi-line data behavior.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *attractor_core-sse*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse-regressions.log tclsh tests/all.tcl -match *attractor_core-sse*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-a/sse-parser/tests-all-attractor-core-sse-regressions.log`
 ```
@@ -105,8 +143,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Define helper procs for creating/validating StreamEvent dicts (required keys per type, allowed optional keys).
+- Define invariants: text_id lifecycle (TEXT_START before first TEXT_DELTA; TEXT_END after final delta), and FINISH terminal event requirements.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-b/event-model/tests-all-unified-llm-stream-event-model.log tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-b/event-model/tests-all-unified-llm-stream-event-model.log`
 ```
@@ -115,8 +157,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Update `::unified_llm::__stream_from_response` to emit TEXT_START and TEXT_END (in addition to TEXT_DELTA) with a stable `text_id`.
+- Preserve ordering guarantees: STREAM_START first, FINISH last, and tool-call events must not interleave incorrectly with text segments.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-events*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-b/synthetic/tests-all-unified-llm-stream-events.log tclsh tests/all.tcl -match *unified_llm-stream-events*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-b/synthetic/tests-all-unified-llm-stream-events.log`
 ```
@@ -125,8 +171,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Add StreamEvent support for `PROVIDER_EVENT` (raw passthrough) and `ERROR` (normalized streaming error).
+- Add unit tests for malformed JSON in `data:` frames and unknown event types that must not crash the stream.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-error*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-b/errors/tests-all-unified-llm-stream-error.log tclsh tests/all.tcl -match *unified_llm-stream-error*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-b/errors/tests-all-unified-llm-stream-error.log`
 ```
@@ -140,8 +190,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Implement OpenAI `stream()` using provider-native streaming frames (SSE) and map them to StreamEvent types (TEXT_*, TOOL_CALL_*, FINISH, PROVIDER_EVENT, ERROR).
+- Ensure tool call argument deltas accumulate into a complete tool_call dict at TOOL_CALL_END and final usage includes reasoning token counts when present.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-c/openai/tests-all-unified-llm-openai-stream-translation.log tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-c/openai/tests-all-unified-llm-openai-stream-translation.log`
 ```
@@ -157,8 +211,12 @@ Implementation notes (must be covered by unit tests using fixtures):
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Implement Anthropic `stream()` using provider-native SSE events and map text/tool_use/thinking blocks into TEXT_*, TOOL_CALL_*, and REASONING_* events.
+- Ensure FINISH includes the accumulated unified Response and correct usage mapping at stream termination.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-c/anthropic/tests-all-unified-llm-anthropic-stream-translation.log tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-c/anthropic/tests-all-unified-llm-anthropic-stream-translation.log`
 ```
@@ -175,8 +233,12 @@ Implementation notes (must be covered by unit tests using fixtures):
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Implement Gemini `stream()` using `:streamGenerateContent?alt=sse` format and translate `candidates[].content.parts[]` into TEXT_* and TOOL_CALL_* events.
+- Ensure the translator tolerates missing finish signals by emitting FINISH on end-of-stream when appropriate (fixture-driven).
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-c/gemini/tests-all-unified-llm-gemini-stream-translation.log tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-c/gemini/tests-all-unified-llm-gemini-stream-translation.log`
 ```
@@ -191,8 +253,12 @@ Implementation notes (must be covered by unit tests using fixtures):
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Add unit tests that prove partial tool-call argument fragments are accumulated deterministically and JSON-decoded at TOOL_CALL_END.
+- Cover both: OpenAI argument delta format and Anthropic tool_use blocks (full args delivered vs incremental).
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-tool-call*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-c/tool-calls/tests-all-unified-llm-stream-tool-call.log tclsh tests/all.tcl -match *unified_llm-stream-tool-call*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-c/tool-calls/tests-all-unified-llm-stream-tool-call.log`
 ```
@@ -206,8 +272,15 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Ensure streaming applies middleware in the same order as blocking mode:
+  - request phase: registration order
+  - event phase: registration order (per emitted StreamEvent)
+  - response phase: reverse order on final Response
+- Add tests that prove middleware can transform events without breaking final response assembly.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-middleware*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-d/middleware/tests-all-unified-llm-stream-middleware.log tclsh tests/all.tcl -match *unified_llm-stream-middleware*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-d/middleware/tests-all-unified-llm-stream-middleware.log`
 ```
@@ -216,8 +289,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Update `stream_object` buffering to collect only text deltas for the target text_id, ignore non-text events safely, and validate JSON only after FINISH.
+- Add negative tests for invalid JSON, missing FINISH, and schema mismatch under streaming.
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-object*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-d/stream-object/tests-all-unified-llm-stream-object.log tclsh tests/all.tcl -match *unified_llm-stream-object*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-d/stream-object/tests-all-unified-llm-stream-object.log`
 ```
@@ -226,8 +303,11 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Add an ADR entry describing: StreamEvent model expansion, provider-native translation rules, and any transport API changes required.
+
 Planned verification:
-- `rg -n \"ADR-\" docs/ADR.md`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-d/adr/adr-streaming-entry.txt rg -n \"ADR-\" docs/ADR.md`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-d/adr/adr-streaming-entry.txt`
 ```
@@ -236,8 +316,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Add tests that simulate a transport error occurring after at least one TEXT_DELTA has been emitted.
+- Assert: stream emits ERROR and terminates without re-invoking the transport callback (no retry).
+
 Planned verification:
-- `tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-d/no-retry/tests-all-unified-llm-stream-no-retry-after-partial.log tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-d/no-retry/tests-all-unified-llm-stream-no-retry-after-partial.log`
 ```
@@ -251,8 +335,12 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Update `docs/spec-coverage/traceability.md` so streaming requirements point to streaming-specific test names and verify patterns.
+- Ensure `tools/spec_coverage.tcl` continues to enforce strict catalog/traceability equality and verify-pattern sanity.
+
 Planned verification:
-- `tclsh tools/spec_coverage.tcl`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-e/traceability/spec-coverage.log tclsh tools/spec_coverage.tcl`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage.log`
 ```
@@ -261,8 +349,11 @@ Planned verification:
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Update traceability blocks for the specific streaming IDs listed below to reference the new streaming tests directly (not broad patterns).
+
 Planned verification:
-- `tclsh tools/spec_coverage.tcl`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-e/traceability/spec-coverage-streaming-ids.log tclsh tools/spec_coverage.tcl`
 - Expect: exit code 0
 - Evidence: `.scratch/verification/SPRINT-005/track-e/traceability/spec-coverage-streaming-ids.log`
 
@@ -279,24 +370,37 @@ Scope IDs (minimum set):
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Ensure the sprint doc can be marked complete without tripping docs lint, evidence lint, or evidence guardrail.
+- Ensure each completed item contains: command in backticks, explicit "exit code N", and `.scratch/...` evidence references.
+
 Planned verification:
-- `bash tools/docs_lint.sh`
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
-- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-e/evidence/docs-lint.log bash tools/docs_lint.sh`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-e/evidence/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/track-e/evidence/evidence-guardrail.log tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
 - Expect: exit code 0
-- Evidence: `.scratch/verification/SPRINT-005/track-e/evidence/docs-and-evidence-lint.log`
+- Evidence:
+  - `.scratch/verification/SPRINT-005/track-e/evidence/docs-lint.log`
+  - `.scratch/verification/SPRINT-005/track-e/evidence/evidence-lint.log`
+  - `.scratch/verification/SPRINT-005/track-e/evidence/evidence-guardrail.log`
 ```
 
 - [ ] E4 - Render the Appendix Mermaid diagrams with `mmdc` and store outputs under `.scratch/diagram-renders/sprint-005/` (these renders become evidence artifacts referenced by completed items).
 ```text
 {placeholder for verification justification/reasoning and evidence log}
 
+Scope:
+- Store the `.mmd` diagram sources and rendered `.svg` outputs under `.scratch/diagram-renders/sprint-005/`.
+- Ensure diagrams render without errors and match the intended streaming flow/event ordering contract.
+
 Planned verification:
 - `mmdc -i .scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.mmd -o .scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.svg`
 - `mmdc -i .scratch/diagram-renders/sprint-005/event-ordering-contract.mmd -o .scratch/diagram-renders/sprint-005/event-ordering-contract.svg`
 - `ls .scratch/diagram-renders/sprint-005`
 - Expect: exit code 0
-- Evidence: `.scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.svg`
+- Evidence:
+  - `.scratch/diagram-renders/sprint-005/unified-llm-streaming-flow.svg`
+  - `.scratch/diagram-renders/sprint-005/event-ordering-contract.svg`
 ```
 
 #### Acceptance Criteria - Track E
@@ -304,12 +408,12 @@ Planned verification:
 - Evidence lint and evidence guardrail pass for the SPRINT-005 doc (and for any sprint docs modified as part of the sprint).
 
 ## Verification Summary (What "Done" Looks Like)
-- `tclsh tools/build_check.tcl` (exit code 0)
-- `tclsh tests/all.tcl` (exit code 0)
-- `bash tools/docs_lint.sh` (exit code 0)
-- `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
-- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
-- Live optional: `tclsh tests/e2e_live.tcl -match *unified-llm*` (exit code 0) when provider secrets are configured.
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/build-check.log tclsh tools/build_check.tcl` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/tests-all.log tclsh tests/all.tcl` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/evidence-guardrail.log tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
+- Live optional: `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/e2e-live-unified-llm.log tclsh tests/e2e_live.tcl -match *unified-llm*` (exit code 0) when provider secrets are configured.
 
 ## Appendix - Mermaid Diagrams
 
