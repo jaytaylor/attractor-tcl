@@ -11,16 +11,52 @@ Make Unified LLM streaming spec-faithful (provider-native streaming translation 
 - [X] C0 - Full sprint implementation refresh verification completed with required build and test gates.
 ```text
 Verification commands:
-- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log timeout 180 make build` (exit code 0)
-- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log timeout 180 make test` (exit code 0)
-- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-user-request-2026-02-28.log timeout 180 make build` (exit code 0)
-- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-user-request-2026-02-28.log timeout 180 make test` (exit code 0)
+- Evidence index: `.scratch/verification/SPRINT-005/final/`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log make build` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log make test` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-build-user-request-2026-02-28.log make build` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-005/final/make-test-user-request-2026-02-28.log make test` (exit code 0)
 
 Evidence artifacts:
 - `.scratch/verification/SPRINT-005/final/make-build-post-doc-sync-2026-02-28.log`
 - `.scratch/verification/SPRINT-005/final/make-test-post-doc-sync-2026-02-28.log`
 - `.scratch/verification/SPRINT-005/final/make-build-user-request-2026-02-28.log`
 - `.scratch/verification/SPRINT-005/final/make-test-user-request-2026-02-28.log`
+```
+
+- [X] C1 - Comprehensive plan execution re-verified against streaming-specific selectors, lint/guardrail gates, and final build/test gates.
+```text
+Verification commands:
+- Evidence index: `.scratch/verification/SPRINT-005/comprehensive-plan/`
+- `make build` (exit code 0)
+- `make test` (exit code 0)
+- `tclsh tests/all.tcl -match *attractor_core-sse*` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*` (exit code 0)
+- `tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*` (exit code 0)
+- `tclsh tools/spec_coverage.tcl` (exit code 0)
+- `bash tools/docs_lint.sh` (exit code 0)
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` (exit code 0)
+- `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` (exit code 0)
+- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/attractor-core-sse-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/openai-stream-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/anthropic-stream-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/gemini-stream-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/no-retry-stream-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/docs-lint-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/evidence-lint-source-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/evidence-lint-plan-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/evidence-guardrail-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
+- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
 ## Context
