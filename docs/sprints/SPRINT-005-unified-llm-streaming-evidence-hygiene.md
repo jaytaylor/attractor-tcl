@@ -59,6 +59,22 @@ Evidence artifacts:
 - `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
 ```
 
+- [X] C2 - Comprehensive plan execution re-run after sprint-plan sync, with all commands passing and evidence references refreshed.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/make_build.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/make_test.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/spec_coverage.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/evidence_lint_plan.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/evidence_guardrail.log`
+```
+
 ## Context
 Historical baseline at sprint start (codex-3):
 - Unified LLM `stream()` synthesizes streaming by chunking a completed response; it does not parse provider-native streaming formats (SSE/JSON chunks).
