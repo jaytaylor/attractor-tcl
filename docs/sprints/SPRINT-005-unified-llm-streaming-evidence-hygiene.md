@@ -123,6 +123,26 @@ Evidence artifacts:
 - `.scratch/verification/SPRINT-005/final/evidence-guardrail-post-plan-sync-2026-02-28.log`
 ```
 
+- [X] C5 - Comprehensive plan implementation was re-verified after latest sprint sync, and both sprint docs now reflect a consistent completed state backed by a single full command-status matrix.
+```text
+Verification commands:
+- `timeout 1800 ./.scratch/run_sprint005_full_implementation_verification.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/command-status.tsv` (exit code 0)
+- `timeout 180 make build` (exit code 0)
+- `timeout 180 make test` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/command-status.tsv`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/make_build.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/make_test.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/spec_coverage.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/docs_lint.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/evidence_lint_source.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/evidence_lint_plan.log`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T060255Z/evidence_guardrail.log`
+```
+
 ## Context
 Historical baseline at sprint start (codex-3):
 - Unified LLM `stream()` synthesizes streaming by chunking a completed response; it does not parse provider-native streaming formats (SSE/JSON chunks).
