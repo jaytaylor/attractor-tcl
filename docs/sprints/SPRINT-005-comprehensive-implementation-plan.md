@@ -3,68 +3,46 @@ Legend: [ ] Incomplete, [X] Complete
 # Sprint #005 Comprehensive Implementation Plan - Unified LLM Streaming and Evidence Hygiene
 
 ## Objective
-Implement `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` end-to-end with provider-native streaming translation, strict StreamEvent contract parity, and proof-quality evidence hygiene.
+Create an execution-ready plan for implementing `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` with provider-native streaming translation, strict StreamEvent contract parity, requirement traceability precision, and evidence hygiene closure.
 
-## Source Review Summary
-- The source sprint document defines the right execution tracks (A-E) and target requirement IDs for streaming.
-- The codebase already contains substantial Sprint #005 foundations (SSE parser alias, provider-native stream translators, and streaming test suites).
-- The remaining implementation work is primarily hardening, coverage expansion for edge conditions, and auditable evidence/traceability closure.
+## Review Summary
+- The source sprint document clearly defines scope and expected behaviors for SSE parsing, StreamEvent ordering, provider translation, middleware, and traceability.
+- Existing completion logs are useful historical evidence but are not a stepwise implementation plan.
+- This document re-frames Sprint #005 as actionable implementation phases with explicit deliverables, acceptance criteria, and phase-level verification expectations.
 
 ## Scope
 In scope:
-- SSE parser contract hardening and fixture completeness.
-- Unified StreamEvent validation and ordering invariants.
-- Provider-native streaming translation for OpenAI, Anthropic, Gemini.
-- Streaming middleware and `stream_object` correctness.
-- Traceability, ADR updates, and evidence hygiene closure.
+- SSE parser hardening and parser compatibility alias support.
+- Unified StreamEvent model invariants and fallback stream parity.
+- Provider-native streaming translation for OpenAI, Anthropic, and Gemini.
+- Streaming middleware behavior, `stream_object` resilience, and no-retry-after-partial-data behavior.
+- Traceability refinement, ADR capture, docs/evidence guardrails, and closeout verification.
 
 Out of scope:
-- New providers.
+- New providers beyond OpenAI, Anthropic, and Gemini.
 - Feature flags or gated rollouts.
-- Legacy compatibility shims.
+- Backwards-compatibility shims for superseded behavior.
 
 ## Execution Order
-1. Phase 0 - Baseline and gap lock
-2. Phase 1 - SSE parser and fixture foundation
-3. Phase 2 - Unified StreamEvent contract hardening
-4. Phase 3 - Provider-native translator parity
-5. Phase 4 - Middleware, `stream_object`, and error semantics
-6. Phase 5 - Traceability, ADR, and evidence hygiene
-7. Phase 6 - Final verification and sprint closeout
+1. Phase 0 - Baseline, gap lock, and evidence layout.
+2. Phase 1 - SSE parser contract and fixture corpus.
+3. Phase 2 - Unified StreamEvent contract and fallback behavior.
+4. Phase 3 - Provider-native streaming translators.
+5. Phase 4 - Middleware, `stream_object`, and failure semantics.
+6. Phase 5 - Traceability, ADR, and evidence hygiene.
+7. Phase 6 - Final verification and sprint closeout.
 
 ## Completion Sync (2026-02-28)
-- [X] C0.1 - Baseline status and this plan are synchronized to current repository behavior before implementation starts.
+- [ ] C0.1 - This plan is synchronized with the current source sprint requirements and repository structure before implementation execution starts.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] C0.2 - Completion state in this document is updated immediately as each phase item is verified.
+- [ ] C0.2 - Completion state in this plan is updated immediately as each implementation item is verified.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Requirements Target Set
+## Requirement Target Set
 - `ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS`
 - `ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING`
 - `ULLM-DOD-8.29-YIELDS-EVENTS-CONCATENATE-FULL-RESPONSE-TEXT`
@@ -72,739 +50,321 @@ Evidence:
 - `ULLM-DOD-8.31-STREAMING-FOLLOWS-START-DELTA-END-PATTERN`
 - `ULLM-DOD-8.70-STREAMING-DOES-RETRY-AFTER-PARTIAL-DATA`
 
-## File Touchpoints
-- `lib/attractor_core/core.tcl`
-- `lib/unified_llm/main.tcl`
-- `lib/unified_llm/adapters/openai.tcl`
-- `lib/unified_llm/adapters/anthropic.tcl`
-- `lib/unified_llm/adapters/gemini.tcl`
-- `lib/unified_llm/transports/https_json.tcl`
-- `tests/unit/attractor_core.test`
-- `tests/unit/unified_llm_streaming.test`
-- `tests/unit/unified_llm.test`
-- `tests/fixtures/unified_llm_streaming/`
-- `docs/spec-coverage/traceability.md`
-- `docs/ADR.md`
+## Implementation File Map
+- Core and runtime:
+  - `lib/attractor_core/core.tcl`
+  - `lib/unified_llm/main.tcl`
+  - `lib/unified_llm/transports/https_json.tcl`
+- Provider adapters:
+  - `lib/unified_llm/adapters/openai.tcl`
+  - `lib/unified_llm/adapters/anthropic.tcl`
+  - `lib/unified_llm/adapters/gemini.tcl`
+- Tests and fixtures:
+  - `tests/unit/attractor_core.test`
+  - `tests/unit/unified_llm.test`
+  - `tests/unit/unified_llm_streaming.test`
+  - `tests/fixtures/unified_llm_streaming/`
+- Traceability and architecture records:
+  - `docs/spec-coverage/traceability.md`
+  - `docs/ADR.md`
+  - `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
 
 ## Evidence Strategy
-- Evidence root: `.scratch/verification/SPRINT-005/`
-- Diagram evidence root: `.scratch/diagram-renders/sprint-005-comprehensive-plan/`
-- Every completed checklist item must include command, exit code, and artifact paths.
-- Use `tools/verify_cmd.sh` for deterministic command logging.
+- Verification root: `.scratch/verification/SPRINT-005/comprehensive-plan/`
+- Diagram render root: `.scratch/diagram-renders/sprint-005-comprehensive-plan/`
+- Every completed checklist item must include:
+  - Exact command(s) in backticks.
+  - Explicit exit code(s).
+  - Concrete `.scratch/...` artifact paths.
+- Preferred logging wrapper for execution evidence: `tools/verify_cmd.sh`
 
 ## Phase 0 - Baseline and Gap Lock
 ### Deliverables
-- [X] P0.1 - Capture baseline behavior for build, full tests, targeted streaming tests, and spec-coverage checks.
+- [ ] P0.1 - Capture baseline command outputs for build, full tests, targeted streaming selectors, and spec coverage validation.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P0.2 - Produce a gap ledger mapping each Sprint #005 requirement to implementation file targets and test targets.
+- [ ] P0.2 - Produce a requirement-to-file-and-test gap ledger for the sprint target requirement IDs.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P0.3 - Confirm fixture inventory for OpenAI, Anthropic, Gemini, and malformed stream cases is complete and readable.
+- [ ] P0.3 - Create phase-scoped evidence directories and command index skeleton under `.scratch/verification/SPRINT-005/comprehensive-plan/`.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- `tclsh tests/all.tcl -match *attractor_core-sse*` executes and identifies parser test cases for EOF, multiline, and alias behavior.
-- `tclsh tests/all.tcl -match *unified_llm-stream*` selects streaming-specific tests without pulling unrelated suites.
-- `tclsh tools/spec_coverage.tcl` succeeds with no unknown or malformed streaming requirement mappings.
+- `make build` succeeds with no package load failures.
+- `make test` succeeds and includes targeted streaming suites in aggregate runs.
+- `tclsh tests/all.tcl -match *attractor_core-sse*` resolves parser tests.
+- `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*` resolves OpenAI streaming translation tests.
+- `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*` resolves Anthropic streaming translation tests.
+- `tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*` resolves Gemini streaming translation tests.
+- `tclsh tools/spec_coverage.tcl` returns strict catalog/traceability parity with no unknown IDs.
 
 ### Negative Test Cases
-- Missing fixture file under `tests/fixtures/unified_llm_streaming/` fails deterministic fixture-loading tests with actionable diagnostics.
-- Invalid traceability verify pattern for a streaming requirement fails `tools/spec_coverage.tcl` deterministically.
-- Corrupted SSE fixture payload fails parser/translator unit tests with typed stream error assertions.
+- Missing or malformed traceability mappings fail `tclsh tools/spec_coverage.tcl`.
+- Missing test selector coverage for a target requirement produces a verification gap in the gap ledger.
+- Missing evidence directory paths fail evidence capture automation.
 
 ### Acceptance Criteria - Phase 0
-- [X] P0.A1 - Every streaming requirement in target set has an owning phase task, file target, and test target in the gap ledger.
+- [ ] P0.A1 - Every target requirement ID has an owning phase task, code touchpoint, and verification selector.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P0.A2 - Baseline command logs are captured under `.scratch/verification/SPRINT-005/phase-0/`.
+- [ ] P0.A2 - Baseline evidence index is reproducible and stored under the sprint-specific `.scratch` path.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 1 - SSE Parser and Fixture Foundation
+## Phase 1 - SSE Parser Contract and Fixture Corpus
 ### Deliverables
-- [X] P1.1 - Ensure `::attractor_core::sse_parse` flushes trailing event data at EOF and preserves `event`, `data`, `id`, `retry` semantics.
+- [ ] P1.1 - Harden `::attractor_core::sse_parse` for EOF flush, multiline data handling, comment behavior, and `id`/`retry` field preservation.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.2 - Ensure `::attractor_core::parse_sse` alias is present and behaviorally identical to `sse_parse`.
+- [ ] P1.2 - Ensure `::attractor_core::parse_sse` is present as a stable alias/wrapper with behavior parity to `sse_parse`.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.3 - Expand fixture corpus for provider text deltas, tool call deltas, reasoning blocks, terminal frames, and malformed frames.
+- [ ] P1.3 - Expand fixture corpus for OpenAI, Anthropic, and Gemini streaming payloads including text, tool-call, reasoning, terminal, and malformed scenarios.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.4 - Add parser regression tests for comment-only frames, empty events, multiline `data:` joins, and EOF-without-blank-line flush.
+- [ ] P1.4 - Add parser-focused regression tests for EOF-without-blank-line, comment-only lines, empty events, and multiline `data:` semantics.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- SSE parser returns one event per blank-line boundary with multiline `data:` joined by newline.
-- EOF flush test verifies final event is emitted without trailing separator.
-- Alias test verifies `parse_sse` output equals `sse_parse` output for identical payloads.
-- Provider fixture tests decode valid SSE payloads for OpenAI, Anthropic, and Gemini.
+- EOF parser test emits trailing event when stream ends without a blank separator.
+- Multiline data parser test preserves newline-joined payload order.
+- Alias parity test proves `parse_sse` and `sse_parse` produce identical event dictionaries for the same payload.
+- Fixture-backed parser tests decode provider SSE frame sets into deterministic event boundaries.
 
 ### Negative Test Cases
-- Malformed `retry:` value handling is deterministic and does not crash parser.
-- Unknown SSE fields are ignored and do not pollute parsed event dictionaries.
-- Malformed JSON payload in `data:` frame is surfaced to translator tests as typed stream errors.
+- Malformed `retry:` values are ignored or handled deterministically without parser crash.
+- Unknown SSE fields do not pollute parsed event dicts.
+- Malformed frame bundles trigger typed failures in downstream translator tests.
 
 ### Acceptance Criteria - Phase 1
-- [X] P1.A1 - SSE parser behavior is deterministic for all required field and framing edge cases.
+- [ ] P1.A1 - SSE parser behavior is deterministic and spec-aligned for all required framing and field edge cases.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.A2 - Fixture corpus fully covers text, tool-call, reasoning, terminal, and malformed scenarios for all three providers.
+- [ ] P1.A2 - Fixture corpus is sufficient to drive provider translators without live network calls.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 2 - Unified StreamEvent Contract Hardening
+## Phase 2 - Unified StreamEvent Contract and Fallback Behavior
 ### Deliverables
-- [X] P2.1 - Validate StreamEvent helper contract for required fields by event type.
+- [ ] P2.1 - Implement or refine StreamEvent validation helpers for required fields, optional fields, and type-specific invariants.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.2 - Enforce event ordering invariants: `STREAM_START` first, `FINISH` terminal, and text start/delta/end lifecycle by `text_id`.
+- [ ] P2.2 - Enforce event ordering invariants: `STREAM_START` first, `FINISH` terminal, and valid lifecycle for `TEXT_START`/`TEXT_DELTA`/`TEXT_END` by `text_id`.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.3 - Harden synthetic fallback stream path to emit `TEXT_START`, `TEXT_DELTA`, `TEXT_END`, and preserve tool-call boundaries.
+- [ ] P2.3 - Update fallback/synthetic streaming path so text and tool boundaries remain spec-faithful.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.4 - Validate `PROVIDER_EVENT` and `ERROR` semantics for unmapped provider events and malformed payloads.
+- [ ] P2.4 - Ensure `PROVIDER_EVENT` and `ERROR` are emitted with normalized payloads for unmapped or malformed provider events.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- Synthetic stream test confirms ordered `STREAM_START -> TEXT_START -> TEXT_DELTA* -> TEXT_END -> FINISH` flow.
-- Concatenation test verifies all `TEXT_DELTA` values equal final `response.output_text`.
-- Tool-call assembly test confirms partial argument deltas result in decoded arguments dictionary on `TOOL_CALL_END`.
+- Ordered stream test confirms `STREAM_START -> TEXT_START -> TEXT_DELTA* -> TEXT_END -> FINISH` sequence.
+- Concatenation test verifies aggregated `TEXT_DELTA` content equals final `response.output_text`.
+- Metadata test verifies `FINISH` carries expected usage and finish-reason fields.
+- Fallback stream tests preserve tool-call boundaries and end-state consistency with blocking response.
 
 ### Negative Test Cases
-- `TEXT_DELTA` emitted before `TEXT_START` returns deterministic `INVALID_EVENT_ORDER` error.
-- Stream without terminal `FINISH` fails `stream_object` path with typed stream error.
-- Unknown provider event type maps to `PROVIDER_EVENT` and does not terminate stream unless translator marks fatal.
+- `TEXT_DELTA` before `TEXT_START` fails with deterministic invalid-order error.
+- Stream lacking `FINISH` produces typed incomplete-stream failure in consumers.
+- Unknown provider event type is surfaced as `PROVIDER_EVENT` and does not crash runtime.
+- Malformed event payload emits `ERROR` with structured error details.
 
 ### Acceptance Criteria - Phase 2
-- [X] P2.A1 - StreamEvent type/field validation and ordering invariants are enforced in runtime and covered by tests.
+- [ ] P2.A1 - StreamEvent validation and ordering invariants are runtime-enforced and unit-tested.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.A2 - Fallback synthetic path remains spec-faithful and deterministic for local/offline tests.
+- [ ] P2.A2 - Synthetic stream fallback remains deterministic and contract-consistent for offline testing.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 3 - Provider-Native Translator Parity
+## Phase 3 - Provider-Native Streaming Translators
 ### Deliverables
-- [X] P3.1 - OpenAI translator maps SSE chunks into `TEXT_*`, `TOOL_CALL_*`, `PROVIDER_EVENT`, `ERROR`, and terminal `FINISH` with usage.
+- [ ] P3.1 - Implement/refine OpenAI Responses API SSE translation to unified stream events, including text deltas, tool-call argument deltas, and finish usage mapping.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.2 - Anthropic translator maps `content_block_start/delta/stop` into text/tool/reasoning event families and terminal `FINISH`.
+- [ ] P3.2 - Implement/refine Anthropic SSE translation for `content_block_start`/`delta`/`stop` mapping into text, tool-call, and reasoning event families.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.3 - Gemini translator maps `parts[].text` and `parts[].functionCall` into unified stream events and handles EOF finish behavior.
+- [ ] P3.3 - Implement/refine Gemini `:streamGenerateContent?alt=sse` translation for `parts[].text`, `parts[].functionCall`, and deterministic end-of-stream finish handling.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.4 - End-to-end translator tests prove tool-call argument accumulation and JSON decode correctness at `TOOL_CALL_END`.
+- [ ] P3.4 - Add translator tests proving tool-call argument assembly and decoded argument dictionaries at `TOOL_CALL_END`.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- OpenAI text fixture produces text lifecycle events and final usage metadata.
-- OpenAI function-call delta fixture produces assembled tool call with decoded arguments map.
-- Anthropic mixed content fixture produces `TEXT_*`, `REASONING_*`, `TOOL_CALL_*`, and terminal `FINISH`.
-- Gemini fixture with explicit finish reason produces `TEXT_END` and `FINISH`.
-- Gemini fixture with no explicit finish reason still terminates deterministically at end-of-stream with `FINISH`.
+- OpenAI fixture: first text delta produces `TEXT_START`, subsequent deltas produce ordered `TEXT_DELTA`, and output item completion yields `TEXT_END`.
+- OpenAI function-call deltas accumulate to complete decoded arguments dict at `TOOL_CALL_END`.
+- Anthropic mixed-content fixture emits `TEXT_*`, `REASONING_*`, and `TOOL_CALL_*` families with stable block IDs.
+- Gemini fixture with explicit finish reason emits `TEXT_END` then `FINISH` with mapped usage metadata.
+- Gemini fixture without explicit finish reason still emits deterministic terminal `FINISH` on stream end.
 
 ### Negative Test Cases
-- OpenAI malformed JSON delta after partial text emits terminal `ERROR` and no retry.
-- Anthropic unknown block type surfaces as `PROVIDER_EVENT` and stream continues when non-fatal.
-- Gemini malformed chunk produces typed `ERROR` event and no unhandled runtime exception.
+- OpenAI malformed JSON delta after partial output emits `ERROR` and terminates with no retry.
+- Anthropic unknown block type is surfaced as `PROVIDER_EVENT` and stream remains stable when non-fatal.
+- Gemini malformed chunk payload emits typed translator error event without uncaught exception.
+- Provider partial chunk stream ending abruptly emits typed error and does not fabricate successful completion.
 
 ### Acceptance Criteria - Phase 3
-- [X] P3.A1 - All three providers use provider-native streaming translation; no provider `stream()` path depends on chunking a full `complete()` response.
+- [ ] P3.A1 - All provider `stream()` paths use provider-native streaming translation rather than chunking `complete()` output.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.A2 - Provider translator tests are deterministic, fixture-backed, and cover both success and failure paths.
+- [ ] P3.A2 - Provider translator suites are fixture-backed, deterministic, and cover success and failure paths.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-## Phase 4 - Middleware, stream_object, and Error Semantics
+## Phase 4 - Middleware, stream_object, and Failure Semantics
 ### Deliverables
-- [X] P4.1 - Validate request/event/response middleware ordering and transformation behavior under streaming.
+- [ ] P4.1 - Verify and enforce request/event/response middleware ordering semantics for streaming parity with blocking mode.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.2 - Harden `stream_object` to track target `text_id`, ignore non-target events, and validate JSON only after terminal `FINISH`.
+- [ ] P4.2 - Harden `stream_object` to buffer only intended text stream content, tolerate non-text events, and validate JSON at terminal completion.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.3 - Enforce no-retry-after-partial-data contract with explicit transport invocation-count assertions.
+- [ ] P4.3 - Enforce no-retry-after-partial-data behavior with explicit transport invocation count assertions.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.4 - Ensure streaming error paths emit typed `ERROR` events and preserve partial output diagnostics.
+- [ ] P4.4 - Ensure streaming error paths emit typed `ERROR` events containing actionable diagnostics and partial-state context.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- Middleware test proves request transforms run before transport call, event transforms run in registration order, and final response transforms run in reverse order.
-- `stream_object` valid JSON path emits parsed object callback and returns object payload aligned with schema.
-- Stream with tool/reasoning/provider events interleaved still buffers only target text stream for object parsing.
+- Middleware test confirms request transforms run before provider call, event transforms run in registration order, and response transforms run in reverse order on final response.
+- `stream_object` valid JSON path emits parsed object and schema-valid response.
+- Interleaved text/tool/reasoning/provider events do not corrupt buffered JSON stream target.
+- No-retry tests confirm one transport invocation when failure occurs after first emitted text delta.
 
 ### Negative Test Cases
-- Invalid JSON in buffered text fails with typed parse error and no object callback emission.
-- Stream ending in `ERROR` produces `STREAM_ERROR`-typed failure from `stream_object`.
-- Transport error after first `TEXT_DELTA` does not re-invoke transport and terminates stream with `ERROR`.
+- Invalid buffered JSON triggers typed parse failure and no object callback emission.
+- Missing `FINISH` yields typed incomplete-stream failure for `stream_object` consumers.
+- Transport failure after partial text emits terminal `ERROR` and prevents retry invocation.
+- Event middleware exceptions are surfaced as typed stream errors and halt stream deterministically.
 
 ### Acceptance Criteria - Phase 4
-- [X] P4.A1 - Streaming middleware semantics are deterministic and test-proven for transformation order.
+- [ ] P4.A1 - Streaming middleware ordering and transformation behavior is deterministic and test-proven.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.A2 - `stream_object` is resilient to expanded event model and returns typed failures for invalid or incomplete streams.
+- [ ] P4.A2 - `stream_object` is robust against expanded StreamEvent families and returns typed failures for invalid streams.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Phase 5 - Traceability, ADR, and Evidence Hygiene
 ### Deliverables
-- [X] P5.1 - Tighten streaming requirement mappings in `docs/spec-coverage/traceability.md` to streaming-specific tests.
+- [ ] P5.1 - Tighten streaming requirement traceability mappings to streaming-specific test selectors in `docs/spec-coverage/traceability.md`.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.2 - Add/refresh ADR entry in `docs/ADR.md` for provider-native streaming translation and expanded StreamEvent contract.
+- [ ] P5.2 - Add or update ADR entry in `docs/ADR.md` covering StreamEvent contract expansion and provider-native translator strategy.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.3 - Ensure sprint doc evidence format compliance for this plan and source Sprint #005 doc.
+- [ ] P5.3 - Ensure evidence/doc formatting for both Sprint #005 documents satisfies docs lint, evidence lint, and evidence guardrail.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.4 - Render all appendix diagrams via `mmdc` and store outputs under `.scratch/diagram-renders/sprint-005-comprehensive-plan/`.
+- [ ] P5.4 - Render all appendix Mermaid diagrams to `.scratch/diagram-renders/sprint-005-comprehensive-plan/` using `mmdc`.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- `tclsh tools/spec_coverage.tcl` validates streaming ID mappings with no unknown, malformed, or empty verify patterns.
+- `tclsh tools/spec_coverage.tcl` passes with strict catalog/traceability equality and streaming ID coverage.
+- `bash tools/docs_lint.sh` passes for sprint docs.
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md` passes.
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` passes.
-- `tclsh tools/evidence_guardrail.tcl` validates referenced `.scratch` artifacts exist for completed items.
+- `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md docs/sprints/SPRINT-005-comprehensive-implementation-plan.md` passes.
+- Mermaid diagrams render to SVG without syntax errors.
 
 ### Negative Test Cases
-- Broad catch-all verify pattern for a streaming requirement ID is rejected during review and replaced with streaming-specific test selector.
-- Missing evidence artifact path in a completed item fails evidence guardrail.
-- Missing exit code annotation in a completed item fails evidence lint.
+- Broad catch-all verify selectors for streaming IDs are rejected and replaced with specific streaming test selectors.
+- Missing artifact path in any completed item fails evidence guardrail.
+- Missing exit code annotation in any completed item fails evidence lint.
+- Broken Mermaid syntax fails `mmdc` render and blocks phase completion.
 
 ### Acceptance Criteria - Phase 5
-- [X] P5.A1 - Streaming traceability IDs map to precise streaming tests and remain in strict catalog equality.
+- [ ] P5.A1 - Streaming traceability IDs map to precise streaming verification commands and maintain strict set equality.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.A2 - Evidence lint and guardrail pass for all sprint docs modified during this sprint.
+- [ ] P5.A2 - Evidence and documentation guardrails pass for all Sprint #005 docs changed during implementation.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Phase 6 - Final Verification and Sprint Closeout
 ### Deliverables
-- [X] P6.1 - Run final build and full test suite after all sprint changes.
+- [ ] P6.1 - Execute full post-implementation verification suite (`make build`, `make test`, targeted streaming selectors, and spec/evidence gates).
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P6.2 - Run targeted streaming suites and spec/evidence gates as closeout proof.
+- [ ] P6.2 - Update completion state and evidence references in both Sprint #005 documents.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P6.3 - Update completion ratios and closeout notes in both Sprint #005 docs.
+- [ ] P6.3 - Verify appendix diagram render outputs are present and referenced in closeout evidence.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ### Positive Test Cases
-- `make build` succeeds after all changes.
-- `make test` succeeds after all changes.
-- Targeted streaming selectors pass for parser, translators, middleware, stream_object, and no-retry contract.
-- Docs/spec/evidence lint commands pass without manual exceptions.
+- Final full build and test pass without regressions.
+- Targeted streaming selectors pass across parser, event model, adapters, middleware, stream object, and no-retry contract.
+- Spec coverage and evidence/doc guardrails pass with no exceptions.
 
 ### Negative Test Cases
-- Any regression in event ordering, translator assembly, or parser semantics causes deterministic unit-test failure.
-- Any mismatch between catalog and traceability IDs fails spec coverage and blocks sprint closeout.
-- Any missing artifact reference for completed checklist items fails guardrail.
+- Any regression in event ordering, provider translation, or parser behavior fails targeted selectors deterministically.
+- Any catalog/traceability drift fails spec coverage gate.
+- Any missing evidence artifact path for completed checklist items fails guardrail checks.
 
 ### Acceptance Criteria - Phase 6
-- [X] P6.A1 - All required final verification commands succeed and are logged under `.scratch/verification/SPRINT-005/final/`.
+- [ ] P6.A1 - Final verification artifacts are complete, reproducible, and stored under sprint-specific `.scratch` evidence paths.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P6.A2 - Sprint #005 closeout status reflects actual verified completion state.
+- [ ] P6.A2 - Sprint completion status reflects verified implementation reality with no unresolved checklist gaps.
 ```text
-Verification:
-- `make build` (exit code 0)
-- `make test` (exit code 0)
-- `tclsh tools/spec_coverage.tcl` (exit code 0)
-- `mmdc -i .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.mmd -o .scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg` (exit code 0)
-Evidence:
-- `.scratch/verification/SPRINT-005/final/make-build-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/make-test-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/spec-coverage-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/final/mmdc-arch-sync-20260228T052850Z.log`
-- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T052554Z/gap-ledger.tsv`
-- `.scratch/diagram-renders/sprint-005-comprehensive-plan/architecture.svg`
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
 ## Verification Command Catalog
+- `make build`
+- `make test`
 - `tclsh tests/all.tcl -match *attractor_core-sse*`
 - `tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
+- `tclsh tests/all.tcl -match *unified_llm-stream-events*`
 - `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
 - `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
 - `tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*`
@@ -817,10 +377,8 @@ Evidence:
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
 - `bash tools/evidence_lint.sh docs/sprints/SPRINT-005-comprehensive-implementation-plan.md`
 - `tclsh tools/evidence_guardrail.tcl docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md docs/sprints/SPRINT-005-comprehensive-implementation-plan.md`
-- `make build`
-- `make test`
 
-## Appendix - Required Mermaid Diagrams
+## Appendix - Mermaid Diagrams
 
 ### Core Domain Models
 ```mermaid
@@ -831,6 +389,7 @@ classDiagram
     +adapters
     +middleware
   }
+
   class StreamEvent {
     +type
     +text_id
@@ -842,6 +401,7 @@ classDiagram
     +error
     +raw
   }
+
   class UnifiedResponse {
     +response_id
     +provider
@@ -851,11 +411,13 @@ classDiagram
     +usage
     +finish_reason
   }
+
   class ProviderAdapter {
     +complete(request)
     +stream(request,on_event)
     +translate_chunk(chunk,state)
   }
+
   class SSEEvent {
     +event
     +data
@@ -863,10 +425,10 @@ classDiagram
     +retry
   }
 
-  UnifiedClient "1" --> "3" ProviderAdapter : owns
+  UnifiedClient "1" --> "*" ProviderAdapter : owns
   ProviderAdapter "1" --> "*" SSEEvent : parses
   ProviderAdapter "1" --> "*" StreamEvent : emits
-  UnifiedClient "1" --> "*" StreamEvent : middleware
+  UnifiedClient "1" --> "*" StreamEvent : processes
   UnifiedClient "1" --> "1" UnifiedResponse : returns
 ```
 
@@ -885,26 +447,31 @@ erDiagram
     string phase
     string status
   }
+
   REQUIREMENT {
     string requirement_id
     string spec_ref
     string family
   }
+
   TRACEABILITY_MAPPING {
     string requirement_id
     string impl_paths
     string verify_pattern
   }
+
   TEST_CASE {
     string test_name
     string test_file
     string verify_selector
   }
+
   STREAM_FIXTURE {
     string fixture_path
     string provider
     string scenario
   }
+
   VERIFICATION_ARTIFACT {
     string artifact_path
     string command
@@ -915,56 +482,56 @@ erDiagram
 ### Workflow
 ```mermaid
 flowchart TD
-  A[Phase 0 Baseline] --> B[Phase 1 SSE Parser and Fixtures]
-  B --> C[Phase 2 StreamEvent Contract]
-  C --> D[Phase 3 Provider Translators]
-  D --> E[Phase 4 Middleware and stream_object]
-  E --> F[Phase 5 Traceability ADR Evidence]
-  F --> G[Phase 6 Final Verification]
+  A[Phase 0: Baseline and Gap Lock] --> B[Phase 1: SSE Parser and Fixtures]
+  B --> C[Phase 2: StreamEvent Contract]
+  C --> D[Phase 3: Provider Translators]
+  D --> E[Phase 4: Middleware and stream_object]
+  E --> F[Phase 5: Traceability ADR Evidence]
+  F --> G[Phase 6: Final Verification]
   G --> H[Sprint Closeout]
 ```
 
 ### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  A[Provider SSE Bytes] --> B[attractor_core sse_parse]
-  B --> C[Adapter chunk translation state]
+  A[Provider SSE bytes] --> B[attractor_core sse_parse]
+  B --> C[adapter translator state]
   C --> D[Unified StreamEvent]
-  D --> E[Event middleware chain]
-  E --> F[Caller on_event callback]
-  D --> G[Final response assembler]
-  G --> H[Response middleware]
+  D --> E[event middleware pipeline]
+  E --> F[caller on_event callback]
+  D --> G[final response assembler]
+  G --> H[response middleware pipeline]
   H --> I[FINISH response payload]
-  I --> J[stream_object JSON parse and schema validation]
+  I --> J[stream_object JSON validation]
 ```
 
 ### Architecture Diagram
 ```mermaid
 flowchart TB
   subgraph CallerLayer
-    CALLER[Application Caller]
-    STREAMOBJ[stream_object Consumer]
+    CALLER[Application caller]
+    STREAMOBJ[stream_object consumer]
   end
 
   subgraph UnifiedLLMLayer
-    CLIENT[unified_llm Client]
-    MW[Middleware Pipeline]
-    EVENTMODEL[StreamEvent Contract]
+    CLIENT[unified_llm client]
+    MW[middleware pipeline]
+    EVENTMODEL[StreamEvent contract]
   end
 
   subgraph AdapterLayer
-    OA[OpenAI Adapter]
-    AN[Anthropic Adapter]
-    GE[Gemini Adapter]
+    OA[OpenAI adapter]
+    AN[Anthropic adapter]
+    GE[Gemini adapter]
   end
 
   subgraph CoreLayer
-    SSE[SSE Parser]
-    JSON[JSON Decode and Normalization]
+    SSE[SSE parser]
+    JSON[JSON decode and normalization]
   end
 
   subgraph TransportLayer
-    HTTP[HTTPS JSON Transport]
+    HTTP[HTTPS JSON transport]
   end
 
   CALLER --> CLIENT
