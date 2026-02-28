@@ -33,13 +33,27 @@ Out of scope:
 7. Phase 6 - Final verification and sprint closeout.
 
 ## Completion Sync (2026-02-28)
-- [ ] C0.1 - This plan is synchronized with the current source sprint requirements and repository structure before implementation execution starts.
+- [X] C0.1 - This plan is synchronized with the current source sprint requirements and repository structure before implementation execution starts.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] C0.2 - Completion state in this plan is updated immediately as each implementation item is verified.
+- [X] C0.2 - Completion state in this plan is updated immediately as each implementation item is verified.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Requirement Target Set
@@ -80,17 +94,38 @@ Out of scope:
 
 ## Phase 0 - Baseline and Gap Lock
 ### Deliverables
-- [ ] P0.1 - Capture baseline command outputs for build, full tests, targeted streaming selectors, and spec coverage validation.
+- [X] P0.1 - Capture baseline command outputs for build, full tests, targeted streaming selectors, and spec coverage validation.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P0.2 - Produce a requirement-to-file-and-test gap ledger for the sprint target requirement IDs.
+- [X] P0.2 - Produce a requirement-to-file-and-test gap ledger for the sprint target requirement IDs.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P0.3 - Create phase-scoped evidence directories and command index skeleton under `.scratch/verification/SPRINT-005/comprehensive-plan/`.
+- [X] P0.3 - Create phase-scoped evidence directories and command index skeleton under `.scratch/verification/SPRINT-005/comprehensive-plan/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -108,32 +143,74 @@ Out of scope:
 - Missing evidence directory paths fail evidence capture automation.
 
 ### Acceptance Criteria - Phase 0
-- [ ] P0.A1 - Every target requirement ID has an owning phase task, code touchpoint, and verification selector.
+- [X] P0.A1 - Every target requirement ID has an owning phase task, code touchpoint, and verification selector.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P0.A2 - Baseline evidence index is reproducible and stored under the sprint-specific `.scratch` path.
+- [X] P0.A2 - Baseline evidence index is reproducible and stored under the sprint-specific `.scratch` path.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Phase 1 - SSE Parser Contract and Fixture Corpus
 ### Deliverables
-- [ ] P1.1 - Harden `::attractor_core::sse_parse` for EOF flush, multiline data handling, comment behavior, and `id`/`retry` field preservation.
+- [X] P1.1 - Harden `::attractor_core::sse_parse` for EOF flush, multiline data handling, comment behavior, and `id`/`retry` field preservation.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P1.2 - Ensure `::attractor_core::parse_sse` is present as a stable alias/wrapper with behavior parity to `sse_parse`.
+- [X] P1.2 - Ensure `::attractor_core::parse_sse` is present as a stable alias/wrapper with behavior parity to `sse_parse`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P1.3 - Expand fixture corpus for OpenAI, Anthropic, and Gemini streaming payloads including text, tool-call, reasoning, terminal, and malformed scenarios.
+- [X] P1.3 - Expand fixture corpus for OpenAI, Anthropic, and Gemini streaming payloads including text, tool-call, reasoning, terminal, and malformed scenarios.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P1.4 - Add parser-focused regression tests for EOF-without-blank-line, comment-only lines, empty events, and multiline `data:` semantics.
+- [X] P1.4 - Add parser-focused regression tests for EOF-without-blank-line, comment-only lines, empty events, and multiline `data:` semantics.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -148,32 +225,74 @@ Out of scope:
 - Malformed frame bundles trigger typed failures in downstream translator tests.
 
 ### Acceptance Criteria - Phase 1
-- [ ] P1.A1 - SSE parser behavior is deterministic and spec-aligned for all required framing and field edge cases.
+- [X] P1.A1 - SSE parser behavior is deterministic and spec-aligned for all required framing and field edge cases.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P1.A2 - Fixture corpus is sufficient to drive provider translators without live network calls.
+- [X] P1.A2 - Fixture corpus is sufficient to drive provider translators without live network calls.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Phase 2 - Unified StreamEvent Contract and Fallback Behavior
 ### Deliverables
-- [ ] P2.1 - Implement or refine StreamEvent validation helpers for required fields, optional fields, and type-specific invariants.
+- [X] P2.1 - Implement or refine StreamEvent validation helpers for required fields, optional fields, and type-specific invariants.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P2.2 - Enforce event ordering invariants: `STREAM_START` first, `FINISH` terminal, and valid lifecycle for `TEXT_START`/`TEXT_DELTA`/`TEXT_END` by `text_id`.
+- [X] P2.2 - Enforce event ordering invariants: `STREAM_START` first, `FINISH` terminal, and valid lifecycle for `TEXT_START`/`TEXT_DELTA`/`TEXT_END` by `text_id`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P2.3 - Update fallback/synthetic streaming path so text and tool boundaries remain spec-faithful.
+- [X] P2.3 - Update fallback/synthetic streaming path so text and tool boundaries remain spec-faithful.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P2.4 - Ensure `PROVIDER_EVENT` and `ERROR` are emitted with normalized payloads for unmapped or malformed provider events.
+- [X] P2.4 - Ensure `PROVIDER_EVENT` and `ERROR` are emitted with normalized payloads for unmapped or malformed provider events.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -189,32 +308,74 @@ Out of scope:
 - Malformed event payload emits `ERROR` with structured error details.
 
 ### Acceptance Criteria - Phase 2
-- [ ] P2.A1 - StreamEvent validation and ordering invariants are runtime-enforced and unit-tested.
+- [X] P2.A1 - StreamEvent validation and ordering invariants are runtime-enforced and unit-tested.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P2.A2 - Synthetic stream fallback remains deterministic and contract-consistent for offline testing.
+- [X] P2.A2 - Synthetic stream fallback remains deterministic and contract-consistent for offline testing.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Phase 3 - Provider-Native Streaming Translators
 ### Deliverables
-- [ ] P3.1 - Implement/refine OpenAI Responses API SSE translation to unified stream events, including text deltas, tool-call argument deltas, and finish usage mapping.
+- [X] P3.1 - Implement/refine OpenAI Responses API SSE translation to unified stream events, including text deltas, tool-call argument deltas, and finish usage mapping.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P3.2 - Implement/refine Anthropic SSE translation for `content_block_start`/`delta`/`stop` mapping into text, tool-call, and reasoning event families.
+- [X] P3.2 - Implement/refine Anthropic SSE translation for `content_block_start`/`delta`/`stop` mapping into text, tool-call, and reasoning event families.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P3.3 - Implement/refine Gemini `:streamGenerateContent?alt=sse` translation for `parts[].text`, `parts[].functionCall`, and deterministic end-of-stream finish handling.
+- [X] P3.3 - Implement/refine Gemini `:streamGenerateContent?alt=sse` translation for `parts[].text`, `parts[].functionCall`, and deterministic end-of-stream finish handling.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P3.4 - Add translator tests proving tool-call argument assembly and decoded argument dictionaries at `TOOL_CALL_END`.
+- [X] P3.4 - Add translator tests proving tool-call argument assembly and decoded argument dictionaries at `TOOL_CALL_END`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -231,32 +392,74 @@ Out of scope:
 - Provider partial chunk stream ending abruptly emits typed error and does not fabricate successful completion.
 
 ### Acceptance Criteria - Phase 3
-- [ ] P3.A1 - All provider `stream()` paths use provider-native streaming translation rather than chunking `complete()` output.
+- [X] P3.A1 - All provider `stream()` paths use provider-native streaming translation rather than chunking `complete()` output.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P3.A2 - Provider translator suites are fixture-backed, deterministic, and cover success and failure paths.
+- [X] P3.A2 - Provider translator suites are fixture-backed, deterministic, and cover success and failure paths.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Phase 4 - Middleware, stream_object, and Failure Semantics
 ### Deliverables
-- [ ] P4.1 - Verify and enforce request/event/response middleware ordering semantics for streaming parity with blocking mode.
+- [X] P4.1 - Verify and enforce request/event/response middleware ordering semantics for streaming parity with blocking mode.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P4.2 - Harden `stream_object` to buffer only intended text stream content, tolerate non-text events, and validate JSON at terminal completion.
+- [X] P4.2 - Harden `stream_object` to buffer only intended text stream content, tolerate non-text events, and validate JSON at terminal completion.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P4.3 - Enforce no-retry-after-partial-data behavior with explicit transport invocation count assertions.
+- [X] P4.3 - Enforce no-retry-after-partial-data behavior with explicit transport invocation count assertions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P4.4 - Ensure streaming error paths emit typed `ERROR` events containing actionable diagnostics and partial-state context.
+- [X] P4.4 - Ensure streaming error paths emit typed `ERROR` events containing actionable diagnostics and partial-state context.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -272,32 +475,74 @@ Out of scope:
 - Event middleware exceptions are surfaced as typed stream errors and halt stream deterministically.
 
 ### Acceptance Criteria - Phase 4
-- [ ] P4.A1 - Streaming middleware ordering and transformation behavior is deterministic and test-proven.
+- [X] P4.A1 - Streaming middleware ordering and transformation behavior is deterministic and test-proven.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P4.A2 - `stream_object` is robust against expanded StreamEvent families and returns typed failures for invalid streams.
+- [X] P4.A2 - `stream_object` is robust against expanded StreamEvent families and returns typed failures for invalid streams.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Phase 5 - Traceability, ADR, and Evidence Hygiene
 ### Deliverables
-- [ ] P5.1 - Tighten streaming requirement traceability mappings to streaming-specific test selectors in `docs/spec-coverage/traceability.md`.
+- [X] P5.1 - Tighten streaming requirement traceability mappings to streaming-specific test selectors in `docs/spec-coverage/traceability.md`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P5.2 - Add or update ADR entry in `docs/ADR.md` covering StreamEvent contract expansion and provider-native translator strategy.
+- [X] P5.2 - Add or update ADR entry in `docs/ADR.md` covering StreamEvent contract expansion and provider-native translator strategy.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P5.3 - Ensure evidence/doc formatting for both Sprint #005 documents satisfies docs lint, evidence lint, and evidence guardrail.
+- [X] P5.3 - Ensure evidence/doc formatting for both Sprint #005 documents satisfies docs lint, evidence lint, and evidence guardrail.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P5.4 - Render all appendix Mermaid diagrams to `.scratch/diagram-renders/sprint-005-comprehensive-plan/` using `mmdc`.
+- [X] P5.4 - Render all appendix Mermaid diagrams to `.scratch/diagram-renders/sprint-005-comprehensive-plan/` using `mmdc`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -315,28 +560,63 @@ Out of scope:
 - Broken Mermaid syntax fails `mmdc` render and blocks phase completion.
 
 ### Acceptance Criteria - Phase 5
-- [ ] P5.A1 - Streaming traceability IDs map to precise streaming verification commands and maintain strict set equality.
+- [X] P5.A1 - Streaming traceability IDs map to precise streaming verification commands and maintain strict set equality.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P5.A2 - Evidence and documentation guardrails pass for all Sprint #005 docs changed during implementation.
+- [X] P5.A2 - Evidence and documentation guardrails pass for all Sprint #005 docs changed during implementation.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Phase 6 - Final Verification and Sprint Closeout
 ### Deliverables
-- [ ] P6.1 - Execute full post-implementation verification suite (`make build`, `make test`, targeted streaming selectors, and spec/evidence gates).
+- [X] P6.1 - Execute full post-implementation verification suite (`make build`, `make test`, targeted streaming selectors, and spec/evidence gates).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P6.2 - Update completion state and evidence references in both Sprint #005 documents.
+- [X] P6.2 - Update completion state and evidence references in both Sprint #005 documents.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P6.3 - Verify appendix diagram render outputs are present and referenced in closeout evidence.
+- [X] P6.3 - Verify appendix diagram render outputs are present and referenced in closeout evidence.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ### Positive Test Cases
@@ -350,13 +630,27 @@ Out of scope:
 - Any missing evidence artifact path for completed checklist items fails guardrail checks.
 
 ### Acceptance Criteria - Phase 6
-- [ ] P6.A1 - Final verification artifacts are complete, reproducible, and stored under sprint-specific `.scratch` evidence paths.
+- [X] P6.A1 - Final verification artifacts are complete, reproducible, and stored under sprint-specific `.scratch` evidence paths.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
-- [ ] P6.A2 - Sprint completion status reflects verified implementation reality with no unresolved checklist gaps.
+- [X] P6.A2 - Sprint completion status reflects verified implementation reality with no unresolved checklist gaps.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification:
+- `timeout 1800 ./.scratch/run_sprint005_comprehensive_plan_execution.sh` (exit code 0)
+- `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (exit code 0)
+
+Evidence:
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/command-status.tsv` (includes `timeout 180 make build` exit code 0, `timeout 180 make test` exit code 0, targeted streaming selectors exit code 0, and lint/guardrail commands exit code 0)
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/summary.md`
+- `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T053737Z/*.log`
 ```
 
 ## Verification Command Catalog
