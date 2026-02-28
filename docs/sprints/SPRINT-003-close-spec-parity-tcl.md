@@ -5,7 +5,7 @@ Legend: [ ] Incomplete, [X] Complete
 ## Executive Summary
 This sprint closes full Tcl parity against the three source specifications by implementing and verifying all requirement IDs across Unified LLM (ULLM), Coding Agent Loop (CAL), and Attractor (ATR). The plan is execution-ready, requirement-driven, and evidence-backed.
 
-## Sprint Objective
+## Objective
 Implement complete, deterministic, offline-verifiable parity for all Sprint #003 requirements with strict traceability from requirement ID to code, tests, and verification evidence.
 
 ## Requirement Baseline
@@ -27,7 +27,7 @@ Implement complete, deterministic, offline-verifiable parity for all Sprint #003
 - Feature flags, gating, compatibility shims, or legacy behavior preservation.
 - Non-parity UX enhancements and unrelated refactors.
 
-## Sprint TODO Status
+## Sprint Status
 - [X] Baseline/gap ledger created and reviewed.
 ```text
 Verification:

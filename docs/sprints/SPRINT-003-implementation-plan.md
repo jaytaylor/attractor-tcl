@@ -10,7 +10,7 @@ Implement full Tcl spec parity for:
 
 This plan is implementation-focused, verification-first, and designed so developers can execute Sprint #003 from this document alone.
 
-## Implementation Goal
+## Objective
 Deliver deterministic, offline-verifiable parity where every Sprint #003 requirement ID is mapped to:
 - implementation location
 - automated tests

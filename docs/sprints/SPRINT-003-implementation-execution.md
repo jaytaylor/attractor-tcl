@@ -10,7 +10,7 @@ Execute and re-verify full Tcl parity for:
 
 This document is the execution log for a fresh verification-backed implementation pass.
 
-## Goal
+## Objective
 Deliver a deterministic, offline-verifiable parity implementation where each Sprint #003 requirement maps to:
 - implementation location
 - automated unit/integration/e2e tests
