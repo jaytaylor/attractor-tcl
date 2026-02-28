@@ -2,564 +2,561 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #005 Comprehensive Implementation Plan - Unified LLM Streaming and Evidence Hygiene
 
+## Plan Status
+- [ ] Planning baseline reviewed against `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Sprint implementation tasks remain incomplete until code, tests, docs, and evidence are verified.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
 ## Objective
-Deliver spec-faithful provider-native Unified LLM streaming (OpenAI, Anthropic, Gemini) with strict StreamEvent ordering/typing, deterministic fixture-first verification, and auditable traceability/evidence hygiene.
+Implement spec-faithful provider-native streaming for Unified LLM (OpenAI, Anthropic, Gemini), enforce strict StreamEvent ordering/typing semantics, and restore evidence/traceability hygiene so streaming compliance is provable from deterministic tests.
 
-## Sprint Document Reviewed
-- `docs/sprints/SPRINT-005-unified-llm-streaming-evidence-hygiene.md`
+## High-Level Goals
+- [ ] Replace synthetic post-hoc chunking with provider-native streaming translation in all in-scope adapters.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Enforce unified StreamEvent lifecycle contracts (`STREAM_START`, start/delta/end segments, terminal `FINISH` or `ERROR`).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Expand deterministic fixture-first test coverage for positive and negative streaming behavior.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Tighten traceability mappings and evidence lint/guardrail conformance for sprint artifacts.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-## Implementation Scope
+## Scope
 In scope:
-- `lib/attractor_core/core.tcl` SSE parsing contract (`sse_parse` and `parse_sse` alias behavior)
-- `lib/unified_llm/main.tcl` StreamEvent lifecycle/invariants and streaming orchestration
-- `lib/unified_llm/adapters/openai.tcl` provider-native streaming translation
-- `lib/unified_llm/adapters/anthropic.tcl` provider-native streaming translation
-- `lib/unified_llm/adapters/gemini.tcl` provider-native streaming translation
-- `tests/unit/attractor_core.test` SSE parser correctness/regressions
-- `tests/unit/unified_llm_streaming.test` deterministic positive/negative streaming behavior coverage
-- `tests/fixtures/unified_llm_streaming/` provider and malformed streaming payload fixtures
-- `docs/spec-coverage/traceability.md` streaming requirement mapping specificity
-- `docs/ADR.md` streaming architecture decision record
-- Sprint evidence quality for this plan and the source Sprint #005 doc
+- `lib/attractor_core/core.tcl` SSE parser contract and alias compatibility.
+- `lib/unified_llm/main.tcl` streaming orchestration, event invariants, middleware/event flow, and fallback stream contract.
+- `lib/unified_llm/adapters/openai.tcl` provider-native OpenAI stream translation.
+- `lib/unified_llm/adapters/anthropic.tcl` provider-native Anthropic stream translation.
+- `lib/unified_llm/adapters/gemini.tcl` provider-native Gemini stream translation.
+- `tests/unit/attractor_core.test` and `tests/unit/unified_llm_streaming.test` streaming-focused deterministic tests.
+- `tests/fixtures/unified_llm_streaming/` fixture corpus for per-provider positive and malformed cases.
+- `docs/spec-coverage/traceability.md` streaming-specific requirement mappings.
+- `docs/ADR.md` architecture decisions for stream event model and translator policy.
 
 Out of scope:
-- New providers beyond OpenAI, Anthropic, Gemini
-- Feature flags or gating
-- Legacy/backward compatibility shims
-- Live-network-first verification (offline fixtures remain the default)
+- New providers beyond OpenAI, Anthropic, Gemini.
+- Feature flags or gated rollouts.
+- Backward compatibility shims for legacy streaming behavior.
 
-## Phase Order
-1. Phase 0 - Baseline audit and requirement gap ledger
-2. Phase 1 - SSE parser contract and fixture corpus hardening
-3. Phase 2 - Unified StreamEvent model and fallback stream contract
-4. Phase 3 - OpenAI provider-native streaming translator
-5. Phase 4 - Anthropic provider-native streaming translator
-6. Phase 5 - Gemini provider-native streaming translator
-7. Phase 6 - Middleware, `stream_object`, and no-retry-after-partial semantics
-8. Phase 7 - Traceability, ADR, and evidence hygiene closure
-9. Phase 8 - End-to-end closeout matrix and completion sync
+## Phase Sequence
+1. Phase 0 - Baseline audit and gap ledger.
+2. Phase 1 - SSE parser and fixture corpus hardening.
+3. Phase 2 - Unified StreamEvent contract and fallback stream path.
+4. Phase 3 - OpenAI streaming translator.
+5. Phase 4 - Anthropic streaming translator.
+6. Phase 5 - Gemini streaming translator.
+7. Phase 6 - Middleware, `stream_object`, and no-retry-after-partial behavior.
+8. Phase 7 - Traceability, ADR, and evidence hygiene closure.
+9. Phase 8 - End-to-end closeout matrix and completion sync.
 
-## Global Deliverables
-- [X] G1 - Provider-native stream translation is implemented for OpenAI, Anthropic, and Gemini without post-hoc chunking of `complete()` responses.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] G2 - StreamEvent lifecycle invariants are enforced (`STREAM_START`, start/delta/end segments, terminal `FINISH` or `ERROR`).
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] G3 - Deterministic offline fixture coverage includes explicit positive and negative streaming cases for all in-scope providers.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] G4 - Middleware behavior and `stream_object` parsing remain correct under expanded stream event surface.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] G5 - Streaming requirement traceability is specific, selector-valid, and passes strict spec coverage checks.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] G6 - Closeout gates pass: build, tests, streaming selectors, spec coverage, docs lint, evidence lint, evidence guardrail, and Mermaid render validation.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/ and .scratch/diagram-renders/sprint-005-comprehensive-plan/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-
-## Phase 0 - Baseline Audit and Requirement Gap Ledger
+## Phase 0 - Baseline Audit and Gap Ledger
 ### Deliverables
-- [X] P0.1 - Record baseline outputs for `make -j10 build`, `make -j10 test`, streaming selectors, `tclsh tools/spec_coverage.tcl`, `bash tools/docs_lint.sh`, and sprint-doc evidence checks.
+- [ ] Capture baseline command outputs for build/test/spec coverage/docs lint/evidence lint/evidence guardrail.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-0/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P0.2 - Produce a gap ledger mapping each streaming requirement ID to implementation files, unit tests, and planned phase ownership.
+- [ ] Produce requirement-to-implementation gap ledger for all streaming requirements and DoD IDs.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-0/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P0.3 - Confirm all planned selectors match real tests in `tests/unit/unified_llm_streaming.test` and `tests/unit/attractor_core.test`.
+- [ ] Validate that all planned streaming test selectors resolve to concrete tests before implementation work begins.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-0/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 0)
-- Build and test gates run cleanly on the baseline branch state.
-- Streaming selector commands resolve to concrete test names.
-- Gap ledger rows exist for all target IDs: `ULLM-REQ-MOST-PROVIDERS-USE-SERVER-SENT-EVENTS`, `ULLM-REQ-RESPONSES-API-STREAMING-FORMAT-PROVIDES-REASONING`, `ULLM-DOD-8.29`, `ULLM-DOD-8.30`, `ULLM-DOD-8.31`, `ULLM-DOD-8.70`.
+### Positive Test Cases
+- [ ] Baseline `make -j10 build` succeeds on current branch state.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Baseline `make -j10 test` succeeds on current branch state.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Streaming selectors map to existing tests (no ambiguous/empty matches).
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 0)
-- Missing selector detection: any selector that matches zero tests is flagged and removed from the plan.
-- Gap ledger rejection: missing requirement ID coverage blocks phase exit.
+### Negative Test Cases
+- [ ] Any selector with zero matches fails phase exit and is corrected before implementation continues.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Any requirement ID missing a mapped implementation/test row fails phase exit.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 0
-- Baseline command matrix and gap ledger exist under `.scratch/verification/SPRINT-005/phase-0/`.
-- No planned selector is ambiguous or unmatched.
+- [ ] Baseline matrix and gap ledger are recorded under `.scratch/verification/SPRINT-005/phase-0/`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Planned verification selectors are concrete, specific, and executable.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-## Phase 1 - SSE Parser Contract and Fixture Corpus Hardening
+## Phase 1 - SSE Parser and Fixture Corpus Hardening
 ### Deliverables
-- [X] P1.1 - Harden SSE parsing behavior for EOF flush, multiline `data:`, comment lines, `id`, and `retry` fields.
+- [ ] Harden SSE parser behavior for EOF flush, multiline data assembly, comments, `id`, and `retry` preservation.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-1/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.2 - Keep `::attractor_core::parse_sse` alias behavior in lockstep with `::attractor_core::sse_parse`.
+- [ ] Keep `::attractor_core::parse_sse` and `::attractor_core::sse_parse` behavior in lockstep.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-1/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.3 - Curate/extend fixture corpus under `tests/fixtures/unified_llm_streaming/` for provider and malformed frame coverage.
+- [ ] Build fixture corpus for OpenAI/Anthropic/Gemini text/tool/reasoning/terminal/malformed streaming frames.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-1/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P1.4 - Add/refresh parser and fixture-load tests in `tests/unit/attractor_core.test` and `tests/unit/unified_llm_streaming.test`.
+- [ ] Add parser and fixture-load regression tests covering edge conditions and malformed inputs.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-1/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 1)
-- `attractor_core-sse-parse-1.0` validates normal SSE event extraction.
-- `attractor_core-sse-parse-eof-flush-1.0` validates final event flush without trailing blank line.
-- `attractor_core-sse-parse-multiline-1.0` validates newline-joined multiline payload assembly.
-- `attractor_core-sse-parse-id-retry-1.0` validates `id` and `retry` preservation.
-- `attractor_core-sse-parse-alias-1.0` validates alias parity.
-- `unified_llm-stream-fixture-load-1.0` validates all planned fixture files are readable.
+### Positive Test Cases
+- [ ] Parser emits deterministic event boundaries for single and multiline `data:` frames.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] EOF without trailing blank line still flushes the final event.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Fixture loader validates all provider fixture files are readable and parseable.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 1)
-- Malformed SSE frame with incomplete `data:` JSON is captured for downstream translator error-path testing.
-- Comment-only frames do not emit false data events.
-- Unknown non-SSE fields are ignored without parser crash.
+### Negative Test Cases
+- [ ] Comment-only frames do not emit false events.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Unknown/unused SSE fields are ignored without parser crashes.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Malformed frame payloads are surfaced for downstream translator error tests.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 1
-- Parser contract behavior is deterministic and fully fixture-backed.
-- Fixture set covers text, tool call, reasoning, unknown-event, and malformed payload paths.
+- [ ] SSE parser behavior is deterministic and aligned with streaming translator needs.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Fixture corpus covers all in-scope providers and explicit malformed cases.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-## Phase 2 - Unified StreamEvent Model and Fallback Stream Contract
+## Phase 2 - Unified StreamEvent Contract and Fallback Stream Path
 ### Deliverables
-- [X] P2.1 - Enforce StreamEvent typing and ordering invariants in unified stream orchestration.
+- [ ] Enforce StreamEvent ordering and typing invariants in Unified LLM stream orchestration.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-2/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.2 - Ensure fallback `__stream_from_response` emits `TEXT_START`, `TEXT_DELTA`, and `TEXT_END` with stable `text_id` semantics.
+- [ ] Update fallback `__stream_from_response` to emit `TEXT_START`, `TEXT_DELTA`, and `TEXT_END` with stable `text_id`.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-2/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.3 - Implement/validate `PROVIDER_EVENT` and `ERROR` emissions for unknown events and malformed payloads.
+- [ ] Implement robust `PROVIDER_EVENT` and `ERROR` emissions for unknown events and malformed payloads.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-2/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P2.4 - Validate final response assembly from deltas and terminal event metadata (`finish_reason`, `usage`, `response`).
+- [ ] Validate final response assembly (`finish_reason`, `usage`, and `response`) from streamed deltas.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-2/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 2)
-- `unified_llm-stream-event-model-1.0` validates start/delta/end ordering contract.
-- `unified_llm-stream-events-concatenate-1.0` validates concatenation to final response text.
-- Event callback sequence starts with `STREAM_START` and ends with `FINISH` on successful stream completion.
+### Positive Test Cases
+- [ ] Event sequence starts with `STREAM_START`, emits ordered segment events, and ends with terminal `FINISH` on success.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Concatenated `TEXT_DELTA` content equals final response text.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Metadata (`finish_reason`, `usage`) is present and normalized on `FINISH`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 2)
-- `unified_llm-stream-error-invalid-json-1.0` validates malformed stream payload emits `ERROR` and suppresses `FINISH`.
-- Unknown provider events become `PROVIDER_EVENT` instead of fatal parser exceptions.
+### Negative Test Cases
+- [ ] Malformed JSON streaming payload emits terminal `ERROR` and suppresses `FINISH`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Unknown provider event types are surfaced as `PROVIDER_EVENT`, not hard failures.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 2
-- Stream contract is spec-faithful and deterministic independent of provider adapter.
-- Invalid payload paths fail with typed terminal `ERROR` behavior.
+- [ ] Unified stream contract is deterministic and provider-agnostic.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Invalid payload paths terminate with typed `ERROR` behavior.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Phase 3 - OpenAI Provider-Native Streaming Translator
 ### Deliverables
-- [X] P3.1 - Implement OpenAI streaming request path using native stream frames.
+- [ ] Implement OpenAI Responses API native streaming path (no `complete()` chunk fallback).
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-3/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.2 - Map `response.output_text.delta` to `TEXT_START`/`TEXT_DELTA` and map text completion to `TEXT_END`.
+- [ ] Map text delta frames to `TEXT_START`/`TEXT_DELTA` and text completion to `TEXT_END`.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-3/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.3 - Assemble `response.function_call_arguments.delta` into decoded tool-call arguments and emit `TOOL_CALL_START`/`TOOL_CALL_DELTA`/`TOOL_CALL_END`.
+- [ ] Assemble function-call argument deltas into decoded arguments and emit `TOOL_CALL_START`/`TOOL_CALL_DELTA`/`TOOL_CALL_END`.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-3/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P3.4 - Emit `FINISH` with mapped usage and finish metadata, including reasoning token fields when present.
+- [ ] Emit terminal `FINISH` with normalized usage and finish metadata (including reasoning tokens when available).
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-3/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] P3.5 - Surface unknown OpenAI events as `PROVIDER_EVENT` and malformed OpenAI chunks as `ERROR`.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-3/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 3)
-- `unified_llm-openai-stream-translation-text-1.0` validates text deltas and usage mapping.
-- `unified_llm-openai-stream-translation-tool-1.0` validates tool-call argument delta assembly and decode.
-- OpenAI final response text equals concatenated text deltas in event order.
+### Positive Test Cases
+- [ ] OpenAI text-only fixture emits correct ordered text events and final response text.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] OpenAI tool-call fixture emits complete decoded tool arguments at `TOOL_CALL_END`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] OpenAI finish fixture maps usage/metadata onto `FINISH` event consistently.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 3)
-- `unified_llm-openai-stream-translation-provider-event-1.0` validates unknown event passthrough.
-- Malformed OpenAI JSON fixture yields terminal `ERROR` with no post-error `FINISH`.
+### Negative Test Cases
+- [ ] Malformed OpenAI frame payload produces `ERROR` event with normalized error object.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Unknown OpenAI event types produce `PROVIDER_EVENT` passthrough.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 3
-- OpenAI stream path is provider-native and does not synthesize stream from completed responses.
-- Tool-call and finish metadata are complete and test-backed.
+- [ ] OpenAI translator is provider-native and spec-faithful for text, tool calls, and finish metadata.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] OpenAI streaming coverage includes deterministic positive and negative fixtures.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Phase 4 - Anthropic Provider-Native Streaming Translator
 ### Deliverables
-- [X] P4.1 - Map Anthropic `content_block_start/delta/stop` text blocks to `TEXT_START`/`TEXT_DELTA`/`TEXT_END`.
+- [ ] Implement Anthropic native SSE streaming translation path.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-4/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.2 - Map Anthropic `tool_use` blocks to `TOOL_CALL_START`/`TOOL_CALL_DELTA`/`TOOL_CALL_END`.
+- [ ] Map text blocks to `TEXT_START`/`TEXT_DELTA`/`TEXT_END`.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-4/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.3 - Map Anthropic thinking blocks to `REASONING_START`/`REASONING_DELTA`/`REASONING_END`.
+- [ ] Map tool-use blocks to `TOOL_CALL_START`/`TOOL_CALL_DELTA`/`TOOL_CALL_END` with decoded args.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-4/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.4 - Emit `FINISH` on `message_stop` with accumulated response and usage mapping.
+- [ ] Map thinking/reasoning blocks to `REASONING_START`/`REASONING_DELTA`/`REASONING_END`.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-4/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P4.5 - Surface unknown block types/events as `PROVIDER_EVENT` and preserve terminal error behavior on malformed chunks.
+- [ ] Emit terminal `FINISH` with normalized response and usage metadata.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-4/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 4)
-- `unified_llm-anthropic-stream-translation-1.0` validates text, tool-use, and thinking mapping.
-- Reasoning deltas aggregate in order and retain segment identity.
-- Anthropic final response text and usage align with emitted event stream.
+### Positive Test Cases
+- [ ] Anthropic text fixtures validate ordered text segment lifecycle.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Anthropic tool-use fixtures validate deterministic tool event lifecycle and decoded args.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Anthropic thinking fixtures validate deterministic reasoning event lifecycle.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 4)
-- `unified_llm-anthropic-stream-translation-provider-event-1.0` validates unknown block passthrough.
-- Malformed Anthropic chunk handling returns typed `ERROR` and halts stream.
+### Negative Test Cases
+- [ ] Malformed Anthropic frame payloads terminate with `ERROR`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Unsupported/unknown Anthropic event types surface as `PROVIDER_EVENT`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 4
-- Anthropic stream translation covers text/tool/reasoning contracts with deterministic fixtures.
-- Unknown block/event semantics are non-fatal and auditable.
+- [ ] Anthropic translator correctly emits text, tool, reasoning, and terminal events.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Anthropic stream tests are deterministic and fixture-backed.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Phase 5 - Gemini Provider-Native Streaming Translator
 ### Deliverables
-- [X] P5.1 - Implement Gemini stream request path using `:streamGenerateContent?alt=sse` semantics.
+- [ ] Implement Gemini `:streamGenerateContent?alt=sse` translation path.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-5/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.2 - Map `parts[].text` to `TEXT_START`/`TEXT_DELTA` and `parts[].functionCall` to tool-call events.
+- [ ] Map text parts to `TEXT_START`/`TEXT_DELTA`/`TEXT_END`.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-5/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.3 - Ensure `TEXT_END` and `FINISH` are emitted even when stream ends without explicit `finishReason`.
+- [ ] Map functionCall parts to tool-call lifecycle events with decoded args.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-5/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P5.4 - Map Gemini usage metadata fields into unified usage on `FINISH`.
+- [ ] Emit terminal `FINISH` with normalized response and usage metadata.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-5/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] P5.5 - Emit terminal `ERROR` on malformed Gemini chunk data and stop stream.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-5/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 5)
-- `unified_llm-gemini-stream-translation-1.0` validates text and function-call mapping.
-- `unified_llm-gemini-stream-translation-eof-finish-1.0` validates end-of-stream finish behavior.
-- Gemini text/tool events preserve emission order and final response integrity.
+### Positive Test Cases
+- [ ] Gemini text fixtures validate text event ordering and final response assembly.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Gemini function call fixtures validate complete tool event emission.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Gemini finish fixtures validate finish reason and usage normalization.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 5)
-- `unified_llm-gemini-stream-translation-invalid-json-1.0` validates malformed chunk error path.
-- Missing expected fields in chunk data do not crash translation and are surfaced predictably.
+### Negative Test Cases
+- [ ] Malformed Gemini frame payloads emit `ERROR` and terminate stream.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Unknown Gemini parts/events are preserved as `PROVIDER_EVENT`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 5
-- Gemini stream translation is provider-native, deterministic, and tolerant of EOF finish variants.
-- Malformed input path reliably emits terminal `ERROR`.
+- [ ] Gemini translator is provider-native and emits unified events for text/tool/finish flows.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Gemini streaming coverage is complete across positive and negative deterministic fixtures.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-## Phase 6 - Middleware, `stream_object`, and No-Retry-After-Partial Semantics
+## Phase 6 - Middleware, stream_object, and Partial-Data Error Semantics
 ### Deliverables
-- [X] P6.1 - Preserve streaming middleware order semantics (request transforms in registration order, event transforms in registration order, response transforms in reverse order).
+- [ ] Ensure request/event/response middleware ordering is identical between blocking and streaming flows.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-6/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P6.2 - Update `stream_object` buffering to tolerate expanded event surface while parsing only finalized text JSON payload.
+- [ ] Make `stream_object` robust to expanded event surface while preserving schema validation on terminal output.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-6/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P6.3 - Guarantee typed failure behavior for invalid streamed JSON and upstream stream terminal errors.
+- [ ] Enforce no-retry-after-partial-data rule: after any emitted content delta, transport failure yields `ERROR` and immediate stop.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-6/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] P6.4 - Enforce no-retry-after-partial-data contract once at least one delta has been emitted.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-6/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 6)
-- `unified_llm-stream-middleware-1.0` validates middleware transform order and final response integrity.
-- `unified_llm-stream-object-expanded-1.0` validates structured output buffering and JSON parse after expanded event flow.
-- Tool-call assembly remains deterministic across middleware transformations.
+### Positive Test Cases
+- [ ] Middleware transforms stream events in registration order without corrupting final response assembly.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `stream_object` consumes text deltas correctly and validates final JSON against schema.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 6)
-- `unified_llm-stream-object-invalid-json-2.0` validates typed parse failure.
-- `unified_llm-stream-object-stream-error-1.0` validates typed stream error propagation.
-- `unified_llm-stream-no-retry-after-partial-1.0` validates no transport retry after partial output and error.
+### Negative Test Cases
+- [ ] `stream_object` rejects invalid final JSON and reports typed error.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Post-partial transport failure does not invoke retry path and terminates with `ERROR`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 6
-- Middleware and `stream_object` behavior remain correct under expanded stream semantics.
-- Partial-stream failure path is deterministic and non-retrying.
+- [ ] Streaming middleware and structured-output behavior remain deterministic and spec-aligned.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Partial-data failure semantics are proven by targeted negative tests.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-## Phase 7 - Traceability, ADR, and Evidence Hygiene Closure
+## Phase 7 - Traceability, ADR, and Evidence Hygiene
 ### Deliverables
-- [X] P7.1 - Update streaming requirement mappings in `docs/spec-coverage/traceability.md` to streaming-specific selectors.
+- [ ] Update `docs/spec-coverage/traceability.md` to map streaming IDs to specific streaming tests.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-7/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P7.2 - Verify strict catalog/traceability equality and verify-pattern sanity with `tclsh tools/spec_coverage.tcl`.
+- [ ] Record architecture decisions and consequences in `docs/ADR.md` for stream event model and translator policy.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-7/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P7.3 - Add or update streaming ADR entry in `docs/ADR.md` with context, decision, and consequences.
+- [ ] Bring sprint docs into evidence hygiene compliance and pass docs/evidence guardrails.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-7/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] P7.4 - Bring sprint docs into lint/guardrail compliance: `bash tools/docs_lint.sh`, `bash tools/evidence_lint.sh`, and `tclsh tools/evidence_guardrail.tcl` for changed sprint docs.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/phase-7/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 7)
-- `tclsh tools/spec_coverage.tcl` passes with streaming IDs mapped to concrete streaming tests.
-- Documentation lints pass for both Sprint #005 source and comprehensive plan docs.
-- Evidence guardrail reports no missing referenced `.scratch` artifacts.
+### Positive Test Cases
+- [ ] `tclsh tools/spec_coverage.tcl` passes with explicit streaming selector mappings.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `bash tools/docs_lint.sh` passes for sprint and spec docs touched by this work.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] `bash tools/evidence_lint.sh` and `tclsh tools/evidence_guardrail.tcl` pass for sprint docs.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 7)
-- Any broad or unmatched verify selector fails spec coverage sanity and blocks completion.
-- Any checked sprint item missing command, exit code, or evidence reference fails evidence lint.
+### Negative Test Cases
+- [ ] Broad catch-all streaming traceability selectors are rejected and replaced with specific selectors.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Missing verification command/exit code/evidence artifact references block completion of checklist items.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 7
-- Traceability, ADR, and evidence hygiene are auditable and green.
-- Sprint docs are internally consistent and verification-backed.
+- [ ] Traceability, ADR, and sprint evidence hygiene are complete and auditable.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Docs and guardrail checks pass with no exemptions.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ## Phase 8 - End-to-End Closeout Matrix and Completion Sync
 ### Deliverables
-- [X] P8.1 - Execute full closeout command matrix and persist `command-status.tsv` plus `summary.md` under `.scratch/verification/SPRINT-005/comprehensive-plan/`.
+- [ ] Run full verification matrix and capture command-status ledger with explicit exit codes.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/comprehensive-plan/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P8.2 - Re-run required core gates after final doc sync (`make -j10 build`, `make -j10 test`, streaming selectors, spec coverage, docs/evidence guardrails).
+- [ ] Synchronize completion status in this plan only after phase evidence is validated.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/final/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
-- [X] P8.3 - Render all Appendix Mermaid diagrams with `mmdc` into `.scratch/diagram-renders/sprint-005-comprehensive-plan/` and record render logs.
+- [ ] Produce closeout summary linking each completed deliverable to concrete evidence artifacts.
 ```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/diagram-renders/sprint-005-comprehensive-plan/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
-```
-- [X] P8.4 - Synchronize completion status in both Sprint #005 docs only after evidence is present and guardrails pass.
-```text
-Verification executed on 2026-02-28 using the Sprint #005 comprehensive execution matrix.
-- Verification command(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh`; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv`; `timeout 180 make build`; `timeout 180 make test`
-- Exit code(s): `timeout 1800 ./.scratch/run_sprint005_execute_and_sync.sh` exit code 0; `cat .scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` exit code 0; `timeout 180 make build` exit code 0; `timeout 180 make test` exit code 0.
-- Evidence artifact(s) under .scratch/verification/SPRINT-005/final/:
-- Notes: The command matrix in `.scratch/verification/SPRINT-005/comprehensive-plan/execution-20260228T064211Z/command-status.tsv` shows all tracked verification commands completed successfully.
+{placeholder for verification justification/reasoning and evidence log}
 ```
 
-### Positive Test Cases (Phase 8)
-- Full matrix run reports exit code 0 for every command in `command-status.tsv`.
-- Final required selectors all pass:
-  - `*attractor_core-sse*`
-  - `*unified_llm-openai-stream-translation*`
-  - `*unified_llm-anthropic-stream-translation*`
-  - `*unified_llm-gemini-stream-translation*`
-  - `*unified_llm-stream-no-retry-after-partial*`
-- Sprint docs remain lint-clean after final completion sync.
+### Positive Test Cases
+- [ ] `make -j10 build`, `make -j10 test`, provider streaming selectors, spec coverage, docs lint, evidence lint, and evidence guardrail all succeed.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Mermaid appendix diagrams render successfully with `mmdc` and artifacts are stored under `.scratch/diagram-renders/sprint-005-comprehensive-plan/`.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-### Negative Test Cases (Phase 8)
-- Any failed command in matrix blocks status sync to complete.
-- Missing evidence artifacts for checked items blocks completion status updates.
+### Negative Test Cases
+- [ ] Any failing gate blocks sprint completion and leaves corresponding checklist items as incomplete.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Missing evidence artifacts block conversion of checklist items to complete.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
 ### Acceptance Criteria - Phase 8
-- All closeout gates pass with fresh artifacts.
-- Completion state in sprint docs exactly matches verification evidence.
+- [ ] End-to-end matrix passes with reproducible logs and explicit command status tracking.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Plan completion status is synchronized to verified implementation reality.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
 
-## Command Matrix (Planned Verification Set)
+## Execution Task Matrix
+- [ ] Implement Phase 1 parser + fixtures before any adapter translation changes.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Implement Phase 2 StreamEvent invariants before provider-specific translators.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Implement OpenAI, Anthropic, and Gemini translators in separate incremental units with targeted tests.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Complete middleware/stream_object/no-retry semantics before traceability closure.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+- [ ] Finish traceability + ADR + evidence hygiene updates before closeout matrix execution.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+## Verification Command Template (To Fill During Execution)
+- [ ] Capture each command exactly as executed, with exit code and artifact references.
+```text
+{placeholder for verification justification/reasoning and evidence log}
+```
+
+Planned verification command set:
 - `make -j10 build`
 - `make -j10 test`
 - `tclsh tests/all.tcl -match *attractor_core-sse*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-fixture-load*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-event-model*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-events-concatenate*`
 - `tclsh tests/all.tcl -match *unified_llm-openai-stream-translation*`
 - `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-translation*`
 - `tclsh tests/all.tcl -match *unified_llm-gemini-stream-translation*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-tool-call-assembly*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-middleware*`
-- `tclsh tests/all.tcl -match *unified_llm-stream-object-*`
 - `tclsh tests/all.tcl -match *unified_llm-stream-no-retry-after-partial*`
 - `tclsh tools/spec_coverage.tcl`
 - `bash tools/docs_lint.sh`
@@ -572,175 +569,156 @@ Verification executed on 2026-02-28 using the Sprint #005 comprehensive executio
 ### Core Domain Models
 ```mermaid
 classDiagram
+  class StreamRequest {
+    +provider
+    +model
+    +messages
+    +tools
+    +stream=true
+    +on_event callback
+  }
+
   class StreamEvent {
     +type
     +text_id
     +delta
     +reasoning_delta
     +tool_call
-    +finish_reason
     +usage
+    +finish_reason
     +response
     +error
     +raw
   }
+
   class UnifiedResponse {
     +id
+    +content[]
+    +tool_calls[]
+    +usage
+    +finish_reason
     +provider
     +model
-    +output_text
-    +tool_calls
-    +usage
-    +stop_reason
   }
-  class ProviderEvent {
-    +provider
-    +event_name
-    +payload
-  }
-  class AdapterState {
-    +buffers
-    +active_text_ids
-    +active_tool_calls
-    +active_reasoning_ids
-  }
-  class EvidenceRecord {
-    +command
-    +exit_code
-    +artifact_paths
-    +timestamp
-  }
-  StreamEvent --> UnifiedResponse : FINISH includes
-  StreamEvent --> ProviderEvent : PROVIDER_EVENT wraps
-  AdapterState --> StreamEvent : emits
-  EvidenceRecord --> StreamEvent : verifies behavior
+
+  StreamRequest --> StreamEvent : emits via callback
+  StreamEvent --> UnifiedResponse : assembles final response
 ```
 
 ### E-R Diagram
 ```mermaid
 erDiagram
-  REQUIREMENT ||--o{ TRACEABILITY_MAP : maps_to
-  TRACEABILITY_MAP ||--o{ TEST_SELECTOR : verifies_with
-  TEST_SELECTOR ||--o{ TEST_CASE : resolves_to
-  TEST_CASE ||--o{ EVIDENCE_ARTIFACT : produces
-  IMPLEMENTATION_FILE ||--o{ TRACEABILITY_MAP : implements
-  SPRINT_ITEM ||--o{ EVIDENCE_ARTIFACT : requires
+  STREAM_SESSION ||--o{ STREAM_EVENT : emits
+  STREAM_SESSION ||--|| STREAM_REQUEST : uses
+  STREAM_SESSION ||--|| STREAM_RESPONSE : finalizes
+  STREAM_RESPONSE ||--o{ TOOL_CALL : contains
 
-  REQUIREMENT {
-    string id
-    string source_spec
-    string statement
+  STREAM_SESSION {
+    string session_id
+    string provider
+    string model
+    datetime started_at
+    datetime completed_at
+    string terminal_state
   }
-  TRACEABILITY_MAP {
-    string requirement_id
-    string impl_paths
-    string verify_command
+
+  STREAM_REQUEST {
+    string request_id
+    string provider
+    string model
+    string stream_mode
   }
-  TEST_SELECTOR {
-    string pattern
-    string command
+
+  STREAM_EVENT {
+    int sequence_no
+    string event_type
+    string text_id
+    string payload_ref
   }
-  TEST_CASE {
-    string name
-    string file
-    string mode
+
+  STREAM_RESPONSE {
+    string response_id
+    string finish_reason
+    string usage_ref
   }
-  EVIDENCE_ARTIFACT {
-    string path
-    int exit_code
-    string generated_at
-  }
-  IMPLEMENTATION_FILE {
-    string path
-    string module
-  }
-  SPRINT_ITEM {
-    string id
-    string status
-    string phase
+
+  TOOL_CALL {
+    string tool_call_id
+    string tool_name
+    string arguments_json
   }
 ```
 
 ### Workflow
 ```mermaid
 flowchart TD
-  A[Phase 0 Baseline] --> B[Phase 1 SSE Parser and Fixtures]
+  A[Phase 0 Baseline Audit] --> B[Phase 1 SSE Parser + Fixtures]
   B --> C[Phase 2 StreamEvent Contract]
   C --> D[Phase 3 OpenAI Translator]
   D --> E[Phase 4 Anthropic Translator]
   E --> F[Phase 5 Gemini Translator]
   F --> G[Phase 6 Middleware and stream_object]
-  G --> H[Phase 7 Traceability and ADR]
-  H --> I[Phase 8 Closeout Matrix and Sync]
-  I --> J[Sprint Completion]
+  G --> H[Phase 7 Traceability + ADR + Evidence]
+  H --> I[Phase 8 Closeout Matrix]
+  I --> J[Sprint Completion Sync]
 ```
 
-### Data-Flow
+### Data-Flow Diagram
 ```mermaid
 flowchart LR
-  A[Caller stream request] --> B[unified_llm::stream]
-  B --> C[Request middleware]
-  C --> D[Provider adapter stream]
-  D --> E[HTTPS transport stream payload]
-  E --> F[attractor_core::sse_parse]
-  F --> G[Provider translator]
-  G --> H[Unified StreamEvent]
-  H --> I[Event middleware]
-  I --> J[Caller callback]
-  G --> K[Final response assembler]
-  K --> L[Response middleware]
-  L --> M[FINISH response]
+  A[Caller] --> B[unified_llm::stream]
+  B --> C[Provider Adapter]
+  C --> D[HTTPS Transport]
+  D --> E[SSE Parser]
+  E --> F[Provider Translator]
+  F --> G[Unified StreamEvent]
+  G --> H[Event Middleware]
+  H --> A
+  F --> I[Final Response Assembler]
+  I --> J[Response Middleware]
+  J --> A
 ```
 
-### Architecture
+### Architecture Diagram
 ```mermaid
 flowchart TB
   subgraph ClientLayer
-    A1[Application Caller]
-    A2[Unified LLM Public API]
+    C1[Application Caller]
+    C2[Event Callback Consumer]
   end
 
-  subgraph UnifiedLayer
-    B1[main.tcl stream orchestration]
-    B2[StreamEvent validation]
-    B3[stream_object JSON assembly]
+  subgraph UnifiedLLMLayer
+    U1[unified_llm main]
+    U2[StreamEvent invariant engine]
+    U3[stream_object handler]
+    U4[Middleware pipeline]
   end
 
-  subgraph ProviderAdapters
-    C1[openai.tcl stream translator]
-    C2[anthropic.tcl stream translator]
-    C3[gemini.tcl stream translator]
+  subgraph AdapterLayer
+    A1[openai adapter]
+    A2[anthropic adapter]
+    A3[gemini adapter]
   end
 
-  subgraph CoreAndTransport
-    D1[attractor_core SSE parser]
-    D2[https_json transport]
+  subgraph CoreLayer
+    K1[attractor_core sse_parse]
   end
 
-  subgraph Verification
-    E1[unit tests]
-    E2[traceability checks]
-    E3[evidence and docs lint]
-    E4[Mermaid renders]
+  subgraph TransportLayer
+    T1[https_json transport]
   end
 
-  A1 --> A2
-  A2 --> B1
-  B1 --> B2
-  B1 --> B3
-  B1 --> C1
-  B1 --> C2
-  B1 --> C3
-  C1 --> D2
-  C2 --> D2
-  C3 --> D2
-  D2 --> D1
-  B2 --> E1
-  B3 --> E1
-  C1 --> E1
-  C2 --> E1
-  C3 --> E1
-  E1 --> E2
-  E2 --> E3
-  E3 --> E4
+  C1 --> U1
+  U1 --> U2
+  U1 --> U3
+  U1 --> U4
+  U1 --> A1
+  U1 --> A2
+  U1 --> A3
+  A1 --> T1
+  A2 --> T1
+  A3 --> T1
+  T1 --> K1
+  U4 --> C2
+  U2 --> C2
 ```
