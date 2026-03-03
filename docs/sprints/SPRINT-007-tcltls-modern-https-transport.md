@@ -412,6 +412,22 @@ Track 0 -> Track A -> Track B -> Track C -> Final Closeout.
     - `.scratch/verification/SPRINT-007/resync/docs-lint.log`
     - `.scratch/verification/SPRINT-007/resync/evidence-lint.log`
 
+- [X] **R5 - Harden TLS version introspection failure path and rerun final verification**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/transport-tests.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport*` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-build.log timeout 180 make build` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-test.log timeout 180 make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-test-e2e.log timeout 180 make test-e2e` (exit code 2, expected in this runtime: Tcl 8.5.9 + tls 1.6.1 unsupported by policy)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync-2/transport-tests.log`
+    - `.scratch/verification/SPRINT-007/resync-2/make-build.log`
+    - `.scratch/verification/SPRINT-007/resync-2/make-test.log`
+    - `.scratch/verification/SPRINT-007/resync-2/make-test-e2e.log`
+    - `.scratch/verification/SPRINT-007/resync-2/docs-lint.log`
+    - `.scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log`
+
 ## Acceptance Matrix
 
 | Case | Expected Result |

@@ -11,25 +11,24 @@ Goal: deliver Sprint #007 with minimal behavior drift, explicit TLS compatibilit
 ## Objective
 Implement modern TLS runtime guardrails for HTTPS transport and live e2e execution so unsupported Tcl TLS stacks fail fast with deterministic diagnostics while offline tests remain stable.
 
-## Current-State Review Summary
-Based on repository review on 2026-03-03:
+## Implementation-State Snapshot
+Verified on 2026-03-03 after final implementation pass:
 - `lib/unified_llm/transports/https_json.tcl`
-  - requires `tls` only at HTTPS registration time
-  - does not enforce a minimum `tls` version
-  - uses `https_registered` boolean, but no explicit registration-state/error message contract beyond generic failures
+  - enforces `tls >= 1.7.22` via explicit runtime preflight
+  - maps missing/unsupported/unreadable TLS runtime to deterministic `UNIFIED_LLM TRANSPORT NETWORK <provider>`
+  - uses explicit HTTPS registration state with cached initialization failures
 - `tests/integration/unified_llm_https_transport_integration.test`
-  - covers happy path, HTTP error contract, and generic network error
-  - does not cover missing/unsupported `tls` preflight semantics
+  - covers happy path, HTTP contract, network contract, missing/unsupported TLS, registration idempotency/failure caching
+  - includes TLS version introspection failure path assertions with remediation hints
 - `tests/e2e_live.tcl` + `tests/support/e2e_live_support.tcl`
-  - has provider/key preflight and artifact generation
-  - does not emit Tcl/TLS runtime diagnostics or preflight artifact focused on TLS readiness
+  - writes `runtime-preflight.json` for every live run
+  - writes `preflight-failure.json` and exits with `E2E_LIVE TRANSPORT TLS_UNSUPPORTED` when TLS is unsupported
 - `Makefile`
-  - hardcodes `tclsh` (no `TCLSH ?= tclsh` override support)
+  - supports interpreter override via `TCLSH ?= tclsh` and uses `$(TCLSH)` across targets
 - `.github/workflows/ci.yml`
-  - installs `tcl` and `tcllib` but not explicit TLS package
-  - no explicit runtime probe for Tcl/TLS versions
+  - installs `tcl-tls` and probes runtime with `tclsh tools/tls_runtime_probe.tcl`
 - `docs/howto/live-e2e.md`
-  - states `tls` required but no minimum/recommended version, no runtime preflight snippet, no `TCLSH=... make test-e2e` example
+  - documents minimum/recommended TLS runtime plus preflight and `TCLSH=... make test-e2e` usage
 
 ## Implementation Principles
 - Preserve transport errorcode contracts:
@@ -163,6 +162,25 @@ Based on repository review on 2026-03-03:
   - Commands:
     - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/docs-lint.log bash tools/docs_lint.sh`
     - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md`
+
+## Resync - Final Hardening Pass (2026-03-03)
+- [X] **R5 - Close TLS version-introspection failure gap and rerun final gates**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/transport-tests.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport*` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-build.log timeout 180 make build` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-test.log timeout 180 make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-test-e2e.log timeout 180 make test-e2e` (exit code 2, expected in this runtime: Tcl 8.5.9 + tls 1.6.1 is unsupported)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/evidence-lint-comprehensive.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-comprehensive-implementation-plan.md` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync-2/transport-tests.log`
+    - `.scratch/verification/SPRINT-007/resync-2/make-build.log`
+    - `.scratch/verification/SPRINT-007/resync-2/make-test.log`
+    - `.scratch/verification/SPRINT-007/resync-2/make-test-e2e.log`
+    - `.scratch/verification/SPRINT-007/resync-2/docs-lint.log`
+    - `.scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log`
+    - `.scratch/verification/SPRINT-007/resync-2/evidence-lint-comprehensive.log`
 
 ## Acceptance Matrix
 | Scenario | Expected Outcome |
