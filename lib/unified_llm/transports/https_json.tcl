@@ -123,7 +123,9 @@ proc ::unified_llm::transports::https_json::__tls_provide_impl_default {} {
 }
 
 proc ::unified_llm::transports::https_json::__tls_register_impl_default {} {
-    return [::http::register https 443 ::tls::socket]
+    # Use TLS SNI to satisfy modern provider endpoints that reject handshakes
+    # without server name indication.
+    return [::http::register https 443 [list ::tls::socket -autoservername 1]]
 }
 
 proc ::unified_llm::transports::https_json::__invoke_impl {scriptList} {
