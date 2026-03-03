@@ -9,17 +9,53 @@ The current `SPRINT-006` document is detailed but is structured as a completion 
 Close the NLSpec adherence gaps for Attractor and Unified LLM by implementing spec-faithful behavior, adding deterministic regression tests, and producing auditable evidence and architecture decisions.
 
 ## Current Completion Status
-- [ ] Sprint implementation not started for this planning cycle.
+- [X] Sprint implementation completed for this planning cycle.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] Baseline verification artifacts not yet captured under `.scratch/verification/SPRINT-006/`.
+- [X] Baseline and final verification artifacts captured under `.scratch/verification/SPRINT-006/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] All phase acceptance criteria pending.
+- [X] All phase acceptance criteria satisfied.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ## Scope
@@ -53,17 +89,53 @@ Close the NLSpec adherence gaps for Attractor and Unified LLM by implementing sp
 - `ULLM-REQ-THINKING-BLOCK-ROUND-TRIPPING-THINKING-AND`
 
 ## Evidence Contract
-- [ ] Every completed checklist item must include command(s), exit code(s), and artifact paths directly under the item.
+- [X] Every completed checklist item must include command(s), exit code(s), and artifact paths directly under the item.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] Commands are captured using `tools/verify_cmd.sh` and stored under `.scratch/verification/SPRINT-006/<phase>/`.
+- [X] Commands are captured using `tools/verify_cmd.sh` and stored under `.scratch/verification/SPRINT-006/<phase>/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] Final closeout includes build, test, spec coverage, docs lint, evidence lint, and mermaid render verification.
+- [X] Final closeout includes build, test, spec coverage, docs lint, evidence lint, and mermaid render verification.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ## Execution Order
@@ -71,17 +143,53 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Phase 0 - Baseline, Gap Confirmation, and Harness Preparation
 ### Deliverables
-- [ ] P0.1 Capture baseline build/test/spec-coverage results before code changes.
+- [X] P0.1 Capture baseline build/test/spec-coverage results before code changes.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P0.2 Confirm current gap behavior with focused failing or coverage tests for all scoped requirements.
+- [X] P0.2 Confirm current gap behavior with focused failing or coverage tests for all scoped requirements.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P0.3 Initialize sprint evidence directories and command-status ledgers.
+- [X] P0.3 Initialize sprint evidence directories and command-status ledgers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Implementation Tasks
@@ -120,21 +228,69 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Phase 1 - Attractor Shape-to-Handler Resolution Compliance
 ### Deliverables
-- [ ] P1.1 Validate and align canonical `shape -> handler` mapping in `::attractor::__handler_from_node`.
+- [X] P1.1 Validate and align canonical `shape -> handler` mapping in `::attractor::__handler_from_node`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P1.2 Enforce precedence rule: explicit `type` overrides shape mapping.
+- [X] P1.2 Enforce precedence rule: explicit `type` overrides shape mapping.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P1.3 Ensure canonical handler naming (`parallel.fan_in`) is used across dispatch and tests.
+- [X] P1.3 Ensure canonical handler naming (`parallel.fan_in`) is used across dispatch and tests.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P1.4 Add exhaustive positive and negative unit coverage for mapping and fallback behavior.
+- [X] P1.4 Add exhaustive positive and negative unit coverage for mapping and fallback behavior.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Implementation Tasks
@@ -170,21 +326,69 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Phase 2 - Attractor `stack.manager_loop` Supervisor Semantics
 ### Deliverables
-- [ ] P2.1 Implement/verify observe-steer-wait lifecycle semantics for `stack.manager_loop`.
+- [X] P2.1 Implement/verify observe-steer-wait lifecycle semantics for `stack.manager_loop`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P2.2 Support and validate controls: `stack.child_dotfile`, `stack.child_autostart`, `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, `manager.actions`.
+- [X] P2.2 Support and validate controls: `stack.child_dotfile`, `stack.child_autostart`, `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, `manager.actions`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P2.3 Persist machine-parseable telemetry artifact (`manager_loop.json`) per execution.
+- [X] P2.3 Persist machine-parseable telemetry artifact (`manager_loop.json`) per execution.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P2.4 Add integration tests for success, child failure, invalid config, and max-cycle termination.
+- [X] P2.4 Add integration tests for success, child failure, invalid config, and max-cycle termination.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Implementation Tasks
@@ -216,21 +420,69 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Phase 3 - Unified LLM `from_env` Multi-Provider Compliance
 ### Deliverables
-- [ ] P3.1 Register all configured providers discovered from environment credentials.
+- [X] P3.1 Register all configured providers discovered from environment credentials.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P3.2 Apply deterministic default-provider selection with validated `UNIFIED_LLM_PROVIDER` override.
+- [X] P3.2 Apply deterministic default-provider selection with validated `UNIFIED_LLM_PROVIDER` override.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P3.3 Ensure client config state contains stable `default_provider` and provider entries (`api_key`, `base_url`, `transport`, `provider_options`).
+- [X] P3.3 Ensure client config state contains stable `default_provider` and provider entries (`api_key`, `base_url`, `transport`, `provider_options`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P3.4 Verify adapter runtime requests use provider-specific credentials and emit expected auth headers.
+- [X] P3.4 Verify adapter runtime requests use provider-specific credentials and emit expected auth headers.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Implementation Tasks
@@ -259,25 +511,85 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Phase 4 - Anthropic Role Translation and Thinking Fidelity
 ### Deliverables
-- [ ] P4.1 Ensure role translation supports `system`, `developer`, `user`, `assistant`, and `tool`.
+- [X] P4.1 Ensure role translation supports `system`, `developer`, `user`, `assistant`, and `tool`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P4.2 Preserve deterministic `system` payload ordering when merging `system` and `developer` messages.
+- [X] P4.2 Preserve deterministic `system` payload ordering when merging `system` and `developer` messages.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P4.3 Enforce strict `tool_result` translation requirements (`tool_use_id`, content, `is_error`).
+- [X] P4.3 Enforce strict `tool_result` translation requirements (`tool_use_id`, content, `is_error`).
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P4.4 Preserve `thinking` and `redacted_thinking` blocks with signature fidelity across complete and stream paths.
+- [X] P4.4 Preserve `thinking` and `redacted_thinking` blocks with signature fidelity across complete and stream paths.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P4.5 Add unit and streaming regression tests for malformed role/tool/thinking payloads.
+- [X] P4.5 Add unit and streaming regression tests for malformed role/tool/thinking payloads.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Implementation Tasks
@@ -308,21 +620,69 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Phase 5 - Traceability, ADR, and Documentation Closeout
 ### Deliverables
-- [ ] P5.1 Update `docs/spec-coverage/traceability.md` for all changed requirement-to-test mappings.
+- [X] P5.1 Update `docs/spec-coverage/traceability.md` for all changed requirement-to-test mappings.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P5.2 Add ADR entries in `docs/ADR.md` for major implementation decisions and consequences.
+- [X] P5.2 Add ADR entries in `docs/ADR.md` for major implementation decisions and consequences.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P5.3 Run docs validation and evidence lint checks for this sprint document.
+- [X] P5.3 Run docs validation and evidence lint checks for this sprint document.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] P5.4 Synchronize completion status in this sprint document only after verification evidence exists.
+- [X] P5.4 Synchronize completion status in this sprint document only after verification evidence exists.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Implementation Tasks
@@ -351,21 +711,69 @@ Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5 -> Final Closeout
 
 ## Final Closeout Verification Matrix
 ### Deliverables
-- [ ] F1 Build and full tests pass.
+- [X] F1 Build and full tests pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] F2 Requirement coverage checks pass.
+- [X] F2 Requirement coverage checks pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] F3 Sprint and evidence lint checks pass.
+- [X] F3 Sprint and evidence lint checks pass.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
-- [ ] F4 Mermaid appendix diagrams render successfully to `.scratch/diagram-renders/sprint-006/`.
+- [X] F4 Mermaid appendix diagrams render successfully to `.scratch/diagram-renders/sprint-006/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv` (exit code 0)
+- `cat .scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T183339Z/logs/`
+- `.scratch/diagram-renders/sprint-006/core-domain-model.svg`
+- `.scratch/diagram-renders/sprint-006/er-diagram.svg`
+- `.scratch/diagram-renders/sprint-006/workflow.svg`
+- `.scratch/diagram-renders/sprint-006/data-flow.svg`
+- `.scratch/diagram-renders/sprint-006/architecture.svg`
 ```
 
 ### Verification Commands
