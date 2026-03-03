@@ -214,3 +214,31 @@ test attractor-custom-handler-1.0 {custom handlers can be registered and execute
     ::attractor::clear_handlers
     rename ::tests::attractor::custom_handler {}
 } -result success
+
+test attractor-handler-shape-mapping-1.0 {canonical shape mapping resolves expected handlers} -body {
+    list \
+      [::attractor::__handler_from_node n [dict create shape Mdiamond] start exit] \
+      [::attractor::__handler_from_node n [dict create shape Msquare] start exit] \
+      [::attractor::__handler_from_node n [dict create shape diamond] start exit] \
+      [::attractor::__handler_from_node n [dict create shape box] start exit] \
+      [::attractor::__handler_from_node n [dict create shape hexagon] start exit] \
+      [::attractor::__handler_from_node n [dict create shape parallelogram] start exit] \
+      [::attractor::__handler_from_node n [dict create shape component] start exit] \
+      [::attractor::__handler_from_node n [dict create shape tripleoctagon] start exit] \
+      [::attractor::__handler_from_node n [dict create shape house] start exit] \
+      [::attractor::__handler_from_node n [dict create shape triangle] start exit]
+} -result {start exit conditional codergen wait.human tool parallel parallel.fan_in stack.manager_loop codergen}
+
+test attractor-handler-shape-type-override-1.0 {type overrides shape mapping and unknown shape falls back} -body {
+    list \
+      [::attractor::__handler_from_node n [dict create type tool shape hexagon] start exit] \
+      [::attractor::__handler_from_node n [dict create type parallel.fan_in shape triangle] start exit] \
+      [::attractor::__handler_from_node n [dict create shape unknown] start exit]
+} -result {tool parallel.fan_in codergen}
+
+test attractor-handler-parallel-fan-in-alias-1.0 {parallel.fan_in and legacy fan-in execute the same handler} -body {
+    set base [list node [dict create] [dict create] ::tests::attractor::backend ::attractor::default_interviewer {} [file join $root .scratch verification SPRINT-006 attractor fan-in-[pid]] {}]
+    set canonical [::attractor::__execute_handler parallel.fan_in {*}$base]
+    set legacy [::attractor::__execute_handler fan-in {*}$base]
+    list [dict get $canonical status] [dict get $canonical notes] [dict get $legacy status] [dict get $legacy notes]
+} -result {success fan-in success fan-in}

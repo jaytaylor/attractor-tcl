@@ -25,6 +25,14 @@ proc ::tests::integration::attractor::cal_backend {request} {
     return [dict create text [dict get $result text] preferred_label success]
 }
 
+proc ::tests::integration::attractor::manager_backend {request} {
+    set nodeId [dict get $request node_id]
+    if {$nodeId eq "build"} {
+        return [dict create text "child-ok" preferred_label success context_updates [dict create child.result ok]]
+    }
+    return [dict create text "ok" preferred_label success]
+}
+
 test integration-attractor-ullm-backend-1.0 {attractor codergen backend works with unified_llm generate} -setup {
     set logsRoot [file join $root .scratch verification SPRINT-003 integration attractor-ullm-[pid]]
     file delete -force $logsRoot
@@ -65,3 +73,112 @@ test integration-attractor-cal-backend-1.0 {attractor codergen backend works wit
 } -cleanup {
     file delete -force $logsRoot
 } -result {success 1}
+
+test integration-attractor-manager-loop-success-1.0 {manager loop runs child graph and writes telemetry artifact} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-success-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set childDotPath [file join $logsRoot child-success.dot]
+    set fh [open $childDotPath w]
+    puts -nonewline $fh {
+        digraph child {
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="child-build"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit [label=success, weight=1];
+        }
+    }
+    close $fh
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s"];
+            start [shape=Mdiamond];
+            supervise [shape=house];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $childDotPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    set telemetryPath [file join $logsRoot supervise manager_loop.json]
+    set fh [open $telemetryPath r]
+    set telemetry [::attractor_core::json_decode [read $fh]]
+    close $fh
+    list [dict get $result status] [file exists $telemetryPath] [expr {[llength [dict get $telemetry cycles]] > 0}]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1 1}
+
+test integration-attractor-manager-loop-child-failure-1.0 {manager loop fails when child pipeline fails} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-child-fail-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set childDotPath [file join $logsRoot child-fail.dot]
+    set fh [open $childDotPath w]
+    puts -nonewline $fh {
+        digraph child {
+            start [shape=Mdiamond];
+            bad [type=tool];
+            exit [shape=Msquare];
+            start -> bad;
+            bad -> exit [label=success];
+        }
+    }
+    close $fh
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s"];
+            start [shape=Mdiamond];
+            supervise [shape=house];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $childDotPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result reason] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {failed missing_tool_command supervise}
+
+test integration-attractor-manager-loop-max-cycles-1.0 {manager loop fails deterministically when max cycles is exceeded} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-max-cycles-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set childDotPath [file join $logsRoot child-not-started.dot]
+    set fh [open $childDotPath w]
+    puts -nonewline $fh {
+        digraph child {
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="noop"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit [label=success];
+        }
+    }
+    close $fh
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s", stack.child_autostart=false];
+            start [shape=Mdiamond];
+            supervise [shape=house, manager.max_cycles=1];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $childDotPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result reason] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {failed max_cycles_exceeded supervise}

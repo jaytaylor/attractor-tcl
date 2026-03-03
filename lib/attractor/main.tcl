@@ -573,6 +573,68 @@ proc ::attractor::__expand_prompt_vars {prompt context} {
     return $out
 }
 
+proc ::attractor::__dict_get_or {mapping key fallback} {
+    if {[dict exists $mapping $key]} {
+        return [dict get $mapping $key]
+    }
+    return $fallback
+}
+
+proc ::attractor::__to_bool {value fallback} {
+    set normalized [string tolower [string trim "$value"]]
+    if {$normalized eq ""} {
+        return $fallback
+    }
+    if {$normalized in {1 true yes on}} {
+        return 1
+    }
+    if {$normalized in {0 false no off}} {
+        return 0
+    }
+    return $fallback
+}
+
+proc ::attractor::__to_int {value fallback} {
+    if {[string is integer -strict "$value"]} {
+        return $value
+    }
+    return $fallback
+}
+
+proc ::attractor::__manager_attr {nodeAttrs context key fallback} {
+    if {[dict exists $nodeAttrs $key]} {
+        return [dict get $nodeAttrs $key]
+    }
+    if {[dict exists $context $key]} {
+        return [dict get $context $key]
+    }
+    return $fallback
+}
+
+proc ::attractor::__manager_actions {rawActions} {
+    set normalized {}
+    foreach token [split "$rawActions" ","] {
+        set action [string tolower [string trim $token]]
+        if {$action eq ""} {
+            continue
+        }
+        if {$action ni {observe steer wait}} {
+            return -code error "unsupported manager action: $action"
+        }
+        if {[lsearch -exact $normalized $action] < 0} {
+            lappend normalized $action
+        }
+    }
+    if {[llength $normalized] == 0} {
+        return {observe wait}
+    }
+    return $normalized
+}
+
+proc ::attractor::__manager_loop_write_log {logsRoot nodeId payload} {
+    ::attractor::__write_json_file [file join $logsRoot $nodeId manager_loop.json] $payload
+}
+
 proc ::attractor::__handler_from_node {nodeId nodeAttrs startNode exitNode} {
     if {[dict exists $nodeAttrs type]} {
         return [dict get $nodeAttrs type]
@@ -591,7 +653,12 @@ proc ::attractor::__handler_from_node {nodeId nodeAttrs startNode exitNode} {
             Mdiamond { return start }
             Msquare { return exit }
             diamond { return conditional }
-            parallelogram { return wait.human }
+            box { return codergen }
+            hexagon { return wait.human }
+            parallelogram { return tool }
+            component { return parallel }
+            tripleoctagon { return parallel.fan_in }
+            house { return stack.manager_loop }
         }
     }
     return codergen
@@ -678,6 +745,7 @@ proc ::attractor::__execute_handler {handler nodeId nodeAttrs context backend in
             }
             return [dict create status success preferred_label "" suggested_next_ids $suggested context_updates {} notes "parallel" terminal 0]
         }
+        parallel.fan_in -
         fan-in {
             return [dict create status success preferred_label "" suggested_next_ids {} context_updates {} notes "fan-in" terminal 0]
         }
@@ -701,7 +769,133 @@ proc ::attractor::__execute_handler {handler nodeId nodeAttrs context backend in
             return [dict create status $status preferred_label [expr {$status eq "failed" ? "retry" : ""}] suggested_next_ids {} context_updates {} notes $out terminal 0]
         }
         stack.manager_loop {
-            return [dict create status success preferred_label "" suggested_next_ids {} context_updates {} notes "manager_loop" terminal 0]
+            set childDotFile [::attractor::__manager_attr $nodeAttrs $context stack.child_dotfile ""]
+            if {[string trim $childDotFile] eq ""} {
+                return [dict create status failed preferred_label "" suggested_next_ids {} context_updates {} notes "missing stack.child_dotfile" terminal 1 failure_reason missing_child_dotfile]
+            }
+            if {![file exists $childDotFile]} {
+                return [dict create status failed preferred_label "" suggested_next_ids {} context_updates {} notes "child dotfile not found: $childDotFile" terminal 1 failure_reason child_dotfile_not_found]
+            }
+
+            set maxCycles [::attractor::__to_int [::attractor::__manager_attr $nodeAttrs $context manager.max_cycles 10] 10]
+            if {$maxCycles < 1} {
+                set maxCycles 1
+            }
+            set pollMs [::attractor::__to_int [::attractor::__manager_attr $nodeAttrs $context manager.poll_interval 0] 0]
+            if {$pollMs < 0} {
+                set pollMs 0
+            }
+            set stopCondition [string trim [::attractor::__manager_attr $nodeAttrs $context manager.stop_condition ""]]
+            if {[catch {::attractor::__manager_actions [::attractor::__manager_attr $nodeAttrs $context manager.actions "observe,wait"]} actionsErr]} {
+                return [dict create status failed preferred_label "" suggested_next_ids {} context_updates {} notes $actionsErr terminal 1 failure_reason invalid_manager_actions]
+            }
+            set actions $actionsErr
+            set autostart [::attractor::__to_bool [::attractor::__manager_attr $nodeAttrs $context stack.child_autostart true] 1]
+            set childLogsRoot [file join $logsRoot $nodeId child]
+
+            set cycles {}
+            set childStatus not_started
+            set childCurrentNode ""
+            set childCompletedCount 0
+            set childReason ""
+            set childRunStarted 0
+            set lastContextUpdate {}
+
+            for {set cycle 1} {$cycle <= $maxCycles} {incr cycle} {
+                set cycleRecord [dict create cycle $cycle actions $actions child_status $childStatus]
+
+                if {!$childRunStarted && $autostart} {
+                    set childRunStarted 1
+                    dict set cycleRecord autostarted 1
+
+                    if {[catch {
+                        set childSourceFile [open $childDotFile r]
+                        set childSource [read $childSourceFile]
+                        close $childSourceFile
+                        set childGraph [::attractor::parse_dot $childSource]
+                        set childResult [::attractor::run $childGraph -backend $backend -interviewer $interviewer -logs_root $childLogsRoot]
+                    } childErr]} {
+                        set childStatus failed
+                        set childReason child_launch_failed
+                        dict set cycleRecord child_status $childStatus
+                        dict set cycleRecord failure_reason $childReason
+                        dict set cycleRecord notes $childErr
+                        lappend cycles $cycleRecord
+                        set telemetry [dict create node_id $nodeId child_dotfile $childDotFile actions $actions max_cycles $maxCycles poll_interval_ms $pollMs cycles $cycles final_status failed failure_reason $childReason]
+                        ::attractor::__manager_loop_write_log $logsRoot $nodeId $telemetry
+                        return [dict create status failed preferred_label "" suggested_next_ids {} context_updates {} notes $childErr terminal 1 failure_reason $childReason]
+                    }
+
+                    set childStatus [::attractor::__dict_get_or $childResult status failed]
+                    set childCurrentNode [::attractor::__dict_get_or $childResult current_node ""]
+                    if {[dict exists $childResult completed_nodes]} {
+                        set childCompletedCount [llength [dict get $childResult completed_nodes]]
+                    }
+                    if {[dict exists $childResult reason]} {
+                        set childReason [dict get $childResult reason]
+                    } else {
+                        set childReason ""
+                    }
+                    dict set cycleRecord child_status $childStatus
+                } else {
+                    dict set cycleRecord autostarted 0
+                }
+
+                if {[lsearch -exact $actions observe] >= 0} {
+                    dict set cycleRecord observed 1
+                }
+                if {[lsearch -exact $actions steer] >= 0} {
+                    dict set cycleRecord steered 1
+                }
+                if {[lsearch -exact $actions wait] >= 0} {
+                    dict set cycleRecord waited [expr {$pollMs > 0 ? $pollMs : 0}]
+                }
+
+                set lastContextUpdate [dict create \
+                    context.stack.child.status $childStatus \
+                    context.stack.child.logs_root $childLogsRoot \
+                    context.stack.child.current_node $childCurrentNode \
+                    context.stack.child.completed_nodes_count $childCompletedCount \
+                    context.stack.child.cycle $cycle \
+                    context.stack.child.reason $childReason]
+                dict set cycleRecord context_updates $lastContextUpdate
+                lappend cycles $cycleRecord
+
+                if {$stopCondition ne ""} {
+                    if {[catch {::attractor::__condition_matches $stopCondition $lastContextUpdate $childStatus ""} stopMatch]} {
+                        set telemetry [dict create node_id $nodeId child_dotfile $childDotFile actions $actions max_cycles $maxCycles poll_interval_ms $pollMs cycles $cycles final_status failed failure_reason invalid_stop_condition]
+                        ::attractor::__manager_loop_write_log $logsRoot $nodeId $telemetry
+                        return [dict create status failed preferred_label "" suggested_next_ids {} context_updates $lastContextUpdate notes $stopMatch terminal 1 failure_reason invalid_stop_condition]
+                    }
+                    if {$stopMatch} {
+                        set telemetry [dict create node_id $nodeId child_dotfile $childDotFile actions $actions max_cycles $maxCycles poll_interval_ms $pollMs cycles $cycles final_status success]
+                        ::attractor::__manager_loop_write_log $logsRoot $nodeId $telemetry
+                        return [dict create status success preferred_label "" suggested_next_ids {} context_updates $lastContextUpdate notes "manager_loop stop condition met" terminal 0]
+                    }
+                }
+
+                if {$childStatus eq "success"} {
+                    set telemetry [dict create node_id $nodeId child_dotfile $childDotFile actions $actions max_cycles $maxCycles poll_interval_ms $pollMs cycles $cycles final_status success]
+                    ::attractor::__manager_loop_write_log $logsRoot $nodeId $telemetry
+                    return [dict create status success preferred_label "" suggested_next_ids {} context_updates $lastContextUpdate notes "manager_loop child success" terminal 0]
+                }
+                if {$childStatus eq "failed"} {
+                    if {$childReason eq ""} {
+                        set childReason child_failed
+                    }
+                    set telemetry [dict create node_id $nodeId child_dotfile $childDotFile actions $actions max_cycles $maxCycles poll_interval_ms $pollMs cycles $cycles final_status failed failure_reason $childReason]
+                    ::attractor::__manager_loop_write_log $logsRoot $nodeId $telemetry
+                    return [dict create status failed preferred_label "" suggested_next_ids {} context_updates $lastContextUpdate notes "manager_loop child failed" terminal 1 failure_reason $childReason]
+                }
+
+                if {[lsearch -exact $actions wait] >= 0 && $pollMs > 0} {
+                    after $pollMs
+                }
+            }
+
+            set telemetry [dict create node_id $nodeId child_dotfile $childDotFile actions $actions max_cycles $maxCycles poll_interval_ms $pollMs cycles $cycles final_status failed failure_reason max_cycles_exceeded]
+            ::attractor::__manager_loop_write_log $logsRoot $nodeId $telemetry
+            return [dict create status failed preferred_label "" suggested_next_ids {} context_updates $lastContextUpdate notes "manager_loop max cycles exceeded" terminal 1 failure_reason max_cycles_exceeded]
         }
         default {
             return [dict create status failed preferred_label "" suggested_next_ids {} context_updates {} notes "unknown handler: $handler" terminal 1 failure_reason unknown_handler]
@@ -812,7 +1006,7 @@ proc ::attractor::run {graphDict args} {
 
     set current [::attractor::__find_start $graph]
     set completed {}
-    set context {}
+    set context [dict get $graph graph_attrs]
     set retries {}
 
     if {$opts(-resume) && [file exists $checkpointPath]} {
@@ -899,7 +1093,11 @@ proc ::attractor::run {graphDict args} {
             context_values $context]
 
         if {[dict exists $outcome terminal] && [dict get $outcome terminal]} {
-            return [dict create status success current_node $current completed_nodes $completed context $context logs_root $opts(-logs_root) diagnostics $diagnostics]
+            if {[dict get $outcome status] eq "success"} {
+                return [dict create status success current_node $current completed_nodes $completed context $context logs_root $opts(-logs_root) diagnostics $diagnostics]
+            }
+            set failureReason [expr {[dict exists $outcome failure_reason] ? [dict get $outcome failure_reason] : "handler_failed"}]
+            return [dict create status failed reason $failureReason current_node $current completed_nodes $completed context $context logs_root $opts(-logs_root) diagnostics $diagnostics]
         }
 
         set nextEdge [::attractor::__select_next_edge $outgoing $outcome $context]
