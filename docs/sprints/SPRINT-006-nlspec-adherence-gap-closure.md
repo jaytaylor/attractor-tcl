@@ -1,261 +1,804 @@
 Legend: [ ] Incomplete, [X] Complete
 
-_Evidence for every completed checklist item must include the exact verification command (wrapped with backticks) plus its exit code and artifacts (logs, `.scratch` transcripts, diagram renders) directly beneath the item when the work is performed._
-
 # Sprint #006 - NLSpec Adherence Gap Closure (Attractor + Unified LLM)
 
 ## Objective
-Close the highest-impact NLSpec adherence gaps identified in the codex-3-2 implementation baseline, focusing on Attractor shape-to-handler resolution and Unified LLM environment configuration, role translation, and Anthropic thinking block round-tripping.
+Close all identified high-impact NLSpec adherence gaps in Attractor and Unified LLM by implementing spec-faithful behavior, adding deterministic regression coverage, and capturing verifiable evidence artifacts for each sprint deliverable.
 
-## Success Criteria
-- Canonical Attractor shape-to-handler mapping matches `attractor-spec.md` Section 2.8 / Appendix B and is enforced by focused unit tests.
-- `stack.manager_loop` implements a minimal supervisor loop per `attractor-spec.md` Section 4.11 and is covered by at least one integration test with a real child DOT.
-- `::unified_llm::from_env` registers all providers whose keys are present and sets a deterministic default provider (with an optional `UNIFIED_LLM_PROVIDER` override).
-- Anthropic adapter correctly translates DEVELOPER and TOOL roles and preserves thinking/redacted thinking blocks (including signatures) through request translation.
-- Verification gates pass: `timeout 180 make build`, `timeout 180 make test`, and `tclsh tools/spec_coverage.tcl`.
+## Executive Summary
+- [X] E1 - Align Attractor handler resolution and handler naming with Attractor spec Section 2.8, Appendix B, and ATR-DOD-11.22.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-## Context & Problem
-Current implementation behavior diverges from the NLSpecs in a few load-bearing places:
-- Attractor does not follow the spec's canonical shape-to-handler mapping (ATR-DOD-11.22), and some handler type names are inconsistent with the spec table.
-- `stack.manager_loop` is a stub, but the spec defines a supervisor loop with observe/steer/wait semantics (Attractor spec Section 4.11).
-- Unified LLM `from_env()` currently errors when multiple provider keys are present and does not populate provider credentials in client state, which makes real provider calls fail and contradicts environment-based setup requirements (ULLM-DOD-8.1).
-- Anthropic adapter request translation does not correctly handle DEVELOPER/TOOL roles and does not preserve thinking/redacted thinking content blocks with signatures for round-tripping (ULLM-DOD-8.14, ULLM-DOD-8.24, ULLM-DOD-8.38, plus thinking round-trip requirements).
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] E2 - Implement a minimal but spec-faithful `stack.manager_loop` supervisor handler with deterministic telemetry and failure semantics per Attractor spec Section 4.11.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-Sprint #006 scopes directly to closing these gaps with targeted tests that prove compliance and prevent regression.
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] E3 - Make `::unified_llm::from_env` register all configured providers, choose deterministic defaults, and wire credentials into runtime adapter calls per ULLM-DOD-8.1.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] E4 - Implement Anthropic role translation and thinking-block round-tripping (including signatures and redacted thinking) per ULLM-DOD-8.14, 8.24, and 8.38.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] E5 - Leave a complete, reproducible evidence trail and ADR record showing why core implementation choices were made and how compliance was validated.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
 
 ## Current State Snapshot (2026-03-03)
-- Attractor handler resolution:
-  - `lib/attractor/main.tcl` `::attractor::__handler_from_node` only maps a subset of shapes and incorrectly maps `parallelogram` to `wait.human` instead of `tool`.
-  - `lib/attractor/main.tcl` `stack.manager_loop` returns immediate success with `"manager_loop"` notes (no supervisor loop).
-- Unified LLM env + Anthropic:
-  - `lib/unified_llm/main.tcl` `::unified_llm::from_env` errors when multiple provider keys are present and constructs a client without populating provider API keys.
-  - `lib/unified_llm/adapters/anthropic.tcl` `translate_request` passes non-Anthropic roles through and collapses thinking to plain text (no signature/redacted support).
+- `lib/attractor/main.tcl`:
+  - `::attractor::__handler_from_node` does not fully match canonical shape mappings.
+  - `stack.manager_loop` is effectively a stub and does not execute supervisor semantics.
+- `lib/unified_llm/main.tcl`:
+  - `::unified_llm::from_env` rejects multi-provider environments and does not fully hydrate provider credentials for runtime use.
+- `lib/unified_llm/adapters/anthropic.tcl`:
+  - Role translation is incomplete for DEVELOPER and TOOL semantics.
+  - Thinking and redacted thinking content does not round-trip with signature fidelity.
 
 ## Scope
-- Attractor engine handler resolution and handler implementations:
+- Runtime implementation:
   - `lib/attractor/main.tcl`
-  - `tests/unit/attractor.test`
-  - `tests/integration/attractor_integration.test` (as needed for end-to-end manager_loop behavior)
-- Unified LLM environment setup and Anthropic translation/round-trip behavior:
   - `lib/unified_llm/main.tcl`
   - `lib/unified_llm/adapters/anthropic.tcl`
+- Test coverage:
+  - `tests/unit/attractor.test`
+  - `tests/integration/attractor_integration.test`
   - `tests/unit/unified_llm.test`
-  - `tests/unit/unified_llm_streaming.test` (for thinking in streaming paths)
-- Spec traceability and evidence hygiene (only where changes are required to keep spec coverage truthful):
+  - `tests/unit/unified_llm_streaming.test`
+- Traceability and architecture record:
   - `docs/spec-coverage/traceability.md`
+  - `docs/ADR.md`
+- Sprint execution evidence:
+  - `.scratch/verification/SPRINT-006/`
+  - `.scratch/diagram-renders/sprint-006/`
 
 ## Non-Goals
-- Adding new providers beyond OpenAI/Anthropic/Gemini.
-- Broad refactors to Attractor DOT parsing, lint rules, or CLI UX not required for the targeted NLSpec gaps.
-- Rewriting Unified LLM streaming event model beyond what is necessary to preserve Anthropic thinking blocks and signatures.
+- Adding new providers beyond OpenAI, Anthropic, and Gemini.
+- Refactoring unrelated Attractor parsing or CLI surfaces.
+- Introducing feature flags, gates, or legacy compatibility shims.
+- Broad streaming model redesign outside requirements needed for thinking-block fidelity.
 
-## Constraints
-- Tcl 8.5 compatibility (avoid Tcl 8.6-only features like `lmap`).
-- All changes must keep `make build` and `make test` green.
-- Evidence discipline: when checklist items are marked complete, attach command + exit code + artifact paths under `.scratch/verification/SPRINT-006/...`.
-
-## Requirements In Scope (NLSpec)
+## Requirements Traceability (In Scope)
 - Attractor:
-  - ATR-DOD-11.22-EACH-NODE-S-HANDLER-RESOLVED-VIA (shape-to-handler mapping)
-  - Attractor spec Section 2.8 / Appendix B (canonical mapping table)
-  - Attractor spec Section 4.11 (Manager Loop Handler semantics)
+  - ATR-DOD-11.22-EACH-NODE-S-HANDLER-RESOLVED-VIA
+  - Attractor spec Section 2.8
+  - Attractor spec Appendix B
+  - Attractor spec Section 4.11
 - Unified LLM:
-  - ULLM-DOD-8.1-CAN-CONSTRUCTED-ENVIRONMENT-VARIABLES (from_env behavior)
-  - ULLM-DOD-8.14-ALL-5-ROLES-SYSTEM-USER-ASSISTANT (DEVELOPER/TOOL translation)
+  - ULLM-DOD-8.1-CAN-CONSTRUCTED-ENVIRONMENT-VARIABLES
+  - ULLM-DOD-8.14-ALL-5-ROLES-SYSTEM-USER-ASSISTANT
   - ULLM-DOD-8.24-REDACTED-THINKING-BLOCKS-PASSED-THROUGH-VERBATIM
   - ULLM-DOD-8.38-ANTHROPIC-EXTENDED-THINKING-BLOCKS-RETURNED-CONTENT
-  - ULLM-REQ-THINKING-BLOCKS-ANTHROPIC-S-EXTENDED-THINKING (signatures + redacted)
-  - ULLM-REQ-THINKING-BLOCK-ROUND-TRIPPING-THINKING-AND (history preservation)
+  - ULLM-REQ-THINKING-BLOCKS-ANTHROPIC-S-EXTENDED-THINKING
+  - ULLM-REQ-THINKING-BLOCK-ROUND-TRIPPING-THINKING-AND
 
-## Evidence Layout
-Use these conventions consistently:
-- `.scratch/verification/SPRINT-006/planning/` for baseline snapshots and analysis captures.
-- `.scratch/verification/SPRINT-006/track-*/...` for implementation verification logs per track.
-- `.scratch/diagram-renders/sprint-006/` for rendered Mermaid outputs (if rendered).
-
-For command logs, prefer:
-- `tools/verify_cmd.sh <logpath> <command...>` (adds `exit_code=<n>` to the log).
+## Evidence Standards
+- Every completed checklist item must include:
+  - Exact verification command in backticks.
+  - Exit code.
+  - Artifact paths under `.scratch/verification/SPRINT-006/...` or `.scratch/diagram-renders/sprint-006/...`.
+- Command capture format:
+  - `tools/verify_cmd.sh <logpath> <command...>`
+- Suggested artifact layout:
+  - `.scratch/verification/SPRINT-006/planning/`
+  - `.scratch/verification/SPRINT-006/track-a/`
+  - `.scratch/verification/SPRINT-006/track-b/`
+  - `.scratch/verification/SPRINT-006/track-c/`
+  - `.scratch/verification/SPRINT-006/track-d/`
+  - `.scratch/verification/SPRINT-006/final/`
 
 ## Execution Order
-Track 0 -> Track A -> Track B -> Track C -> Track D -> Final Closeout.
+Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Final Closeout.
 
-## Track 0 - Baseline + Guardrails
-- [ ] **T0.1 - Capture baseline spec/test state for Sprint-006**
-  - Verification commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/planning/spec-coverage-baseline.log tclsh tools/spec_coverage.tcl`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/planning/make-test-baseline.log timeout 180 make test`
-  - Evidence artifacts:
-    - `.scratch/verification/SPRINT-006/planning/spec-coverage-baseline.log`
-    - `.scratch/verification/SPRINT-006/planning/make-test-baseline.log`
+## Phase 0 - Baseline, Spec Lock, and Test Harness Preparation
+### Deliverables
+- [X] P0.1 - Capture baseline results for build, tests, and spec coverage before any implementation change.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-- [ ] **T0.2 - Add focused tests first (red/green) for each gap before changing implementations**
-  - Goal: each track below starts with tests that fail for the current behavior and then passes after implementation changes.
-  - Verification commands:
-    - `tclsh tests/all.tcl -match *attractor*`
-    - `tclsh tests/all.tcl -match *unified_llm*`
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P0.2 - Enumerate and document current failing scenarios for each identified gap as explicit red tests.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-## Track A - Attractor Shape Mapping + Handler Name Alignment
-- [ ] **A1 - Implement canonical shape-to-handler mapping per Attractor spec (2.8 / Appendix B)**
-  - Scope: `lib/attractor/main.tcl` (`::attractor::__handler_from_node`)
-  - Requirements:
-    - `type` attribute overrides shape-based mapping.
-    - Canonical mapping (minimum): `hexagon -> wait.human`, `parallelogram -> tool`, `component -> parallel`, `tripleoctagon -> parallel.fan_in`, `house -> stack.manager_loop`.
-    - Keep `Mdiamond -> start`, `Msquare -> exit`, `diamond -> conditional`, `box -> codergen`.
-  - Tests (positive):
-    - New unit tests assert mapping for every canonical shape.
-    - New unit tests assert explicit `type` overrides shape mapping.
-  - Tests (negative):
-    - Unknown `shape` falls back to `codergen` unless `type` is set.
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P0.3 - Create sprint-specific verification directories and command-log conventions under `.scratch/verification/SPRINT-006/`.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-- [ ] **A2 - Align handler type names with the spec and keep backward compatibility**
-  - Goal: eliminate handler naming mismatches that break mapping and selectors.
-  - Requirements:
-    - The execution dispatch recognizes `parallel.fan_in` (spec name).
-    - If legacy names exist (example: `fan-in`), they remain supported as aliases to avoid breaking existing DOTs/tests.
-  - Tests:
-    - Unit test covers alias behavior: both `parallel.fan_in` and legacy name execute the same handler.
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
 
-## Track B - Attractor `stack.manager_loop` Supervisor Semantics
-- [ ] **B1 - Implement minimal spec-faithful manager loop (observe/steer/wait)**
-  - Scope: `lib/attractor/main.tcl` (`stack.manager_loop` handler)
-  - Requirements (from spec Section 4.11):
-    - Reads graph-level `stack.child_dotfile` and optional node attrs:
-      - `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, `manager.actions`
-      - `stack.child_autostart` (default true)
-    - Auto-starts child pipeline when configured.
-    - Observation loop reads child telemetry into `context.stack.child.*` keys.
-    - Stops on child completion success/failure and returns SUCCESS/FAIL accordingly.
-  - Tests (positive):
-    - Integration test runs a tiny child DOT that completes successfully and asserts manager_loop returns success.
-  - Tests (negative):
-    - Child failure causes manager_loop to return fail with clear `failure_reason`.
-    - Max cycles exceeded returns fail.
+### Implementation Tasks
+- Record baseline:
+  - `make build`
+  - `make test`
+  - `tclsh tools/spec_coverage.tcl`
+- Add or adjust failing tests first for:
+  - shape mapping mismatch
+  - `stack.manager_loop` stub behavior
+  - `from_env` multi-provider behavior
+  - Anthropic role and thinking round-trip behavior
+- Capture all baseline command outputs via `tools/verify_cmd.sh`.
 
-- [ ] **B2 - Evidence-friendly telemetry contract**
-  - Goal: make it easy to prove what manager_loop observed/decided without digging through ad-hoc logs.
-  - Requirements:
-    - Write a simple manager loop log artifact (example: `manager_loop.json`) under the stage directory describing each cycle outcome.
-  - Tests:
-    - Integration test asserts the artifact exists and is parseable JSON.
+### Positive Test Cases
+1. Baseline command logs are generated and include `exit_code=` records.
+2. Test harness can run focused Attractor and Unified LLM test subsets.
+3. Sprint evidence paths exist and are writable.
 
-## Track C - Unified LLM `from_env()` Spec Compliance
-- [ ] **C1 - Make `::unified_llm::from_env` register all providers whose keys are present**
-  - Scope: `lib/unified_llm/main.tcl`
-  - Requirements (spec Section 2.2):
-    - If multiple keys exist, do not error; register all detected providers.
-    - The first registered provider becomes the default.
-    - If `UNIFIED_LLM_PROVIDER` is set, treat it as an optional default-provider override (error only if set to an unsupported or unregistered provider).
-  - Tests (positive):
-    - Replace `unified_llm-from-env-ambiguous-1.0` with tests that assert multi-provider registration and correct default selection.
-  - Tests (negative):
-    - No keys present still errors with a configuration error.
-    - `UNIFIED_LLM_PROVIDER` set to unknown value errors.
+### Negative Test Cases
+1. Missing evidence directories produce deterministic setup failures until created.
+2. Newly added red tests fail before implementation changes.
+3. Missing spec-coverage command output fails phase validation.
 
-- [ ] **C1.1 - Define the multi-provider client state model (minimal changes, maximum leverage)**
-  - Goal: support multiple providers without requiring callers to manage separate clients per provider.
-  - Design requirements:
-    - Client stores `default_provider` and a `providers` dictionary keyed by provider name.
-    - Each provider entry stores at least: `api_key`, `base_url`, `transport`, and `provider_options`.
-    - Backward compatibility: `client_new -provider ... -api_key ...` continues to work by internally creating a single-entry `providers` dictionary.
-  - Tests:
-    - `$client config` exposes `default_provider` and `providers` deterministically.
+### Acceptance Criteria - Phase 0
+- Baseline behavior is captured with reproducible artifacts.
+- Red tests exist for each scoped gap.
+- Evidence directory conventions are established and enforced.
 
-- [ ] **C2 - Ensure provider credentials are actually wired into runtime adapter calls**
-  - Requirements:
-    - `from_env()` must populate per-provider API keys (and optional base URLs) so real adapter invocations include auth headers.
-    - Unit tests validate that translated request headers include expected auth header keys per provider.
-  - Tests:
-    - Extend/introduce transport-capture tests that assert the correct auth header is present for each provider call.
+## Phase 1 - Attractor Shape-to-Handler Resolution Compliance
+### Deliverables
+- [X] P1.1 - Implement canonical shape-to-handler mapping in `::attractor::__handler_from_node` exactly per spec table.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-## Track D - Anthropic Roles + Thinking Block Round-Tripping
-- [ ] **D1 - Translate all 5 roles correctly for Anthropic (SYSTEM/USER/ASSISTANT/TOOL/DEVELOPER)**
-  - Scope: `lib/unified_llm/adapters/anthropic.tcl` (`translate_request`)
-  - Requirements (spec role mapping):
-    - SYSTEM: extracted to the Anthropic `system` parameter.
-    - DEVELOPER: merged with SYSTEM (preserve ordering deterministically).
-    - TOOL: translated into `tool_result` content blocks inside a `user` message (not `role=tool`).
-    - USER/ASSISTANT: preserved as Anthropic roles.
-  - Tests (positive):
-    - Unit test constructs a message history containing DEVELOPER + SYSTEM + TOOL messages and asserts the outgoing Anthropic payload conforms.
-  - Tests (negative):
-    - Tool result without an ID fails fast with a clear error code.
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P1.2 - Enforce precedence rules: explicit `type` overrides shape-derived mapping.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-- [ ] **D2 - Preserve Anthropic thinking and redacted thinking blocks (with signatures)**
-  - Scope:
-    - `lib/unified_llm/main.tcl` content-part normalization (allow signature, redacted, and redacted_thinking)
-    - `lib/unified_llm/adapters/anthropic.tcl` request translation and response parsing
-  - Requirements:
-    - Thinking blocks received from Anthropic are stored in response content parts (including `signature`).
-    - Redacted thinking blocks are passed through verbatim in subsequent requests.
-    - When sending back history, thinking blocks remain thinking blocks (not converted to plain text).
-  - Tests (positive):
-    - Add fixtures (or transport stubs) returning `thinking` and `redacted_thinking` blocks; assert:
-      - `complete()` returns content parts representing them.
-      - A follow-up request includes the exact thinking block payload (including signature or redacted data).
-  - Tests (negative):
-    - Switching providers strips signatures (if cross-provider routing is supported) or emits a warning; ensure behavior is deterministic and documented.
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P1.3 - Use canonical handler naming (`parallel.fan_in`) consistently in execution dispatch and tests.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-## Final Closeout
-- [ ] **F1 - Full suite green + spec coverage guardrail**
-  - Verification commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/make-build.log timeout 180 make build`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/make-test.log timeout 180 make test`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/spec-coverage.log tclsh tools/spec_coverage.tcl`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/docs-lint.log bash tools/docs_lint.sh`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-006-nlspec-adherence-gap-closure.md`
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P1.4 - Add full positive and negative unit coverage for mapping and unknown-shape fallback behavior.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
 
-- [ ] **F2 - Render Mermaid diagrams (optional but recommended)**
-  - Goal: confirm diagrams compile and store renders for evidence.
-  - Verification commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/mmdc-handler-resolution.log /opt/homebrew/bin/mmdc -i .scratch/diagrams/sprint-006/handler-resolution.mmd -o .scratch/diagram-renders/sprint-006/handler-resolution.svg`
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+
+### Implementation Tasks
+- Update `lib/attractor/main.tcl` mapping table and dispatch selectors.
+- Canonical mapping set to verify:
+  - `Mdiamond -> start`
+  - `Msquare -> exit`
+  - `diamond -> conditional`
+  - `box -> codergen`
+  - `hexagon -> wait.human`
+  - `parallelogram -> tool`
+  - `component -> parallel`
+  - `tripleoctagon -> parallel.fan_in`
+  - `house -> stack.manager_loop`
+- Add deterministic tests in `tests/unit/attractor.test` for every mapping and precedence rule.
+
+### Positive Test Cases
+1. Node with `shape=parallelogram` maps to `tool`.
+2. Node with `shape=tripleoctagon` maps to `parallel.fan_in`.
+3. Node with `shape=house` maps to `stack.manager_loop`.
+4. Node with both `type` and `shape` uses `type` consistently.
+5. Start/exit nodes preserve `Mdiamond` and `Msquare` semantics.
+
+### Negative Test Cases
+1. Unknown `shape` maps to fallback `codergen` deterministically.
+2. Empty shape without explicit type still resolves without crash.
+3. Invalid or malformed node attributes return a typed error rather than silent misrouting.
+4. Dispatch rejects unsupported canonical handler names with clear failure reason.
+
+### Acceptance Criteria - Phase 1
+- Canonical mapping and precedence behavior matches spec.
+- Unit tests demonstrate full mapping coverage and fallback behavior.
+- No non-canonical handler naming remains in scoped execution paths.
+
+## Phase 2 - Attractor `stack.manager_loop` Supervisor Semantics
+### Deliverables
+- [X] P2.1 - Implement `stack.manager_loop` observe/steer/wait loop semantics in `lib/attractor/main.tcl`.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P2.2 - Support graph and node controls: `stack.child_dotfile`, `stack.child_autostart`, `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, and `manager.actions`.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P2.3 - Persist machine-parseable supervisor telemetry artifact per run (for example `manager_loop.json`) in stage output.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P2.4 - Add integration tests for success, child failure, and max-cycle-exceeded outcomes.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+
+### Implementation Tasks
+- Add a deterministic supervisor lifecycle:
+  - initialize
+  - optional child autostart
+  - observe child state
+  - optional steer action
+  - wait/poll
+  - stop on success/failure/limit
+- Write `context.stack.child.*` telemetry keys each cycle.
+- Emit explicit `failure_reason` values for non-success termination.
+- Add integration fixtures for child success/failure DOT flows.
+
+### Positive Test Cases
+1. Child flow succeeds and manager loop returns success.
+2. Autostart enabled starts child automatically.
+3. Poll cycle updates `context.stack.child.*` telemetry keys.
+4. `manager_loop.json` is generated and parses as JSON.
+
+### Negative Test Cases
+1. Missing `stack.child_dotfile` fails fast with explicit configuration error.
+2. Child failure propagates as manager-loop failure with reason.
+3. Max cycles exceeded returns deterministic failure.
+4. Malformed `manager.actions` input fails with typed validation error.
+
+### Acceptance Criteria - Phase 2
+- `stack.manager_loop` follows spec-faithful supervisor behavior.
+- Integration tests cover success and failure paths comprehensively.
+- Telemetry evidence is stable and parseable for audits.
+
+## Phase 3 - Unified LLM `from_env` Multi-Provider Compliance
+### Deliverables
+- [X] P3.1 - Make `::unified_llm::from_env` register all providers with present credentials.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P3.2 - Add deterministic default-provider rules with optional `UNIFIED_LLM_PROVIDER` override validation.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P3.3 - Implement and verify client state model with `default_provider` and `providers` dictionary entries containing `api_key`, `base_url`, `transport`, and `provider_options`.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P3.4 - Ensure runtime adapter calls use provider credentials from client state and assert auth headers in transport-capture tests.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+
+### Implementation Tasks
+- Refactor environment detection in `lib/unified_llm/main.tcl`:
+  - discover keys for OpenAI, Anthropic, Gemini
+  - register all discovered providers
+  - select deterministic default by discovery order
+  - override default when `UNIFIED_LLM_PROVIDER` is valid
+- Update `client_new` path to normalize single-provider and multi-provider state shape.
+- Add tests in `tests/unit/unified_llm.test` for config shape and credential hydration.
+
+### Positive Test Cases
+1. OpenAI + Anthropic keys present creates two registered providers.
+2. No override selects deterministic first provider.
+3. Valid override selects requested registered provider.
+4. Config exposes stable `default_provider` and `providers` fields.
+5. Adapter transport contains expected authorization headers for provider requests.
+
+### Negative Test Cases
+1. No provider keys present returns configuration error.
+2. Override points to unregistered provider returns validation error.
+3. Missing provider api key in runtime path fails before outbound request.
+4. Invalid provider name normalization is rejected deterministically.
+
+### Acceptance Criteria - Phase 3
+- `from_env` behavior satisfies multi-provider NLSpec requirements.
+- Runtime auth wiring is verified by transport-level tests.
+- Client configuration contract is deterministic and regression-protected.
+
+## Phase 4 - Anthropic Role Translation and Thinking Round-Trip Fidelity
+### Deliverables
+- [X] P4.1 - Implement role translation for SYSTEM, USER, ASSISTANT, TOOL, and DEVELOPER in Anthropic request translation.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P4.2 - Merge DEVELOPER and SYSTEM content deterministically into Anthropic `system` payload while preserving order.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P4.3 - Translate TOOL responses into Anthropic `tool_result` blocks in `user` messages with strict required fields.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P4.4 - Preserve thinking and redacted thinking blocks (including signatures) across response parsing and follow-up request translation.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P4.5 - Add unit and streaming tests covering mixed role histories, thinking signatures, redacted payloads, and deterministic error behavior.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+
+### Implementation Tasks
+- Update `lib/unified_llm/adapters/anthropic.tcl` `translate_request`:
+  - extract and compose Anthropic `system`
+  - convert TOOL role messages to `tool_result`
+  - preserve USER and ASSISTANT roles natively
+- Update content-part normalization in `lib/unified_llm/main.tcl` for:
+  - `thinking`
+  - `redacted_thinking`
+  - `signature`
+  - redacted payload fields
+- Add robust tests in `tests/unit/unified_llm.test` and `tests/unit/unified_llm_streaming.test`.
+
+### Positive Test Cases
+1. Mixed SYSTEM + DEVELOPER history produces deterministic combined Anthropic `system` payload.
+2. TOOL response with valid tool-use ID converts to Anthropic `tool_result` user content.
+3. Anthropic response with `thinking` content returns normalized thinking part with signature.
+4. Follow-up request reuses prior `thinking` and `redacted_thinking` blocks exactly.
+5. Streaming and non-streaming paths both preserve thinking fidelity.
+
+### Negative Test Cases
+1. TOOL message without required tool-use ID fails with explicit validation error.
+2. Malformed thinking block (missing required fields) fails with typed parse error.
+3. Unsupported role value fails fast instead of passing through silently.
+4. Signature mutation between response and follow-up request is detected and rejected deterministically.
+
+### Acceptance Criteria - Phase 4
+- Anthropic request translation is fully role-compliant.
+- Thinking and redacted thinking blocks round-trip without fidelity loss.
+- Deterministic failures exist for malformed tool/thinking inputs.
+
+## Phase 5 - Traceability, ADR Capture, and Final Verification
+### Deliverables
+- [X] P5.1 - Update `docs/spec-coverage/traceability.md` to reflect implemented tests and NLSpec linkage.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P5.2 - Record architecture decisions and consequences for manager-loop semantics, multi-provider client model, and Anthropic thinking handling in `docs/ADR.md`.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P5.3 - Run final verification gates for build, unit/integration tests, spec coverage, docs lint, and evidence lint.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+- [X] P5.4 - Verify all appendix Mermaid diagrams render through `mmdc` into `.scratch/diagram-renders/sprint-006/`.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+
+### Verification Command Set (Final Closeout)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/make-build.log make build`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/make-test.log make test`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/spec-coverage.log tclsh tools/spec_coverage.tcl`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/docs-lint.log bash tools/docs_lint.sh`
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-006/final/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-006-nlspec-adherence-gap-closure.md`
+
+### Acceptance Criteria - Phase 5
+- Traceability table and tests match actual implementation state.
+- ADR captures context, decision, and consequences for major design choices.
+- Final verification commands pass and are artifact-backed.
+- Mermaid renders are generated and stored in sprint diagram artifact paths.
+
+## Detailed Test Matrix
+### Attractor Mapping and Dispatch
+- Positive:
+  1. Canonical mapping for each in-scope shape.
+  2. Explicit `type` precedence over shape mapping.
+  3. Start/exit node shape preservation.
+- Negative:
+  1. Unknown shape fallback to `codergen`.
+  2. Malformed node dictionary fails deterministically.
+  3. Unsupported handler dispatch reports typed error.
+
+### Manager Loop Supervisor
+- Positive:
+  1. Child success path.
+  2. Autostart true path.
+  3. Telemetry artifact generation and parseability.
+- Negative:
+  1. Missing child dotfile configuration error.
+  2. Child failure propagation.
+  3. Max-cycle-exceeded failure path.
+
+### Unified LLM from_env
+- Positive:
+  1. Multi-provider registration.
+  2. Deterministic default selection.
+  3. Valid provider override.
+  4. Auth header inclusion in provider requests.
+- Negative:
+  1. Missing key configuration error.
+  2. Unknown override provider error.
+  3. Missing runtime credential failure.
+
+### Anthropic Translation and Thinking
+- Positive:
+  1. Five-role translation conformance.
+  2. DEVELOPER + SYSTEM merge ordering.
+  3. TOOL to `tool_result` conversion.
+  4. Thinking and redacted thinking round-trip with signatures.
+- Negative:
+  1. Missing tool result ID.
+  2. Malformed thinking payload.
+  3. Unsupported role.
+  4. Signature mismatch mutation detection.
+
+## Risk Register and Mitigations
+- [X] R1 - Risk: canonical handler mapping change could alter existing behavior in untested DOT graphs.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+  - Mitigation: expand unit mapping coverage and add targeted integration DOT fixtures.
+- [X] R2 - Risk: manager loop lifecycle edge cases may create nondeterministic test failures.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+  - Mitigation: deterministic cycle limits, explicit stop conditions, and stable telemetry assertions.
+- [X] R3 - Risk: multi-provider state migration may break single-provider callers.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+  - Mitigation: keep a normalized config contract and explicit tests for one-provider and multi-provider modes.
+- [X] R4 - Risk: Anthropic thinking fidelity changes may regress streaming behavior.
+```text
+Verification commands:
+- `cat .scratch/verification/SPRINT-006/final/command-status.tsv` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-006/final/command-status.tsv`
+- `.scratch/verification/SPRINT-006/final/summary.md`
+- `.scratch/verification/SPRINT-006/final/execution-20260303T182028Z/logs/`
+```
+  - Mitigation: pair non-stream and stream test fixtures for thinking/redacted blocks and verify equivalence.
 
 ## Appendix - Mermaid Diagrams
 
-### Attractor Handler Resolution (Flow)
+### Core Domain Model
 ```mermaid
-flowchart TD
-  A[Node attrs] --> B{type set?}
-  B -- yes --> T[type]
-  B -- no --> C{handler set?}
-  C -- yes --> H[handler]
-  C -- no --> D{is start/exit id?}
-  D -- start --> S[start]
-  D -- exit --> E[exit]
-  D -- no --> F{shape set?}
-  F -- no --> G[codergen]
-  F -- yes --> M[shape-to-handler mapping]
-  M --> OUT[handler type]
+classDiagram
+  class AttractorNode {
+    +id: string
+    +shape: string
+    +type: string
+    +attrs: dict
+  }
+  class HandlerResolution {
+    +resolve(node): handlerType
+    +rules: ordered mapping
+  }
+  class ManagerLoopState {
+    +cycle: int
+    +childStatus: string
+    +actions: list
+    +failureReason: string
+  }
+  class UnifiedClient {
+    +defaultProvider: string
+    +providers: dict
+  }
+  class ProviderConfig {
+    +apiKey: string
+    +baseUrl: string
+    +transport: string
+    +providerOptions: dict
+  }
+  class Message {
+    +role: string
+    +content: list
+  }
+  class ContentPart {
+    +type: string
+    +text: string
+    +signature: string
+    +redacted: dict
+  }
+
+  AttractorNode --> HandlerResolution : resolved by
+  HandlerResolution --> ManagerLoopState : may execute
+  UnifiedClient --> ProviderConfig : contains
+  Message --> ContentPart : contains
 ```
 
-### Manager Loop Supervisor (State Machine)
+### E-R Diagram
 ```mermaid
-stateDiagram-v2
-  [*] --> Init
-  Init --> AutoStart: stack.child_autostart=true
-  Init --> Observe
-  AutoStart --> Observe
-  Observe --> Steer: actions include steer
-  Observe --> Wait: actions include wait
-  Steer --> Wait
-  Wait --> Observe
-  Observe --> Success: child_outcome=success
-  Observe --> Fail: child_status=failed
-  Observe --> Fail: max_cycles_exceeded
-  Success --> [*]
-  Fail --> [*]
+erDiagram
+  SPRINT_RUN ||--o{ VERIFICATION_LOG : contains
+  SPRINT_RUN ||--o{ DIAGRAM_RENDER : produces
+  SPRINT_RUN ||--o{ TEST_RESULT : records
+  NL_REQUIREMENT ||--o{ TRACEABILITY_LINK : maps_to
+  TEST_RESULT ||--o{ TRACEABILITY_LINK : verifies
+  HANDLER_MAPPING ||--o{ TEST_RESULT : validated_by
+  PROVIDER_CONFIG ||--o{ TEST_RESULT : validated_by
+  THINKING_BLOCK ||--o{ TEST_RESULT : validated_by
+
+  SPRINT_RUN {
+    string run_id
+    string sprint_id
+    string status
+    string started_at
+    string ended_at
+  }
+  VERIFICATION_LOG {
+    string log_path
+    int exit_code
+    string command
+  }
+  DIAGRAM_RENDER {
+    string source_path
+    string output_path
+    string format
+  }
+  TEST_RESULT {
+    string test_name
+    string suite
+    string outcome
+    string artifact_path
+  }
+  NL_REQUIREMENT {
+    string requirement_id
+    string spec_section
+    string description
+  }
+  TRACEABILITY_LINK {
+    string link_id
+    string requirement_id
+    string test_name
+  }
+  HANDLER_MAPPING {
+    string shape
+    string handler_type
+  }
+  PROVIDER_CONFIG {
+    string provider
+    string default_provider
+    string has_api_key
+  }
+  THINKING_BLOCK {
+    string block_type
+    string signature
+    string redacted
+  }
 ```
 
-### Unified LLM from_env Provider Registration (Flow)
+### Workflow Diagram
+```mermaid
+flowchart LR
+  A[Phase 0 Baseline] --> B[Phase 1 Shape Mapping]
+  B --> C[Phase 2 Manager Loop]
+  C --> D[Phase 3 from_env]
+  D --> E[Phase 4 Anthropic Translation]
+  E --> F[Phase 5 Traceability and ADR]
+  F --> G[Final Verification]
+```
+
+### Data-Flow Diagram
 ```mermaid
 flowchart TD
-  A[Environment] --> B{Any provider keys present?}
-  B -- no --> E[Error: missing provider]
-  B -- yes --> C[Register providers with keys]
-  C --> D[Default provider = first registered]
-  D --> F{UNIFIED_LLM_PROVIDER set?}
-  F -- no --> G[Client ready]
-  F -- yes --> H{Override provider registered?}
-  H -- no --> I[Error: override invalid]
-  H -- yes --> J[Set default provider to override]
-  J --> G
+  ENV[Environment Variables] --> FROMENV[unified_llm::from_env]
+  FROMENV --> CLIENT[Unified Client Config]
+  CLIENT --> ADAPTER[Anthropic Adapter]
+  ADAPTER --> REQUEST[Provider Request Payload]
+  RESPONSE[Provider Response Payload] --> NORMALIZE[Content Normalization]
+  NORMALIZE --> HISTORY[Conversation History]
+  HISTORY --> ADAPTER
+
+  DOT[Parent DOT Graph] --> RESOLVE[Handler Resolution]
+  RESOLVE --> MANAGER[stack.manager_loop]
+  MANAGER --> CHILD[Child DOT Execution]
+  CHILD --> TELEMETRY[manager_loop.json + context.stack.child.*]
+```
+
+### Architecture Diagram
+```mermaid
+flowchart TB
+  subgraph Attractor
+    A1[DOT Parser]
+    A2[Handler Resolver]
+    A3[Executor]
+    A4[stack.manager_loop]
+  end
+
+  subgraph UnifiedLLM
+    U1[from_env]
+    U2[Client State]
+    U3[Anthropic Adapter]
+    U4[Response Normalizer]
+  end
+
+  subgraph Verification
+    V1[Unit Tests]
+    V2[Integration Tests]
+    V3[Spec Coverage]
+    V4[Evidence Logs]
+    V5[ADR]
+  end
+
+  A1 --> A2 --> A3 --> A4
+  U1 --> U2 --> U3 --> U4
+  A3 --> V1
+  A4 --> V2
+  U2 --> V1
+  U3 --> V1
+  U4 --> V1
+  V1 --> V3
+  V2 --> V3
+  V3 --> V4
+  V4 --> V5
 ```

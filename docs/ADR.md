@@ -362,3 +362,45 @@ Positive:
 Tradeoffs:
 - Adapter stream translators are more complex and require ongoing fixture maintenance as provider event formats evolve.
 - Streaming failure handling is explicit (`ERROR` terminal) and places more responsibility on callers to handle non-FINISH terminal paths.
+
+## ADR-014: Sprint #006 NLSpec Gap Closure for Attractor Mapping, Manager Loop, and Anthropic Thinking Fidelity
+- Date: 2026-03-03
+- Status: Accepted
+
+### Context
+Sprint #006 identified four high-impact NLSpec gaps:
+- Attractor shape-to-handler resolution diverged from the canonical mapping table.
+- `stack.manager_loop` was implemented as a stub without supervisor semantics or telemetry artifacts.
+- `::unified_llm::from_env` rejected multi-provider environments and did not provide a deterministic multi-provider client configuration contract.
+- Anthropic translation did not fully support DEVELOPER/TOOL role semantics or thinking/redacted thinking round-tripping with signatures.
+
+### Decision
+- Align Attractor handler resolution with canonical mappings:
+  - `hexagon -> wait.human`
+  - `parallelogram -> tool`
+  - `component -> parallel`
+  - `tripleoctagon -> parallel.fan_in`
+  - `house -> stack.manager_loop`
+  - retain `parallel.fan_in` with `fan-in` alias support
+- Implement a minimal `stack.manager_loop` supervisor handler:
+  - consumes `stack.child_dotfile`, `stack.child_autostart`, `manager.poll_interval`, `manager.max_cycles`, `manager.stop_condition`, and `manager.actions`
+  - emits cycle telemetry under `<logs_root>/<node>/manager_loop.json`
+  - returns deterministic failures for missing child configuration, child failure, invalid stop/action config, and cycle exhaustion
+- Introduce a multi-provider client-state contract in Unified LLM:
+  - `default_provider`
+  - `providers` dictionary with per-provider `api_key`, `base_url`, `transport`, and `provider_options`
+  - `from_env` registers all configured providers, chooses deterministic default ordering, and enforces optional `UNIFIED_LLM_PROVIDER` override validity
+- Extend Anthropic adapter/message normalization:
+  - normalize supported roles (`system`, `developer`, `user`, `assistant`, `tool`)
+  - translate TOOL role messages into Anthropic `tool_result` blocks in `user` messages
+  - preserve `thinking` and `redacted_thinking` blocks (with `signature`) in request translation and response parsing for `complete()` and `stream()`
+
+### Consequences
+Positive:
+- Attractor execution behavior now matches canonical NLSpec handler selection and manager-loop semantics.
+- Unified LLM clients can be built once and route across multiple configured providers deterministically.
+- Anthropic round-tripping of reasoning artifacts is preserved for continuation fidelity and regression-protected by unit/streaming tests.
+
+Tradeoffs:
+- Unified LLM client state and Anthropic translation paths are more complex and require ongoing fixture coverage as provider payload schemas evolve.
+- Manager-loop behavior is intentionally minimal and synchronous; future enhancements may be required for fully asynchronous child lifecycle control.

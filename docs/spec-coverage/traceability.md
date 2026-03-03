@@ -193,8 +193,8 @@ verify: `tclsh tests/all.tcl -match *attractor*`
 id: ATR-DOD-11.22-EACH-NODE-S-HANDLER-RESOLVED-VIA
 spec: attractor-spec.md#L1809
 impl: lib/attractor/main.tcl, bin/attractor
-tests: tests/unit/attractor.test, tests/integration/attractor_integration.test, tests/e2e/attractor_cli_e2e.test
-verify: `tclsh tests/all.tcl -match *attractor*`
+tests: tests/unit/attractor.test, tests/integration/attractor_integration.test
+verify: `tclsh tests/all.tcl -match *attractor-handler-shape*`
 ---
 id: ATR-DOD-11.23-HANDLER-CALLED-NODE-CONTEXT-GRAPH-LOGSROOT
 spec: attractor-spec.md#L1810
@@ -1020,9 +1020,9 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-REQ-THINKING-BLOCKS-ANTHROPIC-S-EXTENDED-THINKING
 spec: unified-llm-spec.md#L543
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/anthropic.tcl
+tests: tests/unit/unified_llm.test, tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-anthropic-thinking-roundtrip*`
 ---
 id: ULLM-REQ-USAGE-OBJECTS-MUST-SUPPORT-ADDITION-AGGREGATING
 spec: unified-llm-spec.md#L664
@@ -1104,9 +1104,9 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-REQ-THINKING-BLOCK-ROUND-TRIPPING-THINKING-AND
 spec: unified-llm-spec.md#L1562
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/anthropic.tcl
+tests: tests/unit/unified_llm.test, tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-anthropic-thinking-roundtrip*`
 ---
 id: ULLM-REQ-MAX-TOKENS-IS-REQUIRED-ANTHROPIC-ALWAYS
 spec: unified-llm-spec.md#L1563
@@ -1158,9 +1158,9 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-DOD-8.1-CAN-CONSTRUCTED-ENVIRONMENT-VARIABLES
 spec: unified-llm-spec.md#L1973
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl
+tests: tests/unit/unified_llm.test
+verify: `tclsh tests/all.tcl -match *from-env*`
 ---
 id: ULLM-DOD-8.2-CAN-CONSTRUCTED-PROGRAMMATICALLY-EXPLICIT-ADAPTER-INSTANCES
 spec: unified-llm-spec.md#L1974
@@ -1236,9 +1236,9 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-DOD-8.14-ALL-5-ROLES-SYSTEM-USER-ASSISTANT
 spec: unified-llm-spec.md#L1991
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/anthropic.tcl
+tests: tests/unit/unified_llm.test
+verify: `tclsh tests/all.tcl -match *unified_llm-anthropic-roles-translation*`
 ---
 id: ULLM-DOD-8.15-ESCAPE-HATCH-PASSES-THROUGH-PROVIDER-SPECIFIC
 spec: unified-llm-spec.md#L1992
@@ -1296,9 +1296,9 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-DOD-8.24-REDACTED-THINKING-BLOCKS-PASSED-THROUGH-VERBATIM
 spec: unified-llm-spec.md#L2004
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/anthropic.tcl
+tests: tests/unit/unified_llm.test, tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-anthropic-thinking-translate*`
 ---
 id: ULLM-DOD-8.25-MULTIMODAL-MESSAGES-TEXT-IMAGES-SAME-MESSAGE
 spec: unified-llm-spec.md#L2005
@@ -1380,9 +1380,9 @@ verify: `tclsh tests/all.tcl -match *unified*`
 ---
 id: ULLM-DOD-8.38-ANTHROPIC-EXTENDED-THINKING-BLOCKS-RETURNED-CONTENT
 spec: unified-llm-spec.md#L2024
-impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/openai.tcl, lib/unified_llm/adapters/anthropic.tcl, lib/unified_llm/adapters/gemini.tcl, lib/unified_llm/models.json
-tests: tests/unit/unified_llm.test, tests/integration/unified_llm_parity.test
-verify: `tclsh tests/all.tcl -match *unified*`
+impl: lib/unified_llm/main.tcl, lib/unified_llm/adapters/anthropic.tcl
+tests: tests/unit/unified_llm.test, tests/unit/unified_llm_streaming.test
+verify: `tclsh tests/all.tcl -match *unified_llm-anthropic-stream-thinking-roundtrip*`
 ---
 id: ULLM-DOD-8.39-THINKING-BLOCK-FIELD-PRESERVED-ROUND-TRIPPING
 spec: unified-llm-spec.md#L2025
