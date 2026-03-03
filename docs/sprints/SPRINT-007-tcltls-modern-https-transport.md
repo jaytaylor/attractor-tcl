@@ -428,6 +428,17 @@ Track 0 -> Track A -> Track B -> Track C -> Final Closeout.
     - `.scratch/verification/SPRINT-007/resync-2/docs-lint.log`
     - `.scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log`
 
+- [X] **R6 - Fix modern-runtime live handshake failures via TLS SNI registration**
+  - Files:
+    - `lib/unified_llm/transports/https_json.tcl`
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/debug/docker-tls-handshake-probe.log docker run --rm ubuntu:24.04 bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcl-tls ca-certificates >/dev/null && cat >/tmp/probe.tcl <<\"TCL\"; package require Tcl 8.6; package require http; package require tls; puts \"tcl=[info patchlevel] tls=[package provide tls]\"; proc try_probe {label register_cmd} { catch {::http::unregister https}; eval $register_cmd; set code [catch { set tok [::http::geturl https://api.openai.com/v1/models -timeout 15000 -headers {Authorization {Bearer __invalid__}}]; set status [::http::status $tok]; set ncode [::http::ncode $tok]; set data [::http::data $tok]; ::http::cleanup $tok; list ok $status $ncode [string range $data 0 80] } err opts]; if {$code} { puts \"$label=ERROR:$err\" } else { puts \"$label=OK:$err\" } }; try_probe default {::http::register https 443 ::tls::socket}; try_probe autosni {::http::register https 443 [list ::tls::socket -autoservername 1]}; TCL; tclsh /tmp/probe.tcl'` (exit code 0; default path reproduces handshake failure, autosni path returns HTTP 401)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/docker-invalid-key-modern.log docker run --rm -v "$PWD":/work -w /work ubuntu:24.04 bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcllib tcl-tls make ca-certificates >/dev/null && OPENAI_API_KEY=dummy ANTHROPIC_API_KEY=dummy GEMINI_API_KEY=dummy E2E_LIVE_PROVIDERS=openai,anthropic,gemini tclsh tests/e2e_live.tcl -match *invalid-key*'` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/debug/docker-tls-handshake-probe.log`
+    - `.scratch/verification/SPRINT-007/track-c/docker-invalid-key-modern.log`
+    - `.scratch/verification/SPRINT-007/live/1772571106-1/unified_llm/openai/invalid-key.json`
+
 ## Acceptance Matrix
 
 | Case | Expected Result |

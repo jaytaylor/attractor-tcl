@@ -2,221 +2,252 @@ Legend: [ ] Incomplete, [X] Complete
 
 # Sprint #007 Comprehensive Implementation Plan - TclTLS Modern HTTPS Transport
 
-## Source and Intent
-This implementation plan is derived from:
+## Objective
+Implement Sprint #007 end-to-end so `make test-e2e` uses a modern TLS-aware HTTPS transport path with deterministic failure contracts, actionable runtime diagnostics, and zero regressions to offline deterministic behavior.
+
+## Source Scope
+Primary input:
 - `docs/sprints/SPRINT-007-tcltls-modern-https-transport.md`
 
-Goal: deliver Sprint #007 with minimal behavior drift, explicit TLS compatibility checks, and complete evidence capture.
-
-## Objective
-Implement modern TLS runtime guardrails for HTTPS transport and live e2e execution so unsupported Tcl TLS stacks fail fast with deterministic diagnostics while offline tests remain stable.
-
-## Implementation-State Snapshot
-Verified on 2026-03-03 after final implementation pass:
-- `lib/unified_llm/transports/https_json.tcl`
-  - enforces `tls >= 1.7.22` via explicit runtime preflight
-  - maps missing/unsupported/unreadable TLS runtime to deterministic `UNIFIED_LLM TRANSPORT NETWORK <provider>`
-  - uses explicit HTTPS registration state with cached initialization failures
-- `tests/integration/unified_llm_https_transport_integration.test`
-  - covers happy path, HTTP contract, network contract, missing/unsupported TLS, registration idempotency/failure caching
-  - includes TLS version introspection failure path assertions with remediation hints
-- `tests/e2e_live.tcl` + `tests/support/e2e_live_support.tcl`
-  - writes `runtime-preflight.json` for every live run
-  - writes `preflight-failure.json` and exits with `E2E_LIVE TRANSPORT TLS_UNSUPPORTED` when TLS is unsupported
-- `Makefile`
-  - supports interpreter override via `TCLSH ?= tclsh` and uses `$(TCLSH)` across targets
-- `.github/workflows/ci.yml`
-  - installs `tcl-tls` and probes runtime with `tclsh tools/tls_runtime_probe.tcl`
-- `docs/howto/live-e2e.md`
-  - documents minimum/recommended TLS runtime plus preflight and `TCLSH=... make test-e2e` usage
-
-## Implementation Principles
-- Preserve transport errorcode contracts:
+Design and execution constraints inherited from sprint source:
+- Preserve transport error contracts:
   - `UNIFIED_LLM TRANSPORT NETWORK <provider>`
   - `UNIFIED_LLM TRANSPORT HTTP <provider> <status>`
-- Keep `make test` deterministic and offline.
-- Keep secret-redaction and leak-scan behavior unchanged.
-- Use additive changes; avoid refactors not required by Sprint #007.
+- Preserve secret redaction and leak-scan behavior.
+- Keep `make test` offline and deterministic.
+- Prefer additive hardening over broad refactor.
 
-## Decision Gate: Minimum Supported `tls` Version
-- [ ] **D0 - Finalize policy before code changes**
-  - Candidate policy:
-    - minimum supported: `tls >= 1.7.22`
-    - recommended: latest distro-supported `tls` (prefer Tcl 8.6 + current `tcl-tls`)
-  - Rationale:
-    - rejects known-failing legacy stacks (example: `1.6.1`)
-    - avoids over-constraining to specific major versions
-  - Decision output:
-    - one constant in transport code
-    - mirrored in docs/CI probes
-  - Verification command:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/tls-policy-decision.log tclsh -c 'puts [package vcompare 1.7.22 1.6.1]; puts [package vcompare 1.7.22 1.7.22]'`
+## Current-State Review (2026-03-03)
+Repository inspection shows Sprint #007 requirements are largely present in code, but implementation closure still requires systematic gate execution, evidence freshness, and final acceptance sign-off.
 
-## Phase Plan
+Observed implementation surface:
+- TLS runtime policy and HTTPS registration hardening:
+  - `lib/unified_llm/transports/https_json.tcl`
+- Transport integration tests:
+  - `tests/integration/unified_llm_https_transport_integration.test`
+- Live harness preflight artifacts and fail-fast behavior:
+  - `tests/support/e2e_live_support.tcl`
+  - `tests/e2e_live.tcl`
+- Live preflight integration tests:
+  - `tests/integration/e2e_live_support_integration.test`
+- Runtime probe:
+  - `tools/tls_runtime_probe.tcl`
+- Make/CI/docs alignment:
+  - `Makefile`
+  - `.github/workflows/ci.yml`
+  - `docs/howto/live-e2e.md`
 
-## Phase 0 - Baseline and Repro Capture
-- [ ] **P0.1 - Capture local runtime and live failure shape**
-  - Commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/runtime-version.log tclsh -c 'puts [info patchlevel]; catch {package require tls} e; puts $e; catch {puts [package provide tls]} _'`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/make-test-e2e-baseline.log make test-e2e`
-- [ ] **P0.2 - Capture offline non-regression baseline**
-  - Command:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/make-test-baseline.log timeout 180 make test`
+Plan implication:
+- Treat this sprint as an implementation-closeout and validation-hardening effort, not a greenfield build.
+- Execute remaining work as a structured verification + gap-closure sequence with fresh artifacts.
 
-## Phase 1 - Transport TLS Runtime Hardening (`https_json`)
-- [ ] **P1.1 - Implement TLS preflight helper**
-  - File:
-    - `lib/unified_llm/transports/https_json.tcl`
-  - Add:
-    - minimum-version constant
-    - helper to load `tls`, resolve provided version, compare via `package vcompare`
-    - deterministic fail-fast error text with remediation hint
-  - Required behavior:
-    - missing `tls` -> `UNIFIED_LLM TRANSPORT NETWORK <provider>`
-    - unsupported `tls` -> same errorcode with actionable message
-- [ ] **P1.2 - Harden HTTPS registration state handling**
-  - File:
-    - `lib/unified_llm/transports/https_json.tcl`
-  - Add:
-    - explicit registration state (`uninitialized|ready|failed`) and last error memo
-    - idempotent fast path when ready
-    - stable deterministic mapping of registration failures to `NETWORK`
-- [ ] **P1.3 - Preserve existing HTTP and redaction contracts**
-  - File:
-    - `lib/unified_llm/transports/https_json.tcl`
-  - Guard:
-    - no change to success response shape
-    - no change to non-2xx -> HTTP error mapping
-    - no change to body summarization/redaction safety behavior
-- [ ] **P1.4 - Add integration tests for TLS mismatch paths**
-  - File:
-    - `tests/integration/unified_llm_https_transport_integration.test`
-  - Add coverage:
-    - missing `tls` simulation path
-    - unsupported-version simulation path
-    - message quality assertion (remediation hint present, secrets absent)
-  - Verification commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-tests.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport*`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-network-contract.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport-network-error*`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-http-redaction.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport-http-error*`
+## Implementation Strategy
+Use six ordered tracks:
+1. Baseline capture and policy lock.
+2. Transport hardening parity check and code gap closure.
+3. Integration and deterministic contract coverage.
+4. Live harness and runtime diagnostics verification.
+5. Toolchain/CI/docs parity.
+6. Final regression, evidence, and release closeout.
 
-## Phase 2 - Live Harness Runtime Diagnostics
-- [ ] **P2.1 - Emit preflight runtime metadata**
-  - Files:
-    - `tests/support/e2e_live_support.tcl`
-    - `tests/e2e_live.tcl`
-  - Add:
-    - Tcl and tls runtime capture at run start
-    - artifact persistence (`runtime-preflight.json`) under run root
-    - clear failure artifact when TLS readiness fails
-- [ ] **P2.2 - Preserve existing provider-selection and secret-scan contracts**
-  - Files:
-    - `tests/support/e2e_live_support.tcl`
-    - `tests/e2e_live.tcl`
-  - Guard:
-    - no change to key-selection fail-fast behavior
-    - no change to secret leak scan semantics
-- [ ] **P2.3 - Validate live matrix behavior**
-  - Commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-b/e2e-live-preflight.log tclsh tests/e2e_live.tcl -match *`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-b/make-test-e2e-live.log timeout 180 make test-e2e`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-b/make-test-e2e-no-keys.log env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e`
-
-## Phase 3 - Tooling and CI Alignment
-- [ ] **P3.1 - Parameterize Tcl interpreter in Makefile**
-  - File:
-    - `Makefile`
-  - Change:
-    - add `TCLSH ?= tclsh`
-    - replace direct `tclsh` with `$(TCLSH)` for `precommit`, `build`, `test`, `test-e2e`
-  - Verification:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/makefile-regression.log make build`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/makefile-test-regression.log make test`
-- [ ] **P3.2 - Install and probe TLS prerequisites in CI**
-  - File:
-    - `.github/workflows/ci.yml`
-  - Change:
-    - install distro tls package (for Ubuntu runner, `tcl-tls`)
-    - add explicit probe step printing Tcl version + `package require tls` result
-    - keep existing `test` and `live-smoke` job separation
-  - Verification:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/ci-yaml-validate.log rg -n 'tcl|tls|tcl-tls|package require tls' .github/workflows/ci.yml`
-- [ ] **P3.3 - Update operator documentation**
-  - File:
-    - `docs/howto/live-e2e.md`
-  - Add:
-    - minimum/recommended tls versions
-    - runtime preflight snippet
-    - `TCLSH=... make test-e2e` examples
-    - artifact path update for Sprint 007 run layout
-  - Verification:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/docs-live-e2e-check.log rg -n 'tls|TCLSH|test-e2e|runtime|preflight' docs/howto/live-e2e.md`
-
-## Phase 4 - Final Regression and Closeout
-- [ ] **P4.1 - Full deterministic gate**
-  - Commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/make-build.log timeout 180 make build`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/make-test.log timeout 180 make test`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/spec-coverage.log tclsh tools/spec_coverage.tcl`
-- [ ] **P4.2 - Plan/docs lint guardrails**
-  - Commands:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/docs-lint.log bash tools/docs_lint.sh`
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md`
-
-## Resync - Final Hardening Pass (2026-03-03)
-- [X] **R5 - Close TLS version-introspection failure gap and rerun final gates**
+## Track 0 - Baseline and Policy Lock
+- [X] **T0.1 - Lock runtime support policy**
+  - Decision: `tls >= 1.7.22` as minimum supported runtime.
   - Verification executed:
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/transport-tests.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport*` (exit code 0)
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-build.log timeout 180 make build` (exit code 0)
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-test.log timeout 180 make test` (exit code 0)
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/make-test-e2e.log timeout 180 make test-e2e` (exit code 2, expected in this runtime: Tcl 8.5.9 + tls 1.6.1 is unsupported)
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md` (exit code 0)
-    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-2/evidence-lint-comprehensive.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-comprehensive-implementation-plan.md` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/tls-policy.log tclsh -c 'puts [package vcompare 1.7.22 1.6.1]; puts [package vcompare 1.7.22 1.7.22]'` (exit code 0)
   - Evidence:
-    - `.scratch/verification/SPRINT-007/resync-2/transport-tests.log`
-    - `.scratch/verification/SPRINT-007/resync-2/make-build.log`
-    - `.scratch/verification/SPRINT-007/resync-2/make-test.log`
-    - `.scratch/verification/SPRINT-007/resync-2/make-test-e2e.log`
-    - `.scratch/verification/SPRINT-007/resync-2/docs-lint.log`
-    - `.scratch/verification/SPRINT-007/resync-2/evidence-lint-sprint007.log`
-    - `.scratch/verification/SPRINT-007/resync-2/evidence-lint-comprehensive.log`
+    - `.scratch/verification/SPRINT-007/track-0/tls-policy.log`
+
+- [X] **T0.2 - Capture runtime and test baselines**
+  - Purpose: preserve before/after comparability and detect drift.
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/runtime-version.log bash -lc 'printf "%s\n" "puts [info patchlevel]" "if {[catch {package require tls} err]} {puts \"tls_require_error=$err\"} else {puts \"tls_require_ok=$err\"}" "puts \"tls_provide=[package provide tls]\"" | tclsh'` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/make-test-baseline.log timeout 180 make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-0/make-test-e2e-baseline.log timeout 180 make test-e2e` (exit code 2, expected on local unsupported runtime)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-0/runtime-version.log`
+    - `.scratch/verification/SPRINT-007/track-0/make-test-baseline.log`
+    - `.scratch/verification/SPRINT-007/track-0/make-test-e2e-baseline.log`
+
+## Track A - Transport Runtime Hardening (`https_json`)
+- [X] **A1 - Enforce deterministic TLS preflight semantics**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-preflight.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport-*` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-a/transport-preflight.log`
+
+- [X] **A2 - Validate HTTPS registration state machine**
+  - Implementation note: default registration now uses `::tls::socket -autoservername 1` to satisfy SNI requirements for modern provider endpoints.
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-registration.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport-registration-*` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/debug/docker-tls-handshake-probe.log docker run --rm ubuntu:24.04 bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcl-tls ca-certificates >/dev/null && cat >/tmp/probe.tcl <<\"TCL\"; package require Tcl 8.6; package require http; package require tls; puts \"tcl=[info patchlevel] tls=[package provide tls]\"; proc try_probe {label register_cmd} { catch {::http::unregister https}; eval $register_cmd; set code [catch { set tok [::http::geturl https://api.openai.com/v1/models -timeout 15000 -headers {Authorization {Bearer __invalid__}}]; set status [::http::status $tok]; set ncode [::http::ncode $tok]; set data [::http::data $tok]; ::http::cleanup $tok; list ok $status $ncode [string range $data 0 80] } err opts]; if {$code} { puts \"$label=ERROR:$err\" } else { puts \"$label=OK:$err\" } }; try_probe default {::http::register https 443 ::tls::socket}; try_probe autosni {::http::register https 443 [list ::tls::socket -autoservername 1]}; TCL; tclsh /tmp/probe.tcl'` (exit code 0; default path reproduces handshake failure, autosni path returns HTTP 401)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-a/transport-registration.log`
+    - `.scratch/verification/SPRINT-007/debug/docker-tls-handshake-probe.log`
+
+- [X] **A3 - Preserve HTTP/error and redaction contracts**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-http.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport-http-error*` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-a/transport-network.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport-network-error*` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-a/transport-http.log`
+    - `.scratch/verification/SPRINT-007/track-a/transport-network.log`
+
+## Track B - Integration Coverage and Deterministic Failure Matrix
+- [X] **B1 - Confirm transport mismatch coverage completeness**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-b/transport-integration.log tclsh tests/all.tcl -match *integration-unified-llm-https-transport*` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-b/transport-integration.log`
+
+- [X] **B2 - Confirm live-support preflight artifact tests**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-b/e2e-live-support-integration.log tclsh tests/all.tcl -match *integration-e2e-live-*` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-b/e2e-live-support-integration.log`
+
+## Track C - Live Harness Runtime Diagnostics
+- [X] **C1 - Validate preflight artifact emission in `make test-e2e` flow**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/e2e-live-preflight.log tclsh tests/e2e_live.tcl -match '*'` (exit code 2, expected on local unsupported runtime)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-c/e2e-live-preflight.log`
+    - `.scratch/verification/SPRINT-007/live/1772570902-54557/runtime-preflight.json`
+    - `.scratch/verification/SPRINT-007/live/1772570902-54557/preflight-failure.json`
+
+- [X] **C2 - Validate live invalid-key contract for selected providers**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/make-test-e2e-invalid-key.log timeout 180 make test-e2e` (exit code 2, expected on local unsupported runtime)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/docker-modern-runtime-probe.log docker run --rm -v "$PWD":/work -w /work ubuntu:24.04 bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcllib tcl-tls make ca-certificates >/dev/null && printf "puts [info patchlevel]\npackage require tls\nputs [package provide tls]\n" | tclsh'` (exit code 0, confirms modern runtime `8.6.14/1.7.22`)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/docker-invalid-key-modern.log docker run --rm -v "$PWD":/work -w /work ubuntu:24.04 bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcllib tcl-tls make ca-certificates >/dev/null && OPENAI_API_KEY=dummy ANTHROPIC_API_KEY=dummy GEMINI_API_KEY=dummy E2E_LIVE_PROVIDERS=openai,anthropic,gemini tclsh tests/e2e_live.tcl -match *invalid-key*'` (exit code 0, invalid-key tests pass with HTTP-classified failures)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-c/make-test-e2e-invalid-key.log`
+    - `.scratch/verification/SPRINT-007/track-c/docker-modern-runtime-probe.log`
+    - `.scratch/verification/SPRINT-007/track-c/docker-invalid-key-modern.log`
+    - `.scratch/verification/SPRINT-007/live/1772571106-1/unified_llm/openai/invalid-key.json`
+    - `.scratch/verification/SPRINT-007/live/1772571106-1/unified_llm/anthropic/invalid-key.json`
+    - `.scratch/verification/SPRINT-007/live/1772571106-1/unified_llm/gemini/invalid-key.json`
+
+- [X] **C3 - Preserve no-key fail-fast semantics**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/make-test-e2e-no-keys.log env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u E2E_LIVE_PROVIDERS timeout 180 make test-e2e` (exit code 2)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-c/make-test-e2e-no-keys.log`
+
+## Track D - Tooling, CI, and Docs Parity
+- [X] **D1 - Validate `TCLSH` override usage across all Make targets**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-d/make-build.log make build` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-d/make-test.log make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-d/make-test-tclsh-override.log env TCLSH=tclsh make test` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-d/make-build.log`
+    - `.scratch/verification/SPRINT-007/track-d/make-test.log`
+    - `.scratch/verification/SPRINT-007/track-d/make-test-tclsh-override.log`
+
+- [X] **D2 - Validate CI provisioning/probe coverage**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-d/ci-tls-lines.log rg -n 'tcl-tls|tls_runtime_probe|make test-e2e|E2E_LIVE_PROVIDERS' .github/workflows/ci.yml` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-d/tls-runtime-probe.log tclsh tools/tls_runtime_probe.tcl` (exit code 1, expected on local unsupported runtime)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-d/ci-tls-lines.log`
+    - `.scratch/verification/SPRINT-007/track-d/tls-runtime-probe.log`
+
+- [X] **D3 - Validate operator docs match actual behavior**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-d/docs-live-e2e.log rg -n 'tls >= 1.7.22|TCLSH|runtime-preflight|preflight-failure|test-e2e' docs/howto/live-e2e.md` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/track-d/docs-live-e2e.log`
+
+## Track E - Final Regression and Sprint Closeout
+- [X] **E1 - Full deterministic and spec gates**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/make-build.log timeout 180 make build` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/make-test.log timeout 180 make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/spec-coverage.log tclsh tools/spec_coverage.tcl` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/final/make-build.log`
+    - `.scratch/verification/SPRINT-007/final/make-test.log`
+    - `.scratch/verification/SPRINT-007/final/spec-coverage.log`
+
+- [X] **E2 - Doc and evidence lint gates**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/evidence-lint-sprint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/final/evidence-lint-plan.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-comprehensive-implementation-plan.md` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/final/docs-lint.log`
+    - `.scratch/verification/SPRINT-007/final/evidence-lint-sprint.log`
+    - `.scratch/verification/SPRINT-007/final/evidence-lint-plan.log`
 
 ## Acceptance Matrix
 | Scenario | Expected Outcome |
 | --- | --- |
-| `make test` | Pass, deterministic/offline unchanged |
-| modern tls + valid keys + `make test-e2e` | live smoke passes |
-| modern tls + invalid keys | deterministic `UNIFIED_LLM TRANSPORT HTTP <provider> <status>` |
-| no provider keys | preflight fail-fast before network |
-| missing/unsupported tls | deterministic `UNIFIED_LLM TRANSPORT NETWORK <provider>` with remediation hint |
+| `make test` | Passes unchanged and remains offline/deterministic |
+| supported TLS runtime + valid keys + `make test-e2e` | live smoke passes with artifacts |
+| supported TLS runtime + invalid key | deterministic `UNIFIED_LLM TRANSPORT HTTP <provider> <status>` |
+| unsupported TLS runtime | fail-fast preflight with `E2E_LIVE TRANSPORT TLS_UNSUPPORTED` and `preflight-failure.json` |
+| missing provider keys | deterministic no-provider fail-fast before network calls |
 
 ## Risks and Mitigations
-- TLS packaging differences across OS/distros
-  - Mitigation: explicit CI install + runtime probe + docs preflight
-- Regression in transport initialization affecting non-HTTPS calls
-  - Mitigation: keep HTTPS registration gated on URL scheme; run targeted integration tests
-- Secret leakage via richer diagnostics
-  - Mitigation: keep error text key-agnostic and run existing artifact leak scan unchanged
+- Runtime drift across CI/local package versions.
+  - Mitigation: mandatory `tools/tls_runtime_probe.tcl` checks and persisted preflight artifacts.
+- Hidden regression in transport initialization.
+  - Mitigation: targeted transport integration selectors and repeated registration tests.
+- Secret leakage in richer diagnostics.
+  - Mitigation: preserve redaction checks and post-run artifact leak scans as a non-optional gate.
 
-## Rollout Strategy
-1. Merge Phase 1 (transport + integration coverage).
-2. Merge Phase 2 (live harness diagnostics).
-3. Merge Phase 3 (Makefile, CI, docs).
-4. Execute Phase 4 gates and archive evidence.
+## Rollout and Rollback
+Rollout order:
+1. Complete Track 0 and Track A.
+2. Complete Track B and Track C.
+3. Complete Track D.
+4. Execute Track E and close sprint.
 
-## Rollback Strategy
-- If provider regressions appear after Phase 1:
-  - revert transport hardening commit(s) first
-  - keep docs/CI/runtime-probe improvements if still valid
-- Keep failed-attempt evidence under:
-  - `.scratch/verification/SPRINT-007/failed-rollout/`
+Rollback approach:
+- Revert transport hardening changes first if provider behavior regresses.
+- Keep CI/docs/runtime probe improvements when safe to retain.
+- Archive failed attempt logs in `.scratch/verification/SPRINT-007/failed-rollout/`.
 
-## Appendix - Mermaid Diagrams
+## Design-to-File Mapping
+- Transport runtime and registration hardening:
+  - `lib/unified_llm/transports/https_json.tcl`
+- Transport integration contract tests:
+  - `tests/integration/unified_llm_https_transport_integration.test`
+- Live runtime preflight and artifact behavior:
+  - `tests/support/e2e_live_support.tcl`
+  - `tests/e2e_live.tcl`
+  - `tests/integration/e2e_live_support_integration.test`
+- Runtime probing and operator tooling:
+  - `tools/tls_runtime_probe.tcl`
+  - `Makefile`
+  - `.github/workflows/ci.yml`
+  - `docs/howto/live-e2e.md`
+
+## Appendix - Implementation Mermaid Diagrams
+
+### Runtime and Validation Flow
 ```mermaid
 flowchart LR
-  P0[Baseline] --> P1[Transport hardening]
-  P1 --> P2[Live preflight diagnostics]
-  P2 --> P3[Tooling and docs]
-  P3 --> P4[Final regression gates]
+  T0[Track 0 Baseline] --> A[Track A Transport]
+  A --> B[Track B Integration]
+  B --> C[Track C Live Harness]
+  C --> D[Track D Tooling CI Docs]
+  D --> E[Track E Final Gates]
+  E --> DONE[Sprint 007 Closeout]
+```
+
+### Error Classification Path
+```mermaid
+flowchart TD
+  START[https_json call] --> SCHEME{HTTPS request?}
+  SCHEME -->|No| HTTPCALL[http geturl]
+  SCHEME -->|Yes| PREFLIGHT[TLS runtime preflight]
+  PREFLIGHT -->|unsupported| NETERR[UNIFIED_LLM TRANSPORT NETWORK]
+  PREFLIGHT -->|supported| REGISTER[http register tls socket with autoservername]
+  REGISTER -->|fail| NETERR
+  REGISTER -->|ok| HTTPCALL
+  HTTPCALL --> STATUS{HTTP status}
+  STATUS -->|2xx| OK[response dict]
+  STATUS -->|non-2xx| HTTPERR[UNIFIED_LLM TRANSPORT HTTP provider status]
 ```
