@@ -43,6 +43,10 @@ proc ::tests::integration::https_transport::tls_provide_modern {} {
     return "1.7.22"
 }
 
+proc ::tests::integration::https_transport::tls_provide_error {} {
+    error "simulated package provide tls failure"
+}
+
 proc ::tests::integration::https_transport::tls_register_ok {} {
     variable register_count
     incr register_count
@@ -158,6 +162,23 @@ test integration-unified-llm-https-transport-unsupported-tls-1.0 {unsupported tl
 } -cleanup {
     ::tests::integration::https_transport::restore_tls_impls $saved
 } -result {1 {UNIFIED_LLM TRANSPORT NETWORK anthropic} 1 1}
+
+test integration-unified-llm-https-transport-tls-provide-error-1.0 {tls version introspection failure maps to deterministic NETWORK error with remediation hint} -setup {
+    set saved [::tests::integration::https_transport::save_tls_impls]
+    set ::unified_llm::transports::https_json::tls_require_impl [list ::tests::integration::https_transport::tls_require_modern]
+    set ::unified_llm::transports::https_json::tls_provide_impl [list ::tests::integration::https_transport::tls_provide_error]
+    set ::unified_llm::transports::https_json::tls_register_impl [list ::tests::integration::https_transport::tls_register_ok]
+    ::unified_llm::transports::https_json::__reset_https_registration_state
+} -body {
+    set code [catch {::unified_llm::transports::https_json::__ensure_https_registered openai} err opts]
+    list \
+        $code \
+        [dict get $opts -errorcode] \
+        [expr {[string first "unable to determine tls runtime version" $err] >= 0}] \
+        [expr {[string first "Install or upgrade tcl-tls" $err] >= 0}]
+} -cleanup {
+    ::tests::integration::https_transport::restore_tls_impls $saved
+} -result {1 {UNIFIED_LLM TRANSPORT NETWORK openai} 1 1}
 
 test integration-unified-llm-https-transport-registration-idempotent-1.0 {https registration runs once for repeated initialization} -setup {
     set saved [::tests::integration::https_transport::save_tls_impls]

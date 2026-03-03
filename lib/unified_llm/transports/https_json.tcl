@@ -161,7 +161,13 @@ proc ::unified_llm::transports::https_json::__tls_runtime_probe {} {
         return $out
     }
 
-    set providedVersion [string trim [::unified_llm::transports::https_json::__tls_provided_version]]
+    if {[catch {set providedVersion [string trim [::unified_llm::transports::https_json::__tls_provided_version]]} provideErr]} {
+        dict set out tls_available 1
+        dict set out status error
+        dict set out message "unable to determine tls runtime version (requires tls >= $tls_min_version). Install or upgrade tcl-tls."
+        dict set out error_detail [::unified_llm::transports::https_json::__summarize_body $provideErr]
+        return $out
+    }
     if {$providedVersion eq ""} {
         set providedVersion [string trim $requiredVersion]
     }
