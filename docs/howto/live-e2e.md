@@ -14,10 +14,31 @@ These tests call real provider HTTPS APIs and require API keys.
   - `http`
   - `tls` (required for `https://` transport)
   - `json`
+- Minimum TLS runtime: `tls >= 1.7.22`
+- Recommended runtime: Tcl 8.6+ with current distro `tcl-tls`
 - Provider API key(s):
   - `OPENAI_API_KEY`
   - `ANTHROPIC_API_KEY`
   - `GEMINI_API_KEY`
+
+## Runtime Preflight
+Quick probe:
+```bash
+tclsh <<'TCL'
+puts "tcl=[info patchlevel]"
+if {[catch {package require tls} tlsErr]} {
+  puts stderr "tls=missing"
+  puts stderr "tls_error=$tlsErr"
+  exit 1
+}
+puts "tls=[package provide tls]"
+TCL
+```
+
+If your default `tclsh` is too old, override it:
+```bash
+TCLSH=/path/to/modern/tclsh make test-e2e
+```
 
 ## Environment Variables
 - Provider selection:
@@ -32,7 +53,7 @@ These tests call real provider HTTPS APIs and require API keys.
   - `ANTHROPIC_BASE_URL` (default `https://api.anthropic.com`)
   - `GEMINI_BASE_URL` (default `https://generativelanguage.googleapis.com`)
 - Artifact root override:
-  - `E2E_LIVE_ARTIFACT_ROOT` (default `.scratch/verification/SPRINT-004/live/<run_id>`)
+  - `E2E_LIVE_ARTIFACT_ROOT` (default `.scratch/verification/SPRINT-007/live/<run_id>`)
 
 ## Provider Selection Rules
 - Default behavior: run all providers with configured keys.
@@ -59,10 +80,12 @@ E2E_LIVE_PROVIDERS=openai make test-e2e
 
 ## Artifacts
 Default root:
-- `.scratch/verification/SPRINT-004/live/<run_id>/`
+- `.scratch/verification/SPRINT-007/live/<run_id>/`
 
 Key files:
 - `run.json`
+- `runtime-preflight.json`
+- `preflight-failure.json` (only when runtime preflight fails)
 - `secret-leaks.json`
 - `unified_llm/<provider>/...`
 - `coding_agent_loop/<provider>/...`
@@ -79,14 +102,14 @@ Key files:
 ## Manual Secret Scan Procedure
 Use this if you need a separate audit without printing the key value:
 ```bash
-rg --files .scratch/verification/SPRINT-004/live/<run_id>
+rg --files .scratch/verification/SPRINT-007/live/<run_id>
 ```
 Then inspect `secret-leaks.json`:
 ```bash
-cat .scratch/verification/SPRINT-004/live/<run_id>/secret-leaks.json
+cat .scratch/verification/SPRINT-007/live/<run_id>/secret-leaks.json
 ```
 If leaks are found, only file paths are reported.
 
 ## Costs and Side Effects
 - Runs real provider API calls and incurs provider usage costs.
-- Writes local artifacts under `.scratch/verification/SPRINT-004/live/`.
+- Writes local artifacts under `.scratch/verification/SPRINT-007/live/`.

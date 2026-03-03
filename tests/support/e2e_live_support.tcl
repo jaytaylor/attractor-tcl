@@ -7,6 +7,7 @@ namespace eval ::tests::e2e_live {
     variable provider_configs {}
     variable component_list {unified_llm coding_agent_loop attractor}
     variable loaded_key_values {}
+    variable runtime_preflight {}
 }
 
 proc ::tests::e2e_live::provider_specs {} {
@@ -144,6 +145,7 @@ proc ::tests::e2e_live::initialize_run_context {} {
     variable provider_configs
     variable loaded_key_values
     variable component_list
+    variable runtime_preflight
 
     set envDict [::tests::e2e_live::env_to_dict]
     set selection [::tests::e2e_live::resolve_provider_selection $envDict]
@@ -157,7 +159,7 @@ proc ::tests::e2e_live::initialize_run_context {} {
         set run_id [file tail $artifact_root]
     } else {
         set run_id "[clock seconds]-[pid]"
-        set artifact_root [file normalize [file join $root .scratch verification SPRINT-004 live $run_id]]
+        set artifact_root [file normalize [file join $root .scratch verification SPRINT-007 live $run_id]]
     }
     file mkdir $artifact_root
 
@@ -171,18 +173,39 @@ proc ::tests::e2e_live::initialize_run_context {} {
             base_url [expr {[dict get $cfg base_url] ne "" ? [dict get $cfg base_url] : [dict get $cfg base_url_default]}]]
     }
 
+    set runtime_preflight [::unified_llm::transports::https_json::runtime_preflight]
+    dict set runtime_preflight checked_at [::tests::e2e_live::timestamp_utc]
+    ::tests::e2e_live::write_json_file [file join $artifact_root runtime-preflight.json] $runtime_preflight
+
     ::tests::e2e_live::write_json_file [file join $artifact_root run.json] [dict create \
         run_id $run_id \
         started_at [::tests::e2e_live::timestamp_utc] \
         selected_components $component_list \
         selected_providers $providerSummaries \
-        skipped_providers $skipped_providers]
+        skipped_providers $skipped_providers \
+        runtime_preflight $runtime_preflight]
 
     puts "live-e2e run_id=$run_id"
     puts "live-e2e artifacts=$artifact_root"
     puts "live-e2e providers=[join $selected_providers ,]"
+    if {[dict exists $runtime_preflight tls_version]} {
+        puts "live-e2e runtime tcl=[dict get $runtime_preflight tcl_version] tls=[dict get $runtime_preflight tls_version] supported=[dict get $runtime_preflight tls_supported]"
+    } else {
+        puts "live-e2e runtime tcl=[dict get $runtime_preflight tcl_version] tls=missing supported=0"
+    }
     if {[llength $skipped_providers] > 0} {
         puts "live-e2e skipped=[join [lmap item $skipped_providers {dict get $item provider}] ,]"
+    }
+
+    if {![dict get $runtime_preflight tls_supported]} {
+        set message [dict get $runtime_preflight message]
+        ::tests::e2e_live::write_json_file [file join $artifact_root preflight-failure.json] [dict create \
+            status failed \
+            failed_at [::tests::e2e_live::timestamp_utc] \
+            reason $message \
+            runtime_preflight $runtime_preflight]
+        ::tests::e2e_live::finalize_run_context failed preflight_failure $message
+        return -code error -errorcode [list E2E_LIVE TRANSPORT TLS_UNSUPPORTED] $message
     }
 }
 
@@ -193,6 +216,7 @@ proc ::tests::e2e_live::finalize_run_context {status args} {
     variable skipped_providers
     variable component_list
     variable provider_configs
+    variable runtime_preflight
 
     set providerSummaries {}
     foreach provider $selected_providers {
@@ -210,7 +234,8 @@ proc ::tests::e2e_live::finalize_run_context {status args} {
         status $status \
         selected_components $component_list \
         selected_providers $providerSummaries \
-        skipped_providers $skipped_providers]
+        skipped_providers $skipped_providers \
+        runtime_preflight $runtime_preflight]
     foreach {k v} $args {
         dict set payload $k $v
     }

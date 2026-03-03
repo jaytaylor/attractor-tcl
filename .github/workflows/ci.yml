@@ -18,7 +18,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Tcl
-        run: sudo apt-get update && sudo apt-get install -y tcl tcllib ripgrep graphviz
+        run: sudo apt-get update && sudo apt-get install -y tcl tcllib tcl-tls ripgrep graphviz
+      - name: Probe Tcl/TLS runtime
+        run: |
+          tclsh <<'TCL'
+          puts "tcl=[info patchlevel]"
+          if {[catch {package require tls} tlsErr]} {
+            puts stderr "tls=missing"
+            puts stderr "tls_error=$tlsErr"
+            exit 1
+          }
+          puts "tls=[package provide tls]"
+          TCL
       - name: Run test suite
         run: tclsh tests/all.tcl
 
@@ -30,7 +41,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install Tcl
-        run: sudo apt-get update && sudo apt-get install -y tcl tcllib ripgrep graphviz
+        run: sudo apt-get update && sudo apt-get install -y tcl tcllib tcl-tls ripgrep graphviz
+      - name: Probe Tcl/TLS runtime
+        run: |
+          tclsh <<'TCL'
+          puts "tcl=[info patchlevel]"
+          if {[catch {package require tls} tlsErr]} {
+            puts stderr "tls=missing"
+            puts stderr "tls_error=$tlsErr"
+            exit 1
+          }
+          puts "tls=[package provide tls]"
+          TCL
       - name: Validate provider secrets are present
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

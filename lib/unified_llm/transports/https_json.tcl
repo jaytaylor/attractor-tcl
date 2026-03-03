@@ -1,6 +1,13 @@
 namespace eval ::unified_llm::transports {}
 namespace eval ::unified_llm::transports::https_json {
     variable https_registered 0
+    variable https_registration_state uninitialized
+    variable https_registration_failure_mode ""
+    variable https_registration_failure_reason ""
+    variable tls_min_version "1.7.22"
+    variable tls_require_impl [list ::unified_llm::transports::https_json::__tls_require_impl_default]
+    variable tls_provide_impl [list ::unified_llm::transports::https_json::__tls_provide_impl_default]
+    variable tls_register_impl [list ::unified_llm::transports::https_json::__tls_register_impl_default]
 }
 
 package require Tcl 8.5
@@ -107,22 +114,152 @@ proc ::unified_llm::transports::https_json::__summarize_body {body} {
     return $compact
 }
 
+proc ::unified_llm::transports::https_json::__tls_require_impl_default {} {
+    return [package require tls]
+}
+
+proc ::unified_llm::transports::https_json::__tls_provide_impl_default {} {
+    return [package provide tls]
+}
+
+proc ::unified_llm::transports::https_json::__tls_register_impl_default {} {
+    return [::http::register https 443 ::tls::socket]
+}
+
+proc ::unified_llm::transports::https_json::__invoke_impl {scriptList} {
+    return [{*}$scriptList]
+}
+
+proc ::unified_llm::transports::https_json::__tls_require_package {} {
+    variable tls_require_impl
+    return [::unified_llm::transports::https_json::__invoke_impl $tls_require_impl]
+}
+
+proc ::unified_llm::transports::https_json::__tls_provided_version {} {
+    variable tls_provide_impl
+    return [::unified_llm::transports::https_json::__invoke_impl $tls_provide_impl]
+}
+
+proc ::unified_llm::transports::https_json::__tls_register_https {} {
+    variable tls_register_impl
+    return [::unified_llm::transports::https_json::__invoke_impl $tls_register_impl]
+}
+
+proc ::unified_llm::transports::https_json::__tls_runtime_probe {} {
+    variable tls_min_version
+
+    set out [dict create \
+        tcl_version [info patchlevel] \
+        tls_min_version $tls_min_version \
+        tls_available 0 \
+        tls_supported 0]
+
+    if {[catch {set requiredVersion [::unified_llm::transports::https_json::__tls_require_package]} requireErr]} {
+        dict set out status error
+        dict set out message "missing Tcl package tls (requires tls >= $tls_min_version). Install tcl-tls or set TCLSH to a runtime with newer tls."
+        dict set out error_detail [::unified_llm::transports::https_json::__summarize_body $requireErr]
+        return $out
+    }
+
+    set providedVersion [string trim [::unified_llm::transports::https_json::__tls_provided_version]]
+    if {$providedVersion eq ""} {
+        set providedVersion [string trim $requiredVersion]
+    }
+    if {$providedVersion eq ""} {
+        dict set out status error
+        dict set out message "unable to determine tls runtime version (requires tls >= $tls_min_version). Install or upgrade tcl-tls."
+        return $out
+    }
+
+    dict set out tls_available 1
+    dict set out tls_version $providedVersion
+
+    if {[catch {set comparison [package vcompare $providedVersion $tls_min_version]} compareErr]} {
+        dict set out status error
+        dict set out message "failed to compare tls runtime version $providedVersion with required minimum $tls_min_version. Install or upgrade tcl-tls."
+        dict set out error_detail [::unified_llm::transports::https_json::__summarize_body $compareErr]
+        return $out
+    }
+
+    if {$comparison < 0} {
+        dict set out status error
+        dict set out message "tls runtime $providedVersion is unsupported (requires tls >= $tls_min_version). Upgrade tcl-tls or set TCLSH to a runtime with newer tls."
+        return $out
+    }
+
+    dict set out status ok
+    dict set out tls_supported 1
+    dict set out message "tls runtime $providedVersion satisfies minimum $tls_min_version"
+    return $out
+}
+
+proc ::unified_llm::transports::https_json::__reset_https_registration_state {} {
+    variable https_registered
+    variable https_registration_state
+    variable https_registration_failure_mode
+    variable https_registration_failure_reason
+
+    set https_registered 0
+    set https_registration_state uninitialized
+    set https_registration_failure_mode ""
+    set https_registration_failure_reason ""
+}
+
+proc ::unified_llm::transports::https_json::__format_registration_failure {provider mode reason} {
+    if {$mode eq "initialize"} {
+        return "failed to initialize https transport for provider $provider: $reason"
+    }
+    return "https transport unavailable for provider $provider: $reason"
+}
+
 proc ::unified_llm::transports::https_json::__ensure_https_registered {provider} {
     variable https_registered
+    variable https_registration_state
+    variable https_registration_failure_mode
+    variable https_registration_failure_reason
 
-    if {$https_registered} {
+    if {$https_registration_state eq "ready"} {
+        set https_registered 1
         return
     }
 
-    if {[catch {package require tls} tlsErr]} {
-        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "https transport unavailable for provider $provider"
+    if {$https_registration_state eq "failed"} {
+        set message [::unified_llm::transports::https_json::__format_registration_failure $provider $https_registration_failure_mode $https_registration_failure_reason]
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] $message
     }
 
-    if {[catch {::http::register https 443 ::tls::socket} regErr]} {
-        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "failed to initialize https transport for provider $provider"
+    set probe [::unified_llm::transports::https_json::__tls_runtime_probe]
+    if {![dict get $probe tls_supported]} {
+        set https_registration_state failed
+        set https_registration_failure_mode unavailable
+        set https_registration_failure_reason [dict get $probe message]
+        set https_registered 0
+        set message [::unified_llm::transports::https_json::__format_registration_failure $provider unavailable $https_registration_failure_reason]
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] $message
     }
 
+    if {[catch {::unified_llm::transports::https_json::__tls_register_https} regErr]} {
+        set summary [::unified_llm::transports::https_json::__summarize_body $regErr]
+        set reason "failed to register ::tls::socket handler"
+        if {$summary ne ""} {
+            set reason "$reason: $summary"
+        }
+        set https_registration_state failed
+        set https_registration_failure_mode initialize
+        set https_registration_failure_reason $reason
+        set https_registered 0
+        set message [::unified_llm::transports::https_json::__format_registration_failure $provider initialize $reason]
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] $message
+    }
+
+    set https_registration_state ready
+    set https_registration_failure_mode ""
+    set https_registration_failure_reason ""
     set https_registered 1
+}
+
+proc ::unified_llm::transports::https_json::runtime_preflight {} {
+    return [::unified_llm::transports::https_json::__tls_runtime_probe]
 }
 
 proc ::unified_llm::transports::https_json::call {request} {

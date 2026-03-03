@@ -1,13 +1,15 @@
 .PHONY: precommit build test test-e2e
 
+TCLSH ?= tclsh
+
 precommit:
-	@tclsh tools/build_check.tcl
+	@$(TCLSH) tools/build_check.tcl
 
 build: precommit
-	@tclsh tools/build_check.tcl
+	@$(TCLSH) tools/build_check.tcl
 
 test: precommit
-	@tclsh tests/all.tcl
+	@$(TCLSH) tests/all.tcl
 
 test-e2e: precommit
-	@tclsh tests/e2e_live.tcl
+	@$(TCLSH) tests/e2e_live.tcl

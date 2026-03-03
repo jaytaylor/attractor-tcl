@@ -9,6 +9,52 @@ source [file join $root tests support http_fixture_server.tcl]
 
 namespace eval ::tests::integration::https_transport {}
 
+proc ::tests::integration::https_transport::save_tls_impls {} {
+    return [dict create \
+        require $::unified_llm::transports::https_json::tls_require_impl \
+        provide $::unified_llm::transports::https_json::tls_provide_impl \
+        register $::unified_llm::transports::https_json::tls_register_impl]
+}
+
+proc ::tests::integration::https_transport::restore_tls_impls {saved} {
+    set ::unified_llm::transports::https_json::tls_require_impl [dict get $saved require]
+    set ::unified_llm::transports::https_json::tls_provide_impl [dict get $saved provide]
+    set ::unified_llm::transports::https_json::tls_register_impl [dict get $saved register]
+    ::unified_llm::transports::https_json::__reset_https_registration_state
+}
+
+proc ::tests::integration::https_transport::tls_require_missing {} {
+    error "can't find package tls"
+}
+
+proc ::tests::integration::https_transport::tls_require_legacy {} {
+    return "1.6.1"
+}
+
+proc ::tests::integration::https_transport::tls_require_modern {} {
+    return "1.7.22"
+}
+
+proc ::tests::integration::https_transport::tls_provide_legacy {} {
+    return "1.6.1"
+}
+
+proc ::tests::integration::https_transport::tls_provide_modern {} {
+    return "1.7.22"
+}
+
+proc ::tests::integration::https_transport::tls_register_ok {} {
+    variable register_count
+    incr register_count
+    return ""
+}
+
+proc ::tests::integration::https_transport::tls_register_fail {} {
+    variable register_count
+    incr register_count
+    error "simulated register failure"
+}
+
 test integration-unified-llm-https-transport-join-url-default-1.0 {join_url appends endpoint when base has no path suffix} -body {
     ::unified_llm::transports::https_json::__join_url "https://api.openai.com" "/v1/responses"
 } -result {https://api.openai.com/v1/responses}
@@ -78,3 +124,71 @@ test integration-unified-llm-https-transport-network-error-1.0 {transport raises
 } -cleanup {
     $client close
 } -result {UNIFIED_LLM TRANSPORT NETWORK openai}
+
+test integration-unified-llm-https-transport-missing-tls-1.0 {missing tls package fails with deterministic NETWORK error and remediation hint} -setup {
+    set saved [::tests::integration::https_transport::save_tls_impls]
+    set ::unified_llm::transports::https_json::tls_require_impl [list ::tests::integration::https_transport::tls_require_missing]
+    set ::unified_llm::transports::https_json::tls_provide_impl [list ::tests::integration::https_transport::tls_provide_legacy]
+    set ::unified_llm::transports::https_json::tls_register_impl [list ::tests::integration::https_transport::tls_register_ok]
+    ::unified_llm::transports::https_json::__reset_https_registration_state
+} -body {
+    set code [catch {::unified_llm::transports::https_json::__ensure_https_registered openai} err opts]
+    list \
+        $code \
+        [dict get $opts -errorcode] \
+        [expr {[string first "requires tls >=" $err] >= 0}] \
+        [expr {[string first "Install tcl-tls" $err] >= 0}]
+} -cleanup {
+    ::tests::integration::https_transport::restore_tls_impls $saved
+} -result {1 {UNIFIED_LLM TRANSPORT NETWORK openai} 1 1}
+
+test integration-unified-llm-https-transport-unsupported-tls-1.0 {unsupported tls version fails with deterministic NETWORK error and remediation hint} -setup {
+    set saved [::tests::integration::https_transport::save_tls_impls]
+    set ::unified_llm::transports::https_json::tls_require_impl [list ::tests::integration::https_transport::tls_require_legacy]
+    set ::unified_llm::transports::https_json::tls_provide_impl [list ::tests::integration::https_transport::tls_provide_legacy]
+    set ::unified_llm::transports::https_json::tls_register_impl [list ::tests::integration::https_transport::tls_register_ok]
+    ::unified_llm::transports::https_json::__reset_https_registration_state
+} -body {
+    set code [catch {::unified_llm::transports::https_json::__ensure_https_registered anthropic} err opts]
+    list \
+        $code \
+        [dict get $opts -errorcode] \
+        [expr {[string first "tls runtime 1.6.1 is unsupported" $err] >= 0}] \
+        [expr {[string first "TCLSH" $err] >= 0}]
+} -cleanup {
+    ::tests::integration::https_transport::restore_tls_impls $saved
+} -result {1 {UNIFIED_LLM TRANSPORT NETWORK anthropic} 1 1}
+
+test integration-unified-llm-https-transport-registration-idempotent-1.0 {https registration runs once for repeated initialization} -setup {
+    set saved [::tests::integration::https_transport::save_tls_impls]
+    set ::tests::integration::https_transport::register_count 0
+    set ::unified_llm::transports::https_json::tls_require_impl [list ::tests::integration::https_transport::tls_require_modern]
+    set ::unified_llm::transports::https_json::tls_provide_impl [list ::tests::integration::https_transport::tls_provide_modern]
+    set ::unified_llm::transports::https_json::tls_register_impl [list ::tests::integration::https_transport::tls_register_ok]
+    ::unified_llm::transports::https_json::__reset_https_registration_state
+} -body {
+    ::unified_llm::transports::https_json::__ensure_https_registered openai
+    ::unified_llm::transports::https_json::__ensure_https_registered openai
+    set ::tests::integration::https_transport::register_count
+} -cleanup {
+    ::tests::integration::https_transport::restore_tls_impls $saved
+} -result 1
+
+test integration-unified-llm-https-transport-registration-failure-cached-1.0 {registration failure maps to deterministic NETWORK errors and does not re-register} -setup {
+    set saved [::tests::integration::https_transport::save_tls_impls]
+    set ::tests::integration::https_transport::register_count 0
+    set ::unified_llm::transports::https_json::tls_require_impl [list ::tests::integration::https_transport::tls_require_modern]
+    set ::unified_llm::transports::https_json::tls_provide_impl [list ::tests::integration::https_transport::tls_provide_modern]
+    set ::unified_llm::transports::https_json::tls_register_impl [list ::tests::integration::https_transport::tls_register_fail]
+    ::unified_llm::transports::https_json::__reset_https_registration_state
+} -body {
+    catch {::unified_llm::transports::https_json::__ensure_https_registered openai} err1 opts1
+    catch {::unified_llm::transports::https_json::__ensure_https_registered gemini} err2 opts2
+    list \
+        [dict get $opts1 -errorcode] \
+        [dict get $opts2 -errorcode] \
+        $::tests::integration::https_transport::register_count \
+        [expr {[string first "failed to register ::tls::socket handler" $err2] >= 0}]
+} -cleanup {
+    ::tests::integration::https_transport::restore_tls_impls $saved
+} -result {{UNIFIED_LLM TRANSPORT NETWORK openai} {UNIFIED_LLM TRANSPORT NETWORK gemini} 1 1}
