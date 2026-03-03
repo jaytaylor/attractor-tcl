@@ -9,6 +9,50 @@ package require coding_agent_loop
 package require attractor
 source [file join $root tests support e2e_live_support.tcl]
 
+namespace eval ::tests::integration::e2e_live_support {}
+
+proc ::tests::integration::e2e_live_support::read_json_file {path} {
+    set fh [open $path r]
+    set payload [read $fh]
+    close $fh
+    return [::attractor_core::json_decode $payload]
+}
+
+proc ::tests::integration::e2e_live_support::save_runtime_preflight_proc {} {
+    rename ::unified_llm::transports::https_json::runtime_preflight ::tests::integration::e2e_live_support::runtime_preflight_original
+}
+
+proc ::tests::integration::e2e_live_support::restore_runtime_preflight_proc {} {
+    if {[llength [info commands ::unified_llm::transports::https_json::runtime_preflight]] > 0} {
+        rename ::unified_llm::transports::https_json::runtime_preflight {}
+    }
+    if {[llength [info commands ::tests::integration::e2e_live_support::runtime_preflight_original]] > 0} {
+        rename ::tests::integration::e2e_live_support::runtime_preflight_original ::unified_llm::transports::https_json::runtime_preflight
+    }
+}
+
+proc ::tests::integration::e2e_live_support::runtime_preflight_unsupported {} {
+    return [dict create \
+        tcl_version 8.5.9 \
+        tls_min_version 1.7.22 \
+        tls_available 1 \
+        tls_supported 0 \
+        tls_version 1.6.1 \
+        status error \
+        message "tls runtime 1.6.1 is unsupported (requires tls >= 1.7.22). Upgrade tcl-tls or set TCLSH to a runtime with newer tls."]
+}
+
+proc ::tests::integration::e2e_live_support::runtime_preflight_supported {} {
+    return [dict create \
+        tcl_version 8.6.14 \
+        tls_min_version 1.7.22 \
+        tls_available 1 \
+        tls_supported 1 \
+        tls_version 1.8.0 \
+        status ok \
+        message "tls runtime 1.8.0 satisfies minimum 1.7.22"]
+}
+
 test integration-e2e-live-selection-no-providers-1.0 {resolve selection fails when no provider keys exist} -body {
     catch {::tests::e2e_live::resolve_provider_selection {}} err opts
     dict get $opts -errorcode
@@ -28,7 +72,7 @@ test integration-e2e-live-selection-defaults-and-overrides-1.0 {selection comput
 } -result {openai gpt-test http://proxy.local}
 
 test integration-e2e-live-secret-scan-1.0 {secret scan reports file paths without exposing secret} -setup {
-    set artifactRoot [file join $root .scratch verification SPRINT-004 integration e2e-live-secret-scan-[pid]]
+    set artifactRoot [file join $root .scratch verification SPRINT-007 integration e2e-live-secret-scan-[pid]]
     file delete -force $artifactRoot
     file mkdir $artifactRoot
     set cleanPath [file join $artifactRoot clean.log]
@@ -46,4 +90,133 @@ test integration-e2e-live-secret-scan-1.0 {secret scan reports file paths withou
     ::tests::e2e_live::scan_artifacts_for_secret_leaks
 } -cleanup {
     file delete -force $artifactRoot
-} -result [list [file join $root .scratch verification SPRINT-004 integration e2e-live-secret-scan-[pid] leak.log]]
+} -result [list [file join $root .scratch verification SPRINT-007 integration e2e-live-secret-scan-[pid] leak.log]]
+
+test integration-e2e-live-preflight-failure-artifacts-1.0 {initialize_run_context persists runtime-preflight and preflight-failure artifacts when tls is unsupported} -setup {
+    set artifactRoot [file join $root .scratch verification SPRINT-007 integration e2e-live-preflight-failure-[pid]]
+    file delete -force $artifactRoot
+    file mkdir $artifactRoot
+
+    set savedOpenAI ""
+    if {[info exists ::env(OPENAI_API_KEY)]} {
+        set savedOpenAI $::env(OPENAI_API_KEY)
+    }
+    set savedProviders ""
+    if {[info exists ::env(E2E_LIVE_PROVIDERS)]} {
+        set savedProviders $::env(E2E_LIVE_PROVIDERS)
+    }
+    set savedArtifactRoot ""
+    if {[info exists ::env(E2E_LIVE_ARTIFACT_ROOT)]} {
+        set savedArtifactRoot $::env(E2E_LIVE_ARTIFACT_ROOT)
+    }
+
+    set ::env(OPENAI_API_KEY) "sk-test-live"
+    set ::env(E2E_LIVE_PROVIDERS) "openai"
+    set ::env(E2E_LIVE_ARTIFACT_ROOT) $artifactRoot
+
+    ::tests::integration::e2e_live_support::save_runtime_preflight_proc
+    proc ::unified_llm::transports::https_json::runtime_preflight {} {
+        return [::tests::integration::e2e_live_support::runtime_preflight_unsupported]
+    }
+} -body {
+    set code [catch {::tests::e2e_live::initialize_run_context} err opts]
+    set runtimePath [file join $artifactRoot runtime-preflight.json]
+    set failurePath [file join $artifactRoot preflight-failure.json]
+    set runPath [file join $artifactRoot run.json]
+
+    set runtimePayload [::tests::integration::e2e_live_support::read_json_file $runtimePath]
+    set failurePayload [::tests::integration::e2e_live_support::read_json_file $failurePath]
+    set runPayload [::tests::integration::e2e_live_support::read_json_file $runPath]
+
+    list \
+        $code \
+        [dict get $opts -errorcode] \
+        [expr {[file exists $runtimePath] && [file exists $failurePath] && [file exists $runPath]}] \
+        [expr {[dict get $runtimePayload tls_supported] == 0}] \
+        [expr {[dict get $failurePayload status] eq "failed"}] \
+        [expr {[dict get $runPayload status] eq "failed"}] \
+        [expr {[string first "unsupported" [dict get $failurePayload reason]] >= 0 && [string first "TCLSH" [dict get $failurePayload reason]] >= 0}] \
+        [expr {[string first "sk-test-live" $err] < 0}]
+} -cleanup {
+    ::tests::integration::e2e_live_support::restore_runtime_preflight_proc
+
+    if {$savedOpenAI eq ""} {
+        unset -nocomplain ::env(OPENAI_API_KEY)
+    } else {
+        set ::env(OPENAI_API_KEY) $savedOpenAI
+    }
+    if {$savedProviders eq ""} {
+        unset -nocomplain ::env(E2E_LIVE_PROVIDERS)
+    } else {
+        set ::env(E2E_LIVE_PROVIDERS) $savedProviders
+    }
+    if {$savedArtifactRoot eq ""} {
+        unset -nocomplain ::env(E2E_LIVE_ARTIFACT_ROOT)
+    } else {
+        set ::env(E2E_LIVE_ARTIFACT_ROOT) $savedArtifactRoot
+    }
+    file delete -force $artifactRoot
+} -result {1 {E2E_LIVE TRANSPORT TLS_UNSUPPORTED} 1 1 1 1 1 1}
+
+test integration-e2e-live-preflight-success-artifacts-1.0 {initialize_run_context writes runtime-preflight metadata when tls is supported} -setup {
+    set artifactRoot [file join $root .scratch verification SPRINT-007 integration e2e-live-preflight-success-[pid]]
+    file delete -force $artifactRoot
+    file mkdir $artifactRoot
+
+    set savedOpenAI ""
+    if {[info exists ::env(OPENAI_API_KEY)]} {
+        set savedOpenAI $::env(OPENAI_API_KEY)
+    }
+    set savedProviders ""
+    if {[info exists ::env(E2E_LIVE_PROVIDERS)]} {
+        set savedProviders $::env(E2E_LIVE_PROVIDERS)
+    }
+    set savedArtifactRoot ""
+    if {[info exists ::env(E2E_LIVE_ARTIFACT_ROOT)]} {
+        set savedArtifactRoot $::env(E2E_LIVE_ARTIFACT_ROOT)
+    }
+
+    set ::env(OPENAI_API_KEY) "sk-test-live"
+    set ::env(E2E_LIVE_PROVIDERS) "openai"
+    set ::env(E2E_LIVE_ARTIFACT_ROOT) $artifactRoot
+
+    ::tests::integration::e2e_live_support::save_runtime_preflight_proc
+    proc ::unified_llm::transports::https_json::runtime_preflight {} {
+        return [::tests::integration::e2e_live_support::runtime_preflight_supported]
+    }
+} -body {
+    set code [catch {::tests::e2e_live::initialize_run_context} err opts]
+    set runtimePath [file join $artifactRoot runtime-preflight.json]
+    set failurePath [file join $artifactRoot preflight-failure.json]
+    set runPath [file join $artifactRoot run.json]
+    set runtimePayload [::tests::integration::e2e_live_support::read_json_file $runtimePath]
+    set runPayload [::tests::integration::e2e_live_support::read_json_file $runPath]
+
+    list \
+        $code \
+        [expr {[file exists $runtimePath] && [file exists $runPath]}] \
+        [expr {![file exists $failurePath]}] \
+        [dict get $runtimePayload tls_supported] \
+        [dict get $runtimePayload tls_version] \
+        [dict get [dict get $runPayload runtime_preflight] tls_supported]
+} -cleanup {
+    ::tests::integration::e2e_live_support::restore_runtime_preflight_proc
+    catch {::tests::e2e_live::finalize_run_context passed failed_tests 0 secret_leaks {}}
+
+    if {$savedOpenAI eq ""} {
+        unset -nocomplain ::env(OPENAI_API_KEY)
+    } else {
+        set ::env(OPENAI_API_KEY) $savedOpenAI
+    }
+    if {$savedProviders eq ""} {
+        unset -nocomplain ::env(E2E_LIVE_PROVIDERS)
+    } else {
+        set ::env(E2E_LIVE_PROVIDERS) $savedProviders
+    }
+    if {$savedArtifactRoot eq ""} {
+        unset -nocomplain ::env(E2E_LIVE_ARTIFACT_ROOT)
+    } else {
+        set ::env(E2E_LIVE_ARTIFACT_ROOT) $savedArtifactRoot
+    }
+    file delete -force $artifactRoot
+} -result {0 1 1 1 1.8.0 1}
