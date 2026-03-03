@@ -114,6 +114,23 @@ Key design constraint: keep Tcl 8.5 compatibility, so no coroutines, no async/aw
   - new e2e tests under `tests/e2e/` for end-to-end web mode
   - ensure all tests are runnable via `tclsh tests/all.tcl`
 
+## Planning Validation Snapshot (2026-03-03)
+- [X] Mermaid diagrams in this plan were syntax-validated with `mmdc` and rendered to `.scratch/diagram-renders/sprint-008/`.
+```text
+Verification commands:
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-008/planning/mmdc-architecture.log /opt/homebrew/bin/mmdc -i .scratch/diagrams/sprint-008/architecture.mmd -o .scratch/diagram-renders/sprint-008/architecture.svg` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-008/planning/mmdc-domain-model.log /opt/homebrew/bin/mmdc -i .scratch/diagrams/sprint-008/domain-model.mmd -o .scratch/diagram-renders/sprint-008/domain-model.svg` (exit code 0)
+- `tools/verify_cmd.sh .scratch/verification/SPRINT-008/planning/mmdc-human-gate-flow.log /opt/homebrew/bin/mmdc -i .scratch/diagrams/sprint-008/human-gate-flow.mmd -o .scratch/diagram-renders/sprint-008/human-gate-flow.svg` (exit code 0)
+
+Evidence artifacts:
+- `.scratch/verification/SPRINT-008/planning/mmdc-architecture.log`
+- `.scratch/verification/SPRINT-008/planning/mmdc-domain-model.log`
+- `.scratch/verification/SPRINT-008/planning/mmdc-human-gate-flow.log`
+- `.scratch/diagram-renders/sprint-008/architecture.svg`
+- `.scratch/diagram-renders/sprint-008/domain-model.svg`
+- `.scratch/diagram-renders/sprint-008/human-gate-flow.svg`
+```
+
 ### Run Directory Layout (Contract)
 Each run lives in a directory `${runs_root}/${run_id}/`:
 - `pipeline.dot` (original DOT source submitted)
