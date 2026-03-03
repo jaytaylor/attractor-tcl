@@ -85,6 +85,13 @@ Out of scope (explicitly not in Sprint #008):
   - stream events in real time over SSE
 - Human-gate web operability requirement is satisfied *by implementation + tests* (not only by traceability mapping).
 
+## Non-Regression Boundary
+- Keep existing CLI subcommands stable: `bin/attractor run|validate` must continue to work as-is.
+- Keep existing artifact contracts stable for existing tests:
+  - `checkpoint.json` and per-node `status.json` must still be written.
+  - `prompt.md`/`response.md` remain optional and only written when present in outcomes.
+- Any new event emission must be additive and a no-op unless explicitly enabled (ex: `-on_event`).
+
 ## Design Overview
 
 ### High-Level Architecture
@@ -94,10 +101,24 @@ Out of scope (explicitly not in Sprint #008):
 
 Key design constraint: keep Tcl 8.5 compatibility, so no coroutines, no async/await. Concurrency is achieved via OS subprocess workers.
 
+### Implementation Map (Design-to-File)
+- Engine event hooks:
+  - [lib/attractor/main.tcl](/Users/jay.taylor/src/attractor-tcl/lib/attractor/main.tcl)
+- Web server:
+  - new `attractor_web` package under `lib/attractor_web/` (HTTP router, SSE, run registry)
+  - expose via `bin/attractor serve` (or a thin `bin/attractor_web` wrapper)
+- Worker:
+  - `bin/attractor-worker` (single-run runner; file interviewer + event sink)
+- Tests:
+  - new integration tests under `tests/integration/` for HTTP API + SSE + human-gate flow
+  - new e2e tests under `tests/e2e/` for end-to-end web mode
+  - ensure all tests are runnable via `tclsh tests/all.tcl`
+
 ### Run Directory Layout (Contract)
 Each run lives in a directory `${runs_root}/${run_id}/`:
 - `pipeline.dot` (original DOT source submitted)
-- `manifest.json` (run metadata; includes `run_id`, `started_at`, `dot_sha256`)
+- `web.json` (server-owned metadata; includes `run_id`, `file_name`, `created_at`, `dot_sha256`, `worker_pid`)
+- `manifest.json` (engine-owned; currently includes `graph_id`, `started_at`)
 - `checkpoint.json` (engine checkpoint)
 - `events.ndjson` (append-only JSON lines; see Event Contract below)
 - `questions/`
@@ -120,7 +141,7 @@ All endpoints are local-first; CORS is optional but allowed for developer conven
   - request JSON: `{ "dotSource": "...", "fileName": "optional.dot" }`
   - response JSON: `{ "id": "run-..." }`
 - `GET /api/pipeline?id=<run_id>` -> hydrated view for one run:
-  - response JSON: `{ "id", "dotSource", "manifest", "checkpoint", "nodes": {...}, "pending_questions": [...] }`
+  - response JSON: `{ "id", "dotSource", "web", "manifest", "checkpoint", "nodes": {...}, "pending_questions": [...] }`
 - `GET /api/stage?id=<run_id>&node=<node_id>` -> per-node artifact payload:
   - response JSON: `{ "status": {...}, "prompt_md": "...", "response_md": "..." }`
 - `POST /api/answer` -> submit human answer:
@@ -192,6 +213,14 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - `tclsh tests/all.tcl -match *worker*`
 
 ## Track B - Web Server + API + SSE
+- [ ] **B0 - Add CLI `serve` subcommand**
+  - Implement `bin/attractor serve` with flags:
+    - `--web-port <n>` (default `7070`)
+    - `--runs-root <path>` (default `.scratch/runs/attractor-web/`)
+    - `--bind <ip>` (default `127.0.0.1`)
+  - Verification:
+    - `tclsh tests/all.tcl -match *attractor-web*`
+
 - [ ] **B1 - Minimal HTTP server and router**
   - Implement `socket -server` HTTP listener with:
     - request parsing (method/path/query/headers/body)
@@ -346,4 +375,3 @@ sequenceDiagram
   W->>W: PipelineCompleted event
   S-->>B: SSE updates /events + /events/<run_id>
 ```
-
