@@ -8,11 +8,15 @@ proc ::unified_llm::adapters::anthropic::__merge_same_role {messages} {
     foreach msg $messages {
         if {[llength $out] > 0 && [dict get [lindex $out end] role] eq [dict get $msg role]} {
             set merged [lindex $out end]
-            set mergedParts [dict get $merged content_parts]
-            foreach part [dict get $msg content_parts] {
+            set key content
+            if {[dict exists $merged content_parts]} {
+                set key content_parts
+            }
+            set mergedParts [dict get $merged $key]
+            foreach part [dict get $msg $key] {
                 lappend mergedParts $part
             }
-            dict set merged content_parts $mergedParts
+            dict set merged $key $mergedParts
             set out [lreplace $out end end $merged]
         } else {
             lappend out $msg
@@ -24,8 +28,18 @@ proc ::unified_llm::adapters::anthropic::__merge_same_role {messages} {
 proc ::unified_llm::adapters::anthropic::__translate_part {part} {
     set type [dict get $part type]
     switch -- $type {
-        text - thinking {
+        text {
             return [dict create type text text [dict get $part text]]
+        }
+        thinking {
+            set translated [dict create type thinking thinking [dict get $part text]]
+            if {[dict exists $part signature] && [dict get $part signature] ne ""} {
+                dict set translated signature [dict get $part signature]
+            }
+            return $translated
+        }
+        redacted_thinking {
+            return [dict create type redacted_thinking data [dict get $part data]]
         }
         image_url {
             return [dict create type image source [dict create type url url [dict get $part url]]]
@@ -45,6 +59,33 @@ proc ::unified_llm::adapters::anthropic::__translate_part {part} {
     }
 }
 
+proc ::unified_llm::adapters::anthropic::__tool_part_to_result {message part} {
+    set partType [dict get $part type]
+    if {$partType eq "tool_result"} {
+        if {![dict exists $part id] || [string trim [dict get $part id]] eq ""} {
+            return -code error -errorcode [list UNIFIED_LLM INPUT TOOL_RESULT_MISSING_ID] "tool_result part requires id for Anthropic translation"
+        }
+        return [dict create type tool_result tool_use_id [dict get $part id] content [dict get $part output] is_error [dict get $part is_error]]
+    }
+
+    if {$partType eq "text"} {
+        if {![dict exists $message tool_call_id] || [string trim [dict get $message tool_call_id]] eq ""} {
+            return -code error -errorcode [list UNIFIED_LLM INPUT TOOL_RESULT_MISSING_ID] "tool role message requires tool_call_id for Anthropic translation"
+        }
+        set isError 0
+        if {[dict exists $message is_error]} {
+            set isError [dict get $message is_error]
+        }
+        return [dict create \
+            type tool_result \
+            tool_use_id [dict get $message tool_call_id] \
+            content [dict get $part text] \
+            is_error $isError]
+    }
+
+    return -code error -errorcode [list UNIFIED_LLM INPUT PART UNSUPPORTED] "unsupported tool role content part for anthropic: $partType"
+}
+
 proc ::unified_llm::adapters::anthropic::__translate_tools {tools} {
     set toolsPayload {}
     foreach name [dict keys $tools] {
@@ -62,30 +103,46 @@ proc ::unified_llm::adapters::anthropic::translate_request {request} {
     set normalizedMessages {}
     foreach msg [dict get $request messages] {
         if {[dict exists $msg content_parts]} {
-            lappend normalizedMessages $msg
+            lappend normalizedMessages [::unified_llm::__normalize_message $msg]
         } else {
             lappend normalizedMessages [::unified_llm::__normalize_message $msg]
         }
     }
 
-    set merged [::unified_llm::adapters::anthropic::__merge_same_role $normalizedMessages]
-    set anthropicMessages {}
     set systemParts {}
+    set anthropicMessages {}
 
-    foreach message $merged {
+    foreach message $normalizedMessages {
+        set role [dict get $message role]
+
+        if {$role in {system developer}} {
+            foreach part [dict get $message content_parts] {
+                lappend systemParts [::unified_llm::adapters::anthropic::__translate_part $part]
+            }
+            continue
+        }
+
+        if {$role eq "tool"} {
+            set toolParts {}
+            foreach part [dict get $message content_parts] {
+                lappend toolParts [::unified_llm::adapters::anthropic::__tool_part_to_result $message $part]
+            }
+            lappend anthropicMessages [dict create role user content $toolParts]
+            continue
+        }
+
+        if {$role ni {user assistant}} {
+            return -code error -errorcode [list UNIFIED_LLM INPUT ROLE_UNSUPPORTED] "unsupported role for Anthropic translation: $role"
+        }
+
         set convertedParts {}
         foreach part [dict get $message content_parts] {
             lappend convertedParts [::unified_llm::adapters::anthropic::__translate_part $part]
         }
-        set role [dict get $message role]
-        if {$role eq "system"} {
-            foreach converted $convertedParts {
-                lappend systemParts $converted
-            }
-            continue
-        }
         lappend anthropicMessages [dict create role $role content $convertedParts]
     }
+
+    set anthropicMessages [::unified_llm::adapters::anthropic::__merge_same_role $anthropicMessages]
 
     set out [dict create messages $anthropicMessages max_tokens 1024]
     if {[llength $systemParts] > 0} {
@@ -162,6 +219,51 @@ proc ::unified_llm::adapters::anthropic::__extract_tool_calls {decoded} {
     return $calls
 }
 
+proc ::unified_llm::adapters::anthropic::__extract_content_parts {decoded} {
+    set parts {}
+    if {![dict exists $decoded content]} {
+        if {[dict exists $decoded text]} {
+            lappend parts [dict create type text text [dict get $decoded text]]
+        }
+        return $parts
+    }
+
+    foreach part [dict get $decoded content] {
+        if {![dict exists $part type]} {
+            continue
+        }
+        set type [dict get $part type]
+        switch -- $type {
+            text {
+                if {[dict exists $part text]} {
+                    lappend parts [dict create type text text [dict get $part text]]
+                }
+            }
+            thinking {
+                set item [dict create type thinking text [::unified_llm::adapters::anthropic::__dict_get_or $part "" thinking]]
+                if {[dict exists $part signature] && [dict get $part signature] ne ""} {
+                    dict set item signature [dict get $part signature]
+                }
+                lappend parts $item
+            }
+            redacted_thinking {
+                lappend parts [dict create type redacted_thinking data [::unified_llm::adapters::anthropic::__dict_get_or $part "" data]]
+            }
+            tool_use {
+                lappend parts [dict create \
+                    type tool_call \
+                    id [::unified_llm::adapters::anthropic::__dict_get_or $part "" id] \
+                    name [::unified_llm::adapters::anthropic::__dict_get_or $part "" name] \
+                    arguments [::unified_llm::adapters::anthropic::__dict_get_or $part {} input]]
+            }
+            default {
+                # Ignore unknown content parts in normalized response.
+            }
+        }
+    }
+    return $parts
+}
+
 proc ::unified_llm::adapters::anthropic::complete {state request} {
     set endpoint "/v1/messages"
     set payload [::unified_llm::adapters::anthropic::translate_request $request]
@@ -214,6 +316,7 @@ proc ::unified_llm::adapters::anthropic::complete {state request} {
         provider anthropic \
         response_id $responseId \
         text $text \
+        content_parts [::unified_llm::adapters::anthropic::__extract_content_parts $decoded] \
         tool_calls [::unified_llm::adapters::anthropic::__extract_tool_calls $decoded] \
         usage [::unified_llm::adapters::anthropic::__translate_usage $decoded] \
         metadata $metadata \
@@ -299,6 +402,11 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
 
     array set reasoningStarted {}
     array set reasoningEnded {}
+    array set reasoningText {}
+    array set reasoningSignature {}
+    array set redactedData {}
+    array set textByIndex {}
+    set blockOrder {}
 
     array set blockKind {}
     array set textIdByIndex {}
@@ -348,10 +456,14 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
                 set index [::unified_llm::adapters::anthropic::__dict_get_or $chunk 0 index]
                 set block [::unified_llm::adapters::anthropic::__dict_get_or $chunk {} content_block]
                 set blockType [::unified_llm::adapters::anthropic::__dict_get_or $block "" type]
+                if {[lsearch -exact $blockOrder $index] < 0} {
+                    lappend blockOrder $index
+                }
                 if {$blockType eq "text"} {
                     set textId [::unified_llm::adapters::anthropic::__dict_get_or $block "anthropic-text-$index" id]
                     set blockKind($index) text
                     set textIdByIndex($index) $textId
+                    set textByIndex($index) ""
                     if {![info exists textStarted($textId)]} {
                         set textStarted($textId) 1
                         set textEnded($textId) 0
@@ -361,6 +473,7 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
                     }
                     set initialText [::unified_llm::adapters::anthropic::__dict_get_or $block "" text]
                     if {$initialText ne ""} {
+                        append textByIndex($index) $initialText
                         append textBuffer($textId) $initialText
                         lappend translated [::unified_llm::__stream_event TEXT_DELTA text_id $textId delta $initialText]
                     }
@@ -381,11 +494,16 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
                     set reasoningId [::unified_llm::adapters::anthropic::__dict_get_or $block "anthropic-thinking-$index" id]
                     set blockKind($index) thinking
                     set reasoningIdByIndex($index) $reasoningId
+                    set reasoningText($index) [::unified_llm::adapters::anthropic::__dict_get_or $block "" thinking]
+                    set reasoningSignature($index) [::unified_llm::adapters::anthropic::__dict_get_or $block "" signature]
                     if {![info exists reasoningStarted($reasoningId)]} {
                         set reasoningStarted($reasoningId) 1
                         set reasoningEnded($reasoningId) 0
                         lappend translated [::unified_llm::__stream_event REASONING_START text_id $reasoningId]
                     }
+                } elseif {$blockType eq "redacted_thinking"} {
+                    set blockKind($index) redacted_thinking
+                    set redactedData($index) [::unified_llm::adapters::anthropic::__dict_get_or $block "" data]
                 } else {
                     lappend translated [::unified_llm::__stream_event PROVIDER_EVENT raw $chunk]
                 }
@@ -407,6 +525,10 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
                         lappend textOrder $textId
                         lappend translated [::unified_llm::__stream_event TEXT_START text_id $textId]
                     }
+                    if {![info exists textByIndex($index)]} {
+                        set textByIndex($index) ""
+                    }
+                    append textByIndex($index) $textValue
                     append textBuffer($textId) $textValue
                     lappend translated [::unified_llm::__stream_event TEXT_DELTA text_id $textId delta $textValue]
                 } elseif {$deltaType eq "input_json_delta"} {
@@ -436,11 +558,20 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
                         set reasoningEnded($reasoningId) 0
                         lappend translated [::unified_llm::__stream_event REASONING_START text_id $reasoningId]
                     }
+                    if {![info exists reasoningText($index)]} {
+                        set reasoningText($index) ""
+                    }
                     set thinkingValue [::unified_llm::adapters::anthropic::__dict_get_or $delta "" thinking]
                     if {$thinkingValue eq ""} {
                         set thinkingValue [::unified_llm::adapters::anthropic::__dict_get_or $delta "" text]
                     }
+                    append reasoningText($index) $thinkingValue
                     lappend translated [::unified_llm::__stream_event REASONING_DELTA reasoning_delta $thinkingValue]
+                } elseif {$deltaType eq "signature_delta"} {
+                    set signature [::unified_llm::adapters::anthropic::__dict_get_or $delta "" signature]
+                    if {$signature ne ""} {
+                        set reasoningSignature($index) $signature
+                    }
                 } else {
                     lappend translated [::unified_llm::__stream_event PROVIDER_EVENT raw $chunk]
                 }
@@ -527,10 +658,40 @@ proc ::unified_llm::adapters::anthropic::stream {state request} {
         set responseRaw $rawEvents
     }
 
+    set contentParts {}
+    foreach index $blockOrder {
+        if {![info exists blockKind($index)]} {
+            continue
+        }
+        switch -- $blockKind($index) {
+            text {
+                set textValue ""
+                if {[info exists textByIndex($index)]} {
+                    set textValue $textByIndex($index)
+                }
+                lappend contentParts [dict create type text text $textValue]
+            }
+            thinking {
+                set part [dict create type thinking text [expr {[info exists reasoningText($index)] ? $reasoningText($index) : ""}]]
+                if {[info exists reasoningSignature($index)] && $reasoningSignature($index) ne ""} {
+                    dict set part signature $reasoningSignature($index)
+                }
+                lappend contentParts $part
+            }
+            redacted_thinking {
+                lappend contentParts [dict create type redacted_thinking data [expr {[info exists redactedData($index)] ? $redactedData($index) : ""}]]
+            }
+            default {
+                # tool_use and unknown blocks are represented in tool_calls/raw.
+            }
+        }
+    }
+
     set response [dict create \
         provider anthropic \
         response_id $responseId \
         text $text \
+        content_parts $contentParts \
         tool_calls $finalizedToolCalls \
         usage $usage \
         metadata $metadata \

@@ -163,6 +163,13 @@ proc ::unified_llm::adapters::openai::__translate_part {part} {
         thinking {
             return [dict create type reasoning text [dict get $part text]]
         }
+        redacted_thinking {
+            set marker {[redacted thinking]}
+            if {[dict exists $part data] && [dict get $part data] ne ""} {
+                set marker "[dict get $part data]"
+            }
+            return [dict create type reasoning text $marker]
+        }
         image_url {
             return [dict create type input_image image_url [dict get $part url]]
         }

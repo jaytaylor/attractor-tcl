@@ -29,34 +29,64 @@ proc ::unified_llm::default_client {} {
     return $default_client
 }
 
-proc ::unified_llm::from_env {} {
-    if {[info exists ::env(UNIFIED_LLM_PROVIDER)]} {
-        set provider [string tolower [string trim $::env(UNIFIED_LLM_PROVIDER)]]
-        if {$provider ni {openai anthropic gemini mock}} {
-            return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider in UNIFIED_LLM_PROVIDER: $provider"
+proc ::unified_llm::from_env {args} {
+    array set opts {
+        -transport ""
+    }
+    array set opts $args
+
+    set providers {}
+    set discoveredProviders {}
+
+    if {[info exists ::env(OPENAI_API_KEY)] && [string trim $::env(OPENAI_API_KEY)] ne ""} {
+        dict set providers openai [dict create \
+            api_key [string trim $::env(OPENAI_API_KEY)] \
+            base_url [expr {[info exists ::env(OPENAI_BASE_URL)] ? [string trim $::env(OPENAI_BASE_URL)] : ""}] \
+            transport $opts(-transport) \
+            provider_options {}]
+        lappend discoveredProviders openai
+    }
+    if {[info exists ::env(ANTHROPIC_API_KEY)] && [string trim $::env(ANTHROPIC_API_KEY)] ne ""} {
+        dict set providers anthropic [dict create \
+            api_key [string trim $::env(ANTHROPIC_API_KEY)] \
+            base_url [expr {[info exists ::env(ANTHROPIC_BASE_URL)] ? [string trim $::env(ANTHROPIC_BASE_URL)] : ""}] \
+            transport $opts(-transport) \
+            provider_options {}]
+        lappend discoveredProviders anthropic
+    }
+
+    set geminiKey ""
+    if {[info exists ::env(GEMINI_API_KEY)] && [string trim $::env(GEMINI_API_KEY)] ne ""} {
+        set geminiKey [string trim $::env(GEMINI_API_KEY)]
+    } elseif {[info exists ::env(GOOGLE_API_KEY)] && [string trim $::env(GOOGLE_API_KEY)] ne ""} {
+        set geminiKey [string trim $::env(GOOGLE_API_KEY)]
+    }
+    if {$geminiKey ne ""} {
+        dict set providers gemini [dict create \
+            api_key $geminiKey \
+            base_url [expr {[info exists ::env(GEMINI_BASE_URL)] ? [string trim $::env(GEMINI_BASE_URL)] : ""}] \
+            transport $opts(-transport) \
+            provider_options {}]
+        lappend discoveredProviders gemini
+    }
+
+    if {[dict size $providers] == 0} {
+        return -code error -errorcode [list UNIFIED_LLM CONFIG MISSING_PROVIDER] "no provider configured; set provider API key environment variables"
+    }
+
+    set defaultProvider [lindex $discoveredProviders 0]
+    if {[info exists ::env(UNIFIED_LLM_PROVIDER)] && [string trim $::env(UNIFIED_LLM_PROVIDER)] ne ""} {
+        set override [string tolower [string trim $::env(UNIFIED_LLM_PROVIDER)]]
+        if {$override ni {openai anthropic gemini mock}} {
+            return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider in UNIFIED_LLM_PROVIDER: $override"
         }
-        return [::unified_llm::client_new -provider $provider]
+        if {![dict exists $providers $override]} {
+            return -code error -errorcode [list UNIFIED_LLM CONFIG UNREGISTERED_PROVIDER] "provider override $override is not configured in environment"
+        }
+        set defaultProvider $override
     }
 
-    set candidates {}
-    if {[info exists ::env(OPENAI_API_KEY)] && $::env(OPENAI_API_KEY) ne ""} {
-        lappend candidates openai
-    }
-    if {[info exists ::env(ANTHROPIC_API_KEY)] && $::env(ANTHROPIC_API_KEY) ne ""} {
-        lappend candidates anthropic
-    }
-    if {[info exists ::env(GEMINI_API_KEY)] && $::env(GEMINI_API_KEY) ne ""} {
-        lappend candidates gemini
-    }
-
-    if {[llength $candidates] > 1} {
-        return -code error -errorcode [list UNIFIED_LLM CONFIG AMBIGUOUS_PROVIDER] "multiple provider API keys present; set UNIFIED_LLM_PROVIDER explicitly"
-    }
-    if {[llength $candidates] == 1} {
-        return [::unified_llm::client_new -provider [lindex $candidates 0]]
-    }
-
-    return -code error -errorcode [list UNIFIED_LLM CONFIG MISSING_PROVIDER] "no provider configured; set UNIFIED_LLM_PROVIDER or one provider API key"
+    return [::unified_llm::client_new -providers $providers -default_provider $defaultProvider]
 }
 
 proc ::unified_llm::client_new {args} {
@@ -70,6 +100,8 @@ proc ::unified_llm::client_new {args} {
         -transport ""
         -middlewares {}
         -provider_options {}
+        -providers {}
+        -default_provider ""
     }
     array set opts $args
 
@@ -77,13 +109,50 @@ proc ::unified_llm::client_new {args} {
     set id $client_seq
     set cmd ::unified_llm::client::$id
 
+    set providers {}
+    if {[catch {dict size $opts(-providers)}] == 0 && [dict size $opts(-providers)] > 0} {
+        foreach name [dict keys $opts(-providers)] {
+            set raw [dict get $opts(-providers) $name]
+            if {[catch {dict size $raw}]} {
+                set raw {}
+            }
+            dict set providers $name [dict create \
+                api_key [expr {[dict exists $raw api_key] ? [dict get $raw api_key] : ""}] \
+                base_url [expr {[dict exists $raw base_url] ? [dict get $raw base_url] : ""}] \
+                transport [expr {[dict exists $raw transport] ? [dict get $raw transport] : ""}] \
+                provider_options [expr {[dict exists $raw provider_options] ? [dict get $raw provider_options] : {}}]]
+        }
+    } else {
+        dict set providers $opts(-provider) [dict create \
+            api_key $opts(-api_key) \
+            base_url $opts(-base_url) \
+            transport $opts(-transport) \
+            provider_options $opts(-provider_options)]
+    }
+
+    set defaultProvider $opts(-default_provider)
+    if {$defaultProvider eq ""} {
+        if {[dict exists $providers $opts(-provider)]} {
+            set defaultProvider $opts(-provider)
+        } else {
+            set defaultProvider [lindex [dict keys $providers] 0]
+        }
+    }
+    if {![dict exists $providers $defaultProvider]} {
+        return -code error -errorcode [list UNIFIED_LLM CONFIG UNREGISTERED_PROVIDER] "default provider is not registered: $defaultProvider"
+    }
+
+    set defaultEntry [dict get $providers $defaultProvider]
+
     set state [dict create \
-        provider $opts(-provider) \
-        api_key $opts(-api_key) \
-        base_url $opts(-base_url) \
-        transport $opts(-transport) \
+        provider $defaultProvider \
+        default_provider $defaultProvider \
+        providers $providers \
+        api_key [dict get $defaultEntry api_key] \
+        base_url [dict get $defaultEntry base_url] \
+        transport [dict get $defaultEntry transport] \
         middlewares $opts(-middlewares) \
-        provider_options $opts(-provider_options) \
+        provider_options [dict get $defaultEntry provider_options] \
         closed 0]
 
     dict set clients $id $state
@@ -146,17 +215,49 @@ proc ::unified_llm::__lreverse {items} {
 }
 
 proc ::unified_llm::__resolve_provider {state request} {
-    set provider [dict get $state provider]
+    set provider [expr {[dict exists $state default_provider] ? [dict get $state default_provider] : [dict get $state provider]}]
     if {[dict exists $request provider] && [dict get $request provider] ne ""} {
-        set provider [dict get $request provider]
+        set provider [string tolower [dict get $request provider]]
     }
     return $provider
 }
 
-proc ::unified_llm::__merge_provider_options {state request} {
+proc ::unified_llm::__provider_entry {state provider} {
+    if {[dict exists $state providers $provider]} {
+        return [dict get $state providers $provider]
+    }
+    if {[dict exists $state provider] && [dict get $state provider] eq $provider} {
+        return [dict create \
+            api_key [expr {[dict exists $state api_key] ? [dict get $state api_key] : ""}] \
+            base_url [expr {[dict exists $state base_url] ? [dict get $state base_url] : ""}] \
+            transport [expr {[dict exists $state transport] ? [dict get $state transport] : ""}] \
+            provider_options [expr {[dict exists $state provider_options] ? [dict get $state provider_options] : {}}]]
+    }
+    if {[dict exists $state providers]} {
+        set fallback [dict get $state default_provider]
+        if {[dict exists $state providers $fallback]} {
+            return [dict get $state providers $fallback]
+        }
+    }
+    return [dict create api_key "" base_url "" transport "" provider_options {}]
+}
+
+proc ::unified_llm::__state_for_provider {state provider} {
+    set entry [::unified_llm::__provider_entry $state $provider]
+    set resolved $state
+    dict set resolved provider $provider
+    dict set resolved api_key [dict get $entry api_key]
+    dict set resolved base_url [dict get $entry base_url]
+    dict set resolved transport [dict get $entry transport]
+    dict set resolved provider_options [dict get $entry provider_options]
+    return $resolved
+}
+
+proc ::unified_llm::__merge_provider_options {state provider request} {
     set merged {}
-    if {[dict exists $state provider_options]} {
-        set merged [dict get $state provider_options]
+    set entry [::unified_llm::__provider_entry $state $provider]
+    if {[dict exists $entry provider_options]} {
+        set merged [dict get $entry provider_options]
     }
     if {[dict exists $request provider_options]} {
         if {$merged eq ""} {
@@ -346,22 +447,23 @@ proc ::unified_llm::__client_complete {id request} {
         return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider: $provider"
     }
 
+    set providerState [::unified_llm::__state_for_provider $state $provider]
     dict set currentRequest provider $provider
-    dict set currentRequest provider_options [::unified_llm::__merge_provider_options $state $currentRequest]
+    dict set currentRequest provider_options [::unified_llm::__merge_provider_options $state $provider $currentRequest]
     ::unified_llm::__validate_provider_options $provider [dict get $currentRequest provider_options]
 
     switch -- $provider {
         openai {
-            set response [::unified_llm::adapters::openai::complete $state $currentRequest]
+            set response [::unified_llm::adapters::openai::complete $providerState $currentRequest]
         }
         anthropic {
-            set response [::unified_llm::adapters::anthropic::complete $state $currentRequest]
+            set response [::unified_llm::adapters::anthropic::complete $providerState $currentRequest]
         }
         gemini {
-            set response [::unified_llm::adapters::gemini::complete $state $currentRequest]
+            set response [::unified_llm::adapters::gemini::complete $providerState $currentRequest]
         }
         mock {
-            set response [::unified_llm::adapters::mock_complete $state $currentRequest]
+            set response [::unified_llm::adapters::mock_complete $providerState $currentRequest]
         }
     }
 
@@ -420,22 +522,23 @@ proc ::unified_llm::__client_stream {id request args} {
         return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider: $provider"
     }
 
+    set providerState [::unified_llm::__state_for_provider $state $provider]
     dict set currentRequest provider $provider
-    dict set currentRequest provider_options [::unified_llm::__merge_provider_options $state $currentRequest]
+    dict set currentRequest provider_options [::unified_llm::__merge_provider_options $state $provider $currentRequest]
     ::unified_llm::__validate_provider_options $provider [dict get $currentRequest provider_options]
 
     switch -- $provider {
         openai {
-            set streamResult [::unified_llm::adapters::openai::stream $state $currentRequest]
+            set streamResult [::unified_llm::adapters::openai::stream $providerState $currentRequest]
         }
         anthropic {
-            set streamResult [::unified_llm::adapters::anthropic::stream $state $currentRequest]
+            set streamResult [::unified_llm::adapters::anthropic::stream $providerState $currentRequest]
         }
         gemini {
-            set streamResult [::unified_llm::adapters::gemini::stream $state $currentRequest]
+            set streamResult [::unified_llm::adapters::gemini::stream $providerState $currentRequest]
         }
         mock {
-            set response [::unified_llm::adapters::mock_complete $state $currentRequest]
+            set response [::unified_llm::adapters::mock_complete $providerState $currentRequest]
             set streamResult [::unified_llm::__stream_from_response $provider $response]
         }
     }
@@ -507,13 +610,29 @@ proc ::unified_llm::__normalize_content_part {part} {
         return -code error -errorcode [list UNIFIED_LLM INPUT PART MALFORMED] "content part requires type"
     }
 
-    set type [dict get $part type]
+    set type [string tolower [dict get $part type]]
     switch -- $type {
-        text - thinking {
+        text {
             if {![dict exists $part text]} {
                 return -code error -errorcode [list UNIFIED_LLM INPUT PART MALFORMED] "$type part requires text"
             }
             return [dict create type $type text [dict get $part text]]
+        }
+        thinking {
+            if {![dict exists $part text]} {
+                return -code error -errorcode [list UNIFIED_LLM INPUT PART MALFORMED] "thinking part requires text"
+            }
+            set normalized [dict create type thinking text [dict get $part text]]
+            if {[dict exists $part signature] && [dict get $part signature] ne ""} {
+                dict set normalized signature [dict get $part signature]
+            }
+            return $normalized
+        }
+        redacted_thinking {
+            if {![dict exists $part data]} {
+                return -code error -errorcode [list UNIFIED_LLM INPUT PART MALFORMED] "redacted_thinking part requires data"
+            }
+            return [dict create type redacted_thinking data [dict get $part data]]
         }
         image_url {
             if {![dict exists $part url]} {
@@ -583,6 +702,14 @@ proc ::unified_llm::__is_part_list {content} {
     return 1
 }
 
+proc ::unified_llm::__normalize_role {role} {
+    set normalized [string tolower [string trim "$role"]]
+    if {$normalized in {system user assistant tool developer}} {
+        return $normalized
+    }
+    return -code error -errorcode [list UNIFIED_LLM INPUT ROLE_UNSUPPORTED] "unsupported message role: $role"
+}
+
 proc ::unified_llm::__normalize_message {message} {
     if {[catch {dict size $message}]} {
         return -code error -errorcode [list UNIFIED_LLM INPUT MESSAGE_MALFORMED] "message must be a dictionary"
@@ -609,7 +736,7 @@ proc ::unified_llm::__normalize_message {message} {
         lappend parts [::unified_llm::__normalize_content_part $part]
     }
 
-    set normalized [dict create role [dict get $message role] content_parts $parts]
+    set normalized [dict create role [::unified_llm::__normalize_role [dict get $message role]] content_parts $parts]
     foreach key [dict keys $message] {
         if {$key in {role content content_parts}} {
             continue

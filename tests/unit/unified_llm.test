@@ -66,6 +66,49 @@ proc ::tests::unified_llm::tool_uppercase {args _toolCall} {
     string toupper [dict get $args text]
 }
 
+proc ::tests::unified_llm::transport_env_capture {req} {
+    variable requests
+    dict lappend requests env_items $req
+
+    set provider [dict get $req provider]
+    switch -- $provider {
+        openai {
+            set body [dict create output_text "env-openai" usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
+        }
+        anthropic {
+            set body [dict create content [list [dict create type text text "env-anthropic"]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
+        }
+        gemini {
+            set body [dict create candidates [list [dict create content [dict create parts [list [dict create text "env-gemini"]]]]] usageMetadata [dict create promptTokenCount 1 candidatesTokenCount 1]]
+        }
+        default {
+            set body [dict create output_text "env-unknown" usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]
+        }
+    }
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
+proc ::tests::unified_llm::transport_anthropic_thinking {req} {
+    variable requests
+    variable call_count
+    incr call_count
+    dict lappend requests thinking_roundtrip $req
+
+    if {$call_count == 1} {
+        set body [dict create \
+            id anth-1 \
+            content [list \
+                [dict create type text text "answer"] \
+                [dict create type thinking thinking "reasoning text" signature "sig-abc"] \
+                [dict create type redacted_thinking data "opaque-blob"]] \
+            usage [dict create input_tokens 2 output_tokens 3 reasoning_tokens 1]]
+        return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+    }
+
+    set body [dict create id anth-2 content [list [dict create type text text "followup"]] usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0]]
+    return [dict create status_code 200 headers {} body [::attractor_core::json_encode $body]]
+}
+
 test unified_llm-provider-endpoints-1.0 {providers map to native endpoints} -setup {
     set ::tests::unified_llm::requests {}
     set client [::unified_llm::client_new -provider openai -transport ::tests::unified_llm::transport_capture]
@@ -291,6 +334,71 @@ test unified_llm-anthropic-merge-1.0 {anthropic adapter merges adjacent same-rol
     list [llength [dict get $payload messages]] [dict get [lindex [dict get $payload messages] 0] role] [string first "first" $merged]
 } -result {2 user 0}
 
+test unified_llm-anthropic-roles-translation-1.0 {anthropic translation handles system developer and tool roles} -body {
+    set request [dict create model claude-sonnet messages [list \
+        [dict create role developer content "dev policy"] \
+        [dict create role system content "system policy"] \
+        [dict create role user content "hello"] \
+        [dict create role assistant content "hi"] \
+        [dict create role tool tool_call_id call-1 name calculator content "42"]]]
+    set payload [::unified_llm::adapters::anthropic::translate_request $request]
+    set toolMsg [lindex [dict get $payload messages] end]
+    set toolPart [lindex [dict get $toolMsg content] 0]
+    list \
+      [dict get [lindex [dict get $payload system] 0] text] \
+      [dict get [lindex [dict get $payload system] 1] text] \
+      [dict get $toolMsg role] \
+      [dict get $toolPart type] \
+      [dict get $toolPart tool_use_id]
+} -result {{dev policy} {system policy} user tool_result call-1}
+
+test unified_llm-anthropic-tool-role-missing-id-1.0 {tool role without tool_call_id fails fast} -body {
+    set request [dict create model claude-sonnet messages [list [dict create role tool content "tool output without id"]]]
+    catch {::unified_llm::adapters::anthropic::translate_request $request} err opts
+    list [dict get $opts -errorcode] [string match "*tool_call_id*" $err]
+} -result {{UNIFIED_LLM INPUT TOOL_RESULT_MISSING_ID} 1}
+
+test unified_llm-anthropic-thinking-translate-1.0 {thinking and redacted thinking are preserved in anthropic translation} -body {
+    set request [dict create model claude-sonnet messages [list \
+        [dict create role assistant content [list \
+            [dict create type thinking text "reasoning text" signature "sig-1"] \
+            [dict create type redacted_thinking data "opaque-data"]]]]]
+    set payload [::unified_llm::adapters::anthropic::translate_request $request]
+    set parts [dict get [lindex [dict get $payload messages] 0] content]
+    list \
+      [dict get [lindex $parts 0] type] \
+      [dict get [lindex $parts 0] thinking] \
+      [dict get [lindex $parts 0] signature] \
+      [dict get [lindex $parts 1] type] \
+      [dict get [lindex $parts 1] data]
+} -result {thinking {reasoning text} sig-1 redacted_thinking opaque-data}
+
+test unified_llm-anthropic-thinking-roundtrip-1.0 {anthropic complete returns thinking content parts and round-trips them in follow-up} -setup {
+    set ::tests::unified_llm::requests {}
+    set ::tests::unified_llm::call_count 0
+    set client [::unified_llm::client_new -provider anthropic -transport ::tests::unified_llm::transport_anthropic_thinking]
+} -body {
+    set first [::unified_llm::generate -client $client -provider anthropic -prompt hello -model claude-sonnet -max_tool_rounds 0]
+    set followupMsgs [list \
+        [dict create role assistant content_parts [dict get $first content_parts]] \
+        [dict create role user content "continue"]]
+    set _ [::unified_llm::generate -client $client -provider anthropic -messages $followupMsgs -model claude-sonnet -max_tool_rounds 0]
+
+    set secondPayload [dict get [lindex [dict get $::tests::unified_llm::requests thinking_roundtrip] 1] payload]
+    set replayParts [dict get [lindex [dict get $secondPayload messages] 0] content]
+    list \
+      [dict get [lindex [dict get $first content_parts] 1] type] \
+      [dict get [lindex [dict get $first content_parts] 1] signature] \
+      [dict get [lindex [dict get $first content_parts] 2] type] \
+      [dict get [lindex [dict get $first content_parts] 2] data] \
+      [dict get [lindex $replayParts 1] type] \
+      [dict get [lindex $replayParts 1] signature] \
+      [dict get [lindex $replayParts 2] type] \
+      [dict get [lindex $replayParts 2] data]
+} -cleanup {
+    $client close
+} -result {thinking sig-abc redacted_thinking opaque-blob thinking sig-abc redacted_thinking opaque-blob}
+
 test unified_llm-gemini-synthetic-tool-id-1.0 {gemini adapter synthesizes missing tool call ids} -setup {
     proc ::tests::unified_llm::transport_gemini_toolid {req} {
         set body [dict create candidates [list [dict create content [dict create parts [list [dict create text ok] [dict create functionCall [dict create name tool_x args [dict create x 1]]]]]]]]
@@ -318,16 +426,55 @@ test unified_llm-model-catalog-1.0 {model catalog lookup helpers} -body {
     list [::unified_llm::get_latest_model openai] [expr {[llength [::unified_llm::list_models anthropic]] > 0}] [dict get [::unified_llm::get_model_info gemini gemini-1.5-pro] id]
 } -result {gpt-4.1 1 gemini-1.5-pro}
 
-test unified_llm-from-env-ambiguous-1.0 {from_env requires explicit provider when multiple keys are set} -setup {
-    set ::env(OPENAI_API_KEY) o
-    set ::env(ANTHROPIC_API_KEY) a
+test unified_llm-client-config-multi-provider-shape-1.0 {client config exposes default_provider and providers deterministically} -setup {
+    set client [::unified_llm::client_new -provider openai -api_key sk-openai -base_url https://openai.example -transport ::tests::unified_llm::transport_capture -provider_options [dict create extra_headers [dict create x-trace t]]]
+} -body {
+    set cfg [$client config]
+    list \
+      [dict get $cfg default_provider] \
+      [dict exists $cfg providers openai api_key] \
+      [dict get $cfg provider]
+} -cleanup {
+    $client close
+} -result {openai 1 openai}
+
+test unified_llm-from-env-multi-provider-1.0 {from_env registers all configured providers and applies auth headers per provider} -setup {
+    set ::tests::unified_llm::requests {}
+    set ::env(OPENAI_API_KEY) openai-key
+    set ::env(ANTHROPIC_API_KEY) anthropic-key
+    set ::env(GEMINI_API_KEY) gemini-key
+    set ::env(OPENAI_BASE_URL) https://openai.example
+    set ::env(ANTHROPIC_BASE_URL) https://anthropic.example
+    set ::env(GEMINI_BASE_URL) https://gemini.example
     unset -nocomplain ::env(UNIFIED_LLM_PROVIDER)
 } -body {
-    catch {::unified_llm::from_env} err opts
-    list [dict get $opts -errorcode] [string match "*multiple provider API keys*" $err]
+    set client [::unified_llm::from_env -transport ::tests::unified_llm::transport_env_capture]
+    set cfg [$client config]
+
+    set _ [::unified_llm::generate -client $client -provider openai -prompt x -model gpt-4.1 -max_tool_rounds 0]
+    set _ [::unified_llm::generate -client $client -provider anthropic -prompt x -model claude-sonnet -max_tool_rounds 0]
+    set _ [::unified_llm::generate -client $client -provider gemini -prompt x -model gemini-1.5-pro -max_tool_rounds 0]
+
+    set reqs [dict get $::tests::unified_llm::requests env_items]
+    set openaiHeaders [dict get [lindex $reqs 0] headers]
+    set anthropicHeaders [dict get [lindex $reqs 1] headers]
+    set geminiHeaders [dict get [lindex $reqs 2] headers]
+
+    set result [list \
+      [dict get $cfg default_provider] \
+      [lsort [dict keys [dict get $cfg providers]]] \
+      [dict get [dict get $cfg providers openai] api_key] \
+      [dict get [dict get $cfg providers anthropic] api_key] \
+      [dict get [dict get $cfg providers gemini] api_key] \
+      [dict exists $openaiHeaders Authorization] \
+      [dict exists $anthropicHeaders x-api-key] \
+      [dict exists $geminiHeaders x-goog-api-key]]
+    $client close
+    set result
 } -cleanup {
-    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
-} -result {{UNIFIED_LLM CONFIG AMBIGUOUS_PROVIDER} 1}
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY)
+    unset -nocomplain ::env(OPENAI_BASE_URL) ::env(ANTHROPIC_BASE_URL) ::env(GEMINI_BASE_URL) ::env(UNIFIED_LLM_PROVIDER)
+} -result {openai {anthropic gemini openai} openai-key anthropic-key gemini-key 1 1 1}
 
 test unified_llm-from-env-missing-1.0 {from_env fails when no provider is configured} -setup {
     unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
@@ -338,18 +485,29 @@ test unified_llm-from-env-missing-1.0 {from_env fails when no provider is config
     unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
 } -result {{UNIFIED_LLM CONFIG MISSING_PROVIDER} 1}
 
-test unified_llm-from-env-explicit-provider-1.0 {from_env honors explicit provider override} -setup {
+test unified_llm-from-env-explicit-provider-1.0 {from_env honors explicit registered provider override} -setup {
     set ::env(OPENAI_API_KEY) o
     set ::env(ANTHROPIC_API_KEY) a
-    set ::env(UNIFIED_LLM_PROVIDER) gemini
+    set ::env(UNIFIED_LLM_PROVIDER) anthropic
 } -body {
     set client [::unified_llm::from_env]
-    set provider [dict get [$client config] provider]
+    set provider [dict get [$client config] default_provider]
     $client close
     set provider
 } -cleanup {
     unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
-} -result gemini
+} -result anthropic
+
+test unified_llm-from-env-explicit-provider-unregistered-1.0 {from_env fails when override provider is not configured} -setup {
+    set ::env(OPENAI_API_KEY) o
+    unset -nocomplain ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY)
+    set ::env(UNIFIED_LLM_PROVIDER) gemini
+} -body {
+    catch {::unified_llm::from_env} err opts
+    list [dict get $opts -errorcode] [string match "*not configured*" $err]
+} -cleanup {
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
+} -result {{UNIFIED_LLM CONFIG UNREGISTERED_PROVIDER} 1}
 
 test unified_llm-provider-metadata-usage-1.0 {adapters map metadata headers and usage fields} -setup {
     proc ::tests::unified_llm::transport_metadata {req} {

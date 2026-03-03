@@ -9,6 +9,13 @@ proc ::unified_llm::adapters::gemini::__translate_part {part} {
         text - thinking {
             return [dict create text [dict get $part text]]
         }
+        redacted_thinking {
+            set marker {[redacted thinking]}
+            if {[dict exists $part data] && [dict get $part data] ne ""} {
+                set marker [dict get $part data]
+            }
+            return [dict create text $marker]
+        }
         image_url {
             return [dict create file_data [dict create file_uri [dict get $part url]]]
         }
