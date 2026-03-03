@@ -439,6 +439,20 @@ Track 0 -> Track A -> Track B -> Track C -> Final Closeout.
     - `.scratch/verification/SPRINT-007/track-c/docker-invalid-key-modern.log`
     - `.scratch/verification/SPRINT-007/live/1772571106-1/unified_llm/openai/invalid-key.json`
 
+- [X] **R7 - Re-run local regression gates and live preflight diagnostics after implementation sync**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-3/make-build.log timeout 180 make build` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-3/make-test.log timeout 180 make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-3/tls-runtime-probe.log tclsh tools/tls_runtime_probe.tcl` (exit code 1, expected in this runtime: Tcl 8.5.9 + tls 1.6.1 < required minimum 1.7.22)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync-3/make-test-e2e-openai-dummy.log env OPENAI_API_KEY=dummy E2E_LIVE_PROVIDERS=openai timeout 180 make test-e2e` (exit code 2, expected in this runtime: unsupported tls preflight)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync-3/make-build.log`
+    - `.scratch/verification/SPRINT-007/resync-3/make-test.log`
+    - `.scratch/verification/SPRINT-007/resync-3/tls-runtime-probe.log`
+    - `.scratch/verification/SPRINT-007/resync-3/make-test-e2e-openai-dummy.log`
+    - `.scratch/verification/SPRINT-007/live/1772571440-59424/runtime-preflight.json`
+    - `.scratch/verification/SPRINT-007/live/1772571440-59424/preflight-failure.json`
+
 ## Acceptance Matrix
 
 | Case | Expected Result |
