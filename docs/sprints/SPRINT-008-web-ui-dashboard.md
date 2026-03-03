@@ -19,8 +19,20 @@ This repo currently ships a headless pipeline engine + CLI (`bin/attractor`) tha
 
 `.scratch/coreys-attractor` demonstrates an effective, dependency-light dashboard pattern for Attractor: single-page HTML with SSE-driven updates, a small JSON API surface, and an artifact browser. This sprint ports the *shape* of that UI to Tcl while preserving Tcl 8.5 compatibility and deterministic offline testing.
 
+## Approach (Plan Recap)
+- Add **event emission hooks** to the existing engine (`::attractor::run`) so both CLI and worker can generate consistent lifecycle events without duplicating logic.
+- Implement a **web server mode** that stays responsive by running pipelines in a **worker subprocess**, persisting state to the filesystem (no DB).
+- Provide **SSE** as the primary realtime channel:
+  - global snapshots for quick convergence
+  - per-run streams sourced from an append-only NDJSON log
+- Make `wait.human` web-operable by introducing a **filesystem-backed interviewer**:
+  - worker writes `questions/*.pending.json`
+  - server writes `questions/*.answer.json`
+  - worker unblocks and continues execution
+- Keep the UI **single-page and dependency-light**, modeled after Corey’s dashboard layout, with a minimal API surface.
+
 ## Golden Sample Review (SPRINT-047)
-This plan borrows process strengths from `~/.codex/skills/sprintplan/SPRINT-047-google-oauth.md`.
+This plan borrows process strengths from `/Users/jay.taylor/src/ai-digital-twin2/docs/sprints/SPRINT-047-google-oauth.md`.
 
 ### What Is Strong (and Why It Works)
 - **Objective is concrete and compatibility-oriented**: it defines a drop-in protocol surface and measures success by real client behavior.
@@ -29,6 +41,9 @@ This plan borrows process strengths from `~/.codex/skills/sprintplan/SPRINT-047-
 - **Checklist items include positive + negative verification**: prevents false-green outcomes where only happy paths are tested.
 - **Evidence discipline is operationalized**: every checklist item requires exact commands + artifact paths, making later audit/replay possible.
 - **Acceptance is expressed as executable commands**: improves repeatability in CI and on developer machines.
+- **API definitions are explicit**: parameter tables, sample requests/responses, and canonical error payloads reduce ambiguity.
+- **UI work is still verifiable**: manual walkthroughs are treated as evidence artifacts, not hand-waved.
+- **Execution guardrails are written down**: keeps the team from unintentionally breaking contracts while iterating quickly.
 
 ### What Can Be Improved
 - **Length growth**: repeated verification blocks can bury architecture and key decisions.
@@ -39,6 +54,7 @@ This plan borrows process strengths from `~/.codex/skills/sprintplan/SPRINT-047-
 - One explicit API contract section (paths, request/response payloads, event shapes).
 - One explicit filesystem/run layout contract (so UI, worker, and tests share the same truth).
 - A minimal set of diagrams, each mapped to concrete modules/files.
+- A non-regression boundary plus explicit error/security guardrails for localhost web mode.
 
 ## Current State Snapshot (2026-03-03)
 
@@ -134,6 +150,9 @@ Evidence artifacts:
 ### Run Directory Layout (Contract)
 Each run lives in a directory `${runs_root}/${run_id}/`:
 - In web mode, the worker sets `logs_root == ${runs_root}/${run_id}` so the existing engine artifact writer is reused unchanged.
+- Identifier formats:
+  - `run_id`: `run-<epoch_ms>-<seq>` (server-generated; filesystem-safe)
+  - `qid`: `q-<seq>` (worker-generated; unique per run)
 - `pipeline.dot` (original DOT source submitted)
 - `web.json` (server-owned metadata; includes `run_id`, `file_name`, `created_at`, `dot_sha256`, `worker_pid`)
 - `manifest.json` (engine-owned; currently includes `graph_id`, `started_at`)
@@ -175,11 +194,23 @@ All endpoints are local-first; CORS is optional but allowed for developer conven
   - subsequent messages are also full snapshots (simple convergence semantics)
 - `GET /events/<run_id>` -> per-run event stream; replays from beginning on connect.
 
+### Status Codes (v0)
+- Success:
+  - `GET /api/*`: `200`
+  - `POST /api/*`: `200` (except a future `201` is acceptable for create-style endpoints)
+- Client errors:
+  - `400`: malformed JSON, missing required fields, invalid IDs
+  - `404`: unknown run/stage/question
+  - `413`: request body too large
+- Server errors:
+  - `500`: worker spawn failures, internal exceptions, unexpected I/O errors
+
 ## Error and Security Contract (v0)
 - JSON endpoints always reply with `Content-Type: application/json`.
 - Error envelope shape:
   - `{ "error": "<human message>", "code": "<stable_code>" }`
   - use HTTP `4xx` for client errors and `5xx` for server/worker failures.
+  - stable codes (initial set): `INVALID_JSON`, `BODY_TOO_LARGE`, `INVALID_ID`, `NOT_FOUND`, `DOT_BINARY_MISSING`, `DOT_RENDER_FAILED`, `WORKER_SPAWN_FAILED`, `WORKER_FAILED`.
 - Path traversal hardening:
   - `run_id` and `node_id` must match a strict allowlist regex (no `/`, no `..`).
   - server must refuse to read any path that resolves outside `${runs_root}/${run_id}/`.
@@ -202,6 +233,47 @@ Worker appends JSON objects (one per line) to `events.ndjson`:
 
 Server streams per-run SSE by tailing `events.ndjson` and emitting `data: <json>\n\n`.
 
+## Evidence + Verification Logging Plan
+- Prefer `tools/verify_cmd.sh` for any non-trivial verification command so logs always capture stdout/stderr plus `exit_code=...`.
+- Store evidence under stable directories:
+  - planning: `.scratch/verification/SPRINT-008/planning/`
+  - track-0: `.scratch/verification/SPRINT-008/track-0/`
+  - track-a: `.scratch/verification/SPRINT-008/track-a/`
+  - track-b: `.scratch/verification/SPRINT-008/track-b/`
+  - track-c: `.scratch/verification/SPRINT-008/track-c/`
+  - track-d: `.scratch/verification/SPRINT-008/track-d/`
+  - final: `.scratch/verification/SPRINT-008/final/`
+- UI screenshots/manual walkthrough evidence (when needed):
+  - `.scratch/verification/SPRINT-008/track-c/ui/`
+- Diagram renders:
+  - `.scratch/diagram-renders/sprint-008/`
+
+## Execution Guardrails
+- Keep `bin/attractor run|validate` behavior stable; web mode is additive.
+- Bind `127.0.0.1` by default; only expose on LAN with an explicit flag.
+- Treat DOT and all request bodies as untrusted input:
+  - never `eval` user-supplied content
+  - cap request sizes and reject invalid JSON early
+- Web server must not block on pipeline execution; pipelines run in worker subprocesses.
+- Tests must remain deterministic/offline; no live network calls.
+
+## Acceptance Criteria (Sprint #008)
+- `bin/attractor serve --bind 127.0.0.1 --web-port 7070` starts and serves the dashboard at `GET /`.
+- A run can be started via `POST /api/run` and its state can be observed via:
+  - `GET /api/pipelines` (summary)
+  - `GET /api/pipeline?id=...` (hydrated)
+  - `GET /api/stage?id=...&node=...` (artifacts)
+- `wait.human` is web-operable:
+  - server surfaces pending questions
+  - user answers via `POST /api/answer`
+  - worker unblocks and completes the run
+- SSE works:
+  - `GET /events` streams global snapshot updates
+  - `GET /events/<run_id>` streams per-run events
+- Regression gates:
+  - `timeout 180 make build`
+  - `timeout 180 make test`
+
 ## Execution Order
 Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 
@@ -220,26 +292,47 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - `tclsh tools/spec_coverage.tcl`
 
 ## Track A - Engine Hooks + Worker
-- [ ] **A1 - Add event emission hooks to `::attractor::run`**
-  - Add `-on_event` option and emit stage/pipeline lifecycle events.
-  - Ensure this is a no-op when `-on_event` is unset.
-  - Files: `lib/attractor/main.tcl`
+- [ ] **A0 - Enforce filesystem-safe node IDs (spec parity)**
+  - Why: the engine uses `node_id` as a filesystem directory name (`${logs_root}/${node_id}/...`), so node IDs must be safe and must match the spec’s bare-identifier constraint.
+  - Implementation:
+    - Extend `::attractor::validate` to reject node IDs not matching `[A-Za-z_][A-Za-z0-9_]*`.
+    - Add a negative fixture DOT with an invalid node ID and ensure `bin/attractor validate` fails with `validation_failed`.
   - Tests:
-    - unit tests for event ordering and required fields.
+    - Positive: all `examples/*.dot` still validate.
+    - Negative: invalid node IDs are rejected (ex: contains `-`, `/`, or `..`).
+  - Verification:
+    - `tclsh tests/all.tcl -match *attractor*`
+
+- [ ] **A1 - Add event emission hooks to `::attractor::run`**
+  - Implementation:
+    - Add a new optional `-on_event` callback option.
+    - Emit ordered events with a monotonic `seq` counter and required fields for the event type.
+    - Ensure this is a no-op when `-on_event` is unset.
+  - Tests:
+    - Positive: event stream includes `PipelineStarted`, per-stage start/end, checkpoint saves, and a terminal `PipelineCompleted`.
+    - Negative: event emission must not change existing run artifacts or CLI outputs.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor*`
 
 - [ ] **A2 - Add filesystem-backed interviewer for `wait.human`**
-  - Worker writes `questions/<qid>.pending.json` and blocks (poll/sleep) until `questions/<qid>.answer.json` appears.
-  - Include timeout support (configurable).
-  - Files: `lib/attractor/main.tcl` (new interviewer), tests.
+  - Implementation:
+    - Implement an interviewer that writes `questions/<qid>.pending.json` and blocks (poll/sleep) until `questions/<qid>.answer.json` appears.
+    - Include a configurable timeout and deterministic failure mode on timeout.
+  - Tests:
+    - Positive: a `wait.human` gate can be answered and the pipeline continues.
+    - Negative: timeout produces a deterministic failure reason and leaves evidence in `questions/`.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor*`
 
 - [ ] **A3 - Introduce worker entrypoint**
-  - New script `bin/attractor-worker` (or equivalent) that:
-    - accepts `--logs-root`, writes `pipeline.dot` + `web.json`, then runs the pipeline (engine still writes `manifest.json` + `checkpoint.json`)
+  - Implementation: new script `bin/attractor-worker` that:
+    - accepts `--logs-root` (which is the run dir in web mode)
+    - writes `pipeline.dot` + `web.json`
+    - runs the pipeline (engine still writes `manifest.json` + `checkpoint.json`)
     - appends `events.ndjson` via `-on_event`
+  - Tests:
+    - Positive: worker exits 0 on success and produces the full artifact set.
+    - Negative: invalid DOT produces a non-zero exit and a server-readable error artifact.
   - Verification:
     - `tclsh tests/all.tcl -match *worker*`
 
@@ -249,6 +342,9 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - `--web-port <n>` (default `7070`)
     - `--runs-root <path>` (default `.scratch/runs/attractor-web/`)
     - `--bind <ip>` (default `127.0.0.1`)
+  - Tests:
+    - Positive: server starts and responds to `GET /api/pipelines` with JSON.
+    - Negative: invalid `--web-port` fails fast with usage text.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
@@ -256,7 +352,11 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Implement `socket -server` HTTP listener with:
     - request parsing (method/path/query/headers/body)
     - JSON helpers + error envelopes
+    - request size limits and strict ID allowlists (per security contract)
   - Files: `lib/attractor_web/*.tcl`, `pkgIndex.tcl`
+  - Tests:
+    - Positive: parse GET + POST with JSON body.
+    - Negative: reject malformed HTTP, invalid JSON, and oversize bodies.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
@@ -264,12 +364,41 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Start worker subprocesses, capture PID, and mark running/terminal states.
   - Provide cancellation by PID kill (best-effort).
   - Rehydrate prior runs by scanning `runs_root/` on server start.
+  - Tests:
+    - Positive: spawn worker, observe status transition `running -> success|failed`.
+    - Negative: missing run dir produces `not_found` errors (not crashes).
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **B3 - SSE endpoints**
+- [ ] **B3 - Implement API endpoints (runs + artifacts + human answers)**
+  - Implement:
+    - `GET /api/pipelines`
+    - `POST /api/run`
+    - `GET /api/pipeline?id=...`
+    - `GET /api/stage?id=...&node=...`
+    - `POST /api/answer`
+  - Tests:
+    - Positive: start a run and fetch hydrated state + per-node artifacts.
+    - Negative: invalid `run_id`/`node_id` rejected; `node_id` not in run returns `not_found`.
+  - Verification:
+    - `tclsh tests/all.tcl -match *attractor-web*`
+
+- [ ] **B4 - DOT render endpoint**
+  - Implement `POST /api/render` using Graphviz `dot` if present:
+    - success returns `{ "svg": "<svg...>" }`
+    - failure returns `{ "error": "...", "code": "DOT_RENDER_FAILED" }`
+  - Tests:
+    - Positive: render a known-good DOT into SVG.
+    - Negative: missing `dot` binary returns a deterministic error code.
+  - Verification:
+    - `tclsh tests/all.tcl -match *attractor-web*`
+
+- [ ] **B5 - SSE endpoints**
   - `/events`: broadcast full snapshots on changes + heartbeat comments.
   - `/events/<run_id>`: tail `events.ndjson` safely.
+  - Tests:
+    - Positive: SSE streams at least one snapshot + one update.
+    - Negative: client disconnect does not leak server resources.
   - Verification:
     - `tclsh tests/all.tcl -match *sse*`
 
@@ -279,7 +408,11 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - pipeline list (left)
     - details view (right): graph SVG, stage list, stage prompt/response viewer
     - live connection indicator (SSE online/offline)
+    - run form: paste DOT or upload `.dot`, then `Run` (calls `POST /api/run`)
+    - artifact browser: fetch per-stage artifacts via `GET /api/stage`
   - Files: embedded HTML in Tcl server or `lib/attractor_web/assets/dashboard.html` (served as static).
+  - Evidence (manual UI when needed):
+    - `.scratch/verification/SPRINT-008/track-c/ui/`
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web-ui*`
 
@@ -287,18 +420,23 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - When `pending_questions` present for a run:
     - show modal with question + choice buttons
     - call `POST /api/answer`
+  - Tests:
+    - Positive: a run blocked on `wait.human` becomes unblocked after `POST /api/answer`.
+    - Negative: invalid `qid` returns a deterministic `not_found` error.
   - Verification:
     - `tclsh tests/all.tcl -match *human-gate*`
 
 ## Track D - Tests, Docs, and Final Regression Gates
 - [ ] **D1 - Integration tests for end-to-end web flow**
   - Start server on ephemeral port; run a pipeline with `wait.human`; answer; verify terminal success and artifacts exist.
+  - Ensure tests do not require a real browser (HTTP-level e2e is sufficient).
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
 - [ ] **D2 - Security and robustness tests**
   - Path traversal rejection for stage/artifact fetch endpoints.
   - SSE client disconnect handling and bounded queues.
+  - Worker supervision: worker crash should surface as a terminal `failed` state with a readable error.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
@@ -306,6 +444,7 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `timeout 180 make build`
     - `timeout 180 make test`
+    - `bash tools/docs_lint.sh`
 
 ## Final Closeout Checklist
 - [ ] All new/updated tests pass locally.
