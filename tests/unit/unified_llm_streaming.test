@@ -237,6 +237,20 @@ test unified_llm-anthropic-stream-thinking-roundtrip-1.0 {anthropic stream prese
     unset -nocomplain ::tests::unified_llm_streaming::events
 } -result {thinking sig-stream redacted_thinking opaque-stream}
 
+test unified_llm-anthropic-stream-invalid-tool-json-1.0 {anthropic malformed tool-call JSON emits terminal ERROR without FINISH} -setup {
+    set fixture [::tests::unified_llm_streaming::fixture_path malformed/anthropic-invalid-tool-json.sse]
+    set client [::unified_llm::client_new -provider anthropic -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
+    set ::tests::unified_llm_streaming::events {}
+} -body {
+    set _ [::unified_llm::stream -client $client -provider anthropic -prompt hi -model claude-sonnet -on_event ::tests::unified_llm_streaming::capture_event]
+    list \
+      [dict get [lindex $::tests::unified_llm_streaming::events end] type] \
+      [::tests::unified_llm_streaming::has_event_type $::tests::unified_llm_streaming::events FINISH]
+} -cleanup {
+    $client close
+    unset -nocomplain ::tests::unified_llm_streaming::events
+} -result {ERROR 0}
+
 test unified_llm-gemini-stream-translation-1.0 {gemini stream maps text and functionCall parts} -setup {
     set fixture [::tests::unified_llm_streaming::fixture_path gemini/gemini-text-tool.sse]
     set client [::unified_llm::client_new -provider gemini -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]

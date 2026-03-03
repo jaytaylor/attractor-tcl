@@ -358,6 +358,12 @@ test unified_llm-anthropic-tool-role-missing-id-1.0 {tool role without tool_call
     list [dict get $opts -errorcode] [string match "*tool_call_id*" $err]
 } -result {{UNIFIED_LLM INPUT TOOL_RESULT_MISSING_ID} 1}
 
+test unified_llm-anthropic-unsupported-role-1.0 {unsupported anthropic role fails fast} -body {
+    set request [dict create model claude-sonnet messages [list [dict create role observer content "noop"]]]
+    catch {::unified_llm::adapters::anthropic::translate_request $request} err opts
+    list [dict get $opts -errorcode] [string match "*unsupported message role*" $err]
+} -result {{UNIFIED_LLM INPUT ROLE_UNSUPPORTED} 1}
+
 test unified_llm-anthropic-thinking-translate-1.0 {thinking and redacted thinking are preserved in anthropic translation} -body {
     set request [dict create model claude-sonnet messages [list \
         [dict create role assistant content [list \
@@ -372,6 +378,13 @@ test unified_llm-anthropic-thinking-translate-1.0 {thinking and redacted thinkin
       [dict get [lindex $parts 1] type] \
       [dict get [lindex $parts 1] data]
 } -result {thinking {reasoning text} sig-1 redacted_thinking opaque-data}
+
+test unified_llm-anthropic-thinking-missing-text-1.0 {thinking content part without text fails validation} -body {
+    set request [dict create model claude-sonnet messages [list \
+        [dict create role assistant content [list [dict create type thinking signature sig-only]]]]]
+    catch {::unified_llm::adapters::anthropic::translate_request $request} err opts
+    list [dict get $opts -errorcode] [string match "*thinking part requires text*" $err]
+} -result {{UNIFIED_LLM INPUT PART MALFORMED} 1}
 
 test unified_llm-anthropic-thinking-roundtrip-1.0 {anthropic complete returns thinking content parts and round-trips them in follow-up} -setup {
     set ::tests::unified_llm::requests {}
@@ -508,6 +521,30 @@ test unified_llm-from-env-explicit-provider-unregistered-1.0 {from_env fails whe
 } -cleanup {
     unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
 } -result {{UNIFIED_LLM CONFIG UNREGISTERED_PROVIDER} 1}
+
+test unified_llm-from-env-explicit-provider-unknown-1.0 {from_env fails when override provider is unsupported} -setup {
+    set ::env(OPENAI_API_KEY) o
+    set ::env(UNIFIED_LLM_PROVIDER) not_a_provider
+} -body {
+    catch {::unified_llm::from_env} err opts
+    list [dict get $opts -errorcode] [string match "*unsupported provider*" $err]
+} -cleanup {
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
+} -result {{UNIFIED_LLM CONFIG UNKNOWN_PROVIDER} 1}
+
+test unified_llm-from-env-google-api-key-alias-1.0 {from_env discovers Gemini from GOOGLE_API_KEY when GEMINI_API_KEY is unset} -setup {
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY)
+    set ::env(GOOGLE_API_KEY) google-key
+    unset -nocomplain ::env(UNIFIED_LLM_PROVIDER)
+} -body {
+    set client [::unified_llm::from_env]
+    set cfg [$client config]
+    set out [list [dict get $cfg default_provider] [dict get [dict get $cfg providers gemini] api_key]]
+    $client close
+    set out
+} -cleanup {
+    unset -nocomplain ::env(OPENAI_API_KEY) ::env(ANTHROPIC_API_KEY) ::env(GEMINI_API_KEY) ::env(GOOGLE_API_KEY) ::env(UNIFIED_LLM_PROVIDER)
+} -result {gemini google-key}
 
 test unified_llm-provider-metadata-usage-1.0 {adapters map metadata headers and usage fields} -setup {
     proc ::tests::unified_llm::transport_metadata {req} {

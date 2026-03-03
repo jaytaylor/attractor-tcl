@@ -182,3 +182,152 @@ test integration-attractor-manager-loop-max-cycles-1.0 {manager loop fails deter
 } -cleanup {
     file delete -force $logsRoot
 } -result {failed max_cycles_exceeded supervise}
+
+test integration-attractor-manager-loop-missing-child-dotfile-1.0 {manager loop fails fast when stack.child_dotfile is missing} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-missing-dotfile-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set graph [::attractor::parse_dot {
+        digraph parent {
+            start [shape=Mdiamond];
+            supervise [shape=house];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result reason] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {failed missing_child_dotfile supervise}
+
+test integration-attractor-manager-loop-child-dotfile-not-found-1.0 {manager loop fails when configured child dotfile does not exist} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-missing-child-file-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+    set missingChildPath [file join $logsRoot does-not-exist.dot]
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s"];
+            start [shape=Mdiamond];
+            supervise [shape=house];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $missingChildPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result reason] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {failed child_dotfile_not_found supervise}
+
+test integration-attractor-manager-loop-invalid-actions-1.0 {manager loop rejects unsupported manager actions} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-invalid-actions-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set childDotPath [file join $logsRoot child.dot]
+    set fh [open $childDotPath w]
+    puts -nonewline $fh {
+        digraph child {
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="child-build"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit [label=success];
+        }
+    }
+    close $fh
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s"];
+            start [shape=Mdiamond];
+            supervise [shape=house, manager.actions="observe,invalid_action"];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $childDotPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result reason] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {failed invalid_manager_actions supervise}
+
+test integration-attractor-manager-loop-invalid-stop-condition-1.0 {manager loop fails deterministically on malformed stop condition} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-invalid-stop-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set childDotPath [file join $logsRoot child.dot]
+    set fh [open $childDotPath w]
+    puts -nonewline $fh {
+        digraph child {
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="child-build"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit [label=success];
+        }
+    }
+    close $fh
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s"];
+            start [shape=Mdiamond];
+            supervise [shape=house, manager.stop_condition="context.stack.child.status"];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $childDotPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result reason] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {failed invalid_stop_condition supervise}
+
+test integration-attractor-manager-loop-stop-condition-success-1.0 {manager loop can terminate early on explicit stop condition} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-006 integration manager-loop-stop-condition-success-[pid]]
+    file delete -force $logsRoot
+    file mkdir $logsRoot
+
+    set childDotPath [file join $logsRoot child.dot]
+    set fh [open $childDotPath w]
+    puts -nonewline $fh {
+        digraph child {
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="child-build"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit [label=success];
+        }
+    }
+    close $fh
+
+    set graph [::attractor::parse_dot [format {
+        digraph parent {
+            graph [stack.child_dotfile="%s", stack.child_autostart=false];
+            start [shape=Mdiamond];
+            supervise [shape=house, manager.max_cycles=3, manager.stop_condition="outcome=not_started"];
+            exit [shape=Msquare];
+            start -> supervise;
+            supervise -> exit;
+        }
+    } $childDotPath]]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::integration::attractor::manager_backend -logs_root $logsRoot]
+    list [dict get $result status] [dict get $result current_node]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success exit}
