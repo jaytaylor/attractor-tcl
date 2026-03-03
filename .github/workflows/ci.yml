@@ -20,18 +20,9 @@ jobs:
       - name: Install Tcl
         run: sudo apt-get update && sudo apt-get install -y tcl tcllib tcl-tls ripgrep graphviz
       - name: Probe Tcl/TLS runtime
-        run: |
-          tclsh <<'TCL'
-          puts "tcl=[info patchlevel]"
-          if {[catch {package require tls} tlsErr]} {
-            puts stderr "tls=missing"
-            puts stderr "tls_error=$tlsErr"
-            exit 1
-          }
-          puts "tls=[package provide tls]"
-          TCL
+        run: tclsh tools/tls_runtime_probe.tcl
       - name: Run test suite
-        run: tclsh tests/all.tcl
+        run: make test
 
   live-smoke:
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.live_smoke == 'true' }}
@@ -43,28 +34,29 @@ jobs:
       - name: Install Tcl
         run: sudo apt-get update && sudo apt-get install -y tcl tcllib tcl-tls ripgrep graphviz
       - name: Probe Tcl/TLS runtime
+        run: tclsh tools/tls_runtime_probe.tcl
+      - name: Select providers with configured keys
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          tclsh <<'TCL'
-          puts "tcl=[info patchlevel]"
-          if {[catch {package require tls} tlsErr]} {
-            puts stderr "tls=missing"
-            puts stderr "tls_error=$tlsErr"
+          providers=()
+          if [ -n "${OPENAI_API_KEY:-}" ]; then providers+=("openai"); fi
+          if [ -n "${ANTHROPIC_API_KEY:-}" ]; then providers+=("anthropic"); fi
+          if [ -n "${GEMINI_API_KEY:-}" ]; then providers+=("gemini"); fi
+
+          if [ "${#providers[@]}" -eq 0 ]; then
+            echo "No provider API keys are configured for live-smoke." >&2
             exit 1
-          }
-          puts "tls=[package provide tls]"
-          TCL
-      - name: Validate provider secrets are present
+          fi
+
+          provider_csv="$(IFS=,; echo "${providers[*]}")"
+          echo "E2E_LIVE_PROVIDERS=$provider_csv" >> "$GITHUB_ENV"
+          echo "live providers: $provider_csv"
+      - name: Run live smoke suite
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          test -n "$OPENAI_API_KEY"
-          test -n "$ANTHROPIC_API_KEY"
-          test -n "$GEMINI_API_KEY"
-      - name: Run smoke-tagged tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: tclsh tests/all.tcl -match "integration-*"
+        run: make test-e2e

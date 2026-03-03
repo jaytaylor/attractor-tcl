@@ -24,16 +24,16 @@ These tests call real provider HTTPS APIs and require API keys.
 ## Runtime Preflight
 Quick probe:
 ```bash
-tclsh <<'TCL'
-puts "tcl=[info patchlevel]"
-if {[catch {package require tls} tlsErr]} {
-  puts stderr "tls=missing"
-  puts stderr "tls_error=$tlsErr"
-  exit 1
-}
-puts "tls=[package provide tls]"
-TCL
+tclsh tools/tls_runtime_probe.tcl
 ```
+
+Expected success output includes:
+- `tls_supported=1`
+- `tls_probe_status=ok`
+
+Expected failure output on legacy runtimes (example: Tcl 8.5.9 + tls 1.6.1) includes:
+- `tls_supported=0`
+- `tls_probe_error=tls runtime 1.6.1 is unsupported (requires tls >= 1.7.22). ...`
 
 If your default `tclsh` is too old, override it:
 ```bash
