@@ -64,6 +64,7 @@ This sprint plan adopts key strengths from `~/.codex/skills/sprintplan/SPRINT-04
 ### Verified Failure Shape
 - `make test-e2e` fails in affected runtime with TLS handshake/network abort errors before HTTP status handling for OpenAI/Anthropic invalid-key checks.
 - `curl` to provider endpoints in same environment succeeds at transport level and returns valid HTTP error responses (for missing auth, typically HTTP 401), proving endpoint reachability.
+- In the hardened live harness, unsupported runtimes now fail fast at preflight with `E2E_LIVE TRANSPORT TLS_UNSUPPORTED` before live network calls.
 
 ## Scope
 In scope:
@@ -375,6 +376,41 @@ Track 0 -> Track A -> Track B -> Track C -> Final Closeout.
     - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/track-c/docs-live-e2e-check.log rg -n 'tls|TCLSH|test-e2e|runtime|preflight' docs/howto/live-e2e.md`
   - Evidence artifacts:
     - `.scratch/verification/SPRINT-007/track-c/docs-live-e2e-check.log`
+
+## Resync - Post-Review Implementation Pass (2026-03-03)
+- [X] **R1 - Add reusable TLS runtime probe with deterministic pass/fail behavior**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/tls-probe-default-fail.log tclsh tools/tls_runtime_probe.tcl` (exit code 1, expected in this runtime: Tcl 8.5.9 + tls 1.6.1 < required minimum 1.7.22)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/tls-probe-override-pass.log tclsh tools/tls_runtime_probe.tcl 1.6.1` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync/tls-probe-default-fail.log`
+    - `.scratch/verification/SPRINT-007/resync/tls-probe-override-pass.log`
+
+- [X] **R2 - Align CI live-smoke with real live harness path and provider selection**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/ci-runtime-lines.log rg -n 'tls_runtime_probe|E2E_LIVE_PROVIDERS|make test-e2e' .github/workflows/ci.yml` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync/ci-runtime-lines.log`
+
+- [X] **R3 - Expand deterministic integration coverage for live preflight artifacts**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/e2e-live-support-integration.log tclsh tests/all.tcl -match *integration-e2e-live-*` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync/e2e-live-support-integration.log`
+
+- [X] **R4 - Refresh runtime documentation and run post-resync regression/lint gates**
+  - Verification executed:
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/docs-runtime-probe-lines.log rg -n 'tls_runtime_probe|tls_supported|TCLSH' docs/howto/live-e2e.md` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/make-build.log timeout 180 make build` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/make-test.log timeout 180 make test` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
+    - `tools/verify_cmd.sh .scratch/verification/SPRINT-007/resync/evidence-lint.log bash tools/evidence_lint.sh docs/sprints/SPRINT-007-tcltls-modern-https-transport.md` (exit code 0)
+  - Evidence:
+    - `.scratch/verification/SPRINT-007/resync/docs-runtime-probe-lines.log`
+    - `.scratch/verification/SPRINT-007/resync/make-build.log`
+    - `.scratch/verification/SPRINT-007/resync/make-test.log`
+    - `.scratch/verification/SPRINT-007/resync/docs-lint.log`
+    - `.scratch/verification/SPRINT-007/resync/evidence-lint.log`
 
 ## Acceptance Matrix
 
