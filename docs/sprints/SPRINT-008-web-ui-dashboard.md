@@ -133,6 +133,7 @@ Evidence artifacts:
 
 ### Run Directory Layout (Contract)
 Each run lives in a directory `${runs_root}/${run_id}/`:
+- In web mode, the worker sets `logs_root == ${runs_root}/${run_id}` so the existing engine artifact writer is reused unchanged.
 - `pipeline.dot` (original DOT source submitted)
 - `web.json` (server-owned metadata; includes `run_id`, `file_name`, `created_at`, `dot_sha256`, `worker_pid`)
 - `manifest.json` (engine-owned; currently includes `graph_id`, `started_at`)
@@ -174,9 +175,22 @@ All endpoints are local-first; CORS is optional but allowed for developer conven
   - subsequent messages are also full snapshots (simple convergence semantics)
 - `GET /events/<run_id>` -> per-run event stream; replays from beginning on connect.
 
+## Error and Security Contract (v0)
+- JSON endpoints always reply with `Content-Type: application/json`.
+- Error envelope shape:
+  - `{ "error": "<human message>", "code": "<stable_code>" }`
+  - use HTTP `4xx` for client errors and `5xx` for server/worker failures.
+- Path traversal hardening:
+  - `run_id` and `node_id` must match a strict allowlist regex (no `/`, no `..`).
+  - server must refuse to read any path that resolves outside `${runs_root}/${run_id}/`.
+- Request size limits:
+  - cap JSON bodies (ex: `dotSource`) to a reasonable max (ex: 1-2 MiB) to avoid memory/Graphviz abuse.
+- Default bind safety:
+  - bind `127.0.0.1` by default; require explicit `--bind 0.0.0.0` to expose on LAN.
+
 ## Event Contract (NDJSON + SSE payloads)
 Worker appends JSON objects (one per line) to `events.ndjson`:
-- common fields: `ts`, `run_id`, `type`
+- common fields: `ts`, `run_id`, `type`, `seq`
 - types (minimum set for UI):
   - `PipelineStarted`
   - `StageStarted` (`node_id`, `handler`)
@@ -224,7 +238,7 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 
 - [ ] **A3 - Introduce worker entrypoint**
   - New script `bin/attractor-worker` (or equivalent) that:
-    - accepts `--logs-root`, writes `pipeline.dot`, `manifest.json`, runs pipeline
+    - accepts `--logs-root`, writes `pipeline.dot` + `web.json`, then runs the pipeline (engine still writes `manifest.json` + `checkpoint.json`)
     - appends `events.ndjson` via `-on_event`
   - Verification:
     - `tclsh tests/all.tcl -match *worker*`
