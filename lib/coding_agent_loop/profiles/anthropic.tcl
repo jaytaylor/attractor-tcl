@@ -1,7 +1,7 @@
 namespace eval ::coding_agent_loop::profiles::anthropic {}
 
 proc ::coding_agent_loop::profiles::anthropic::build {} {
-    set model claude-sonnet-4-5
+    set model claude-haiku-4-5
     if {[info exists ::env(ANTHROPIC_MODEL)] && [string trim $::env(ANTHROPIC_MODEL)] ne ""} {
         set model [string trim $::env(ANTHROPIC_MODEL)]
     }

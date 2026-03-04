@@ -1,7 +1,7 @@
 namespace eval ::coding_agent_loop::profiles::gemini {}
 
 proc ::coding_agent_loop::profiles::gemini::build {} {
-    set model gemini-2.5-flash
+    set model gemini-3-flash-preview
     if {[info exists ::env(GEMINI_MODEL)] && [string trim $::env(GEMINI_MODEL)] ne ""} {
         set model [string trim $::env(GEMINI_MODEL)]
     }

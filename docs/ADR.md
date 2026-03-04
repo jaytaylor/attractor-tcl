@@ -435,3 +435,36 @@ Tradeoffs:
 - Filesystem polling for SSE convergence is simple but less efficient than in-memory publish/subscribe.
 - JSON persistence uses existing project encoding helpers; empty-string representation in some persisted artifacts may require future normalization work.
 - Worker supervision is best-effort and intentionally lightweight for localhost usage.
+
+## ADR-016: Provider Prompt Parity Alignment with swift-omnikit Prompt Sources
+- Date: 2026-03-04
+- Status: Accepted
+
+### Context
+`coding_agent_loop` previously assembled a compact generic system prompt from profile `identity` and `tool_guidance`. This diverged from the provider-native prompt structures used by `swift-omnikit`, reducing parity for Codex/OpenAI, Claude/Anthropic, and Gemini profiles.
+
+### Decision
+- Introduce a dedicated prompt composition module at `lib/coding_agent_loop/prompts.tcl` and route session prompt generation through it.
+- Vendor prompt source material from `swift-omnikit` into repository resources:
+  - `lib/coding_agent_loop/resources/CodexPrompts/*.md` for Codex/OpenAI model-specific base prompts and apply-patch instructions.
+  - `lib/coding_agent_loop/resources/OmniKitPromptSources/ClaudeSystemPrompt.swift` and `GeminiSystemPrompt.swift` as canonical parity references.
+- Implement model-aware Codex prompt selection (`gpt-5.2`, `gpt-5.1`, codex variants, codex-max) and append apply-patch instructions exactly as the upstream selection model describes.
+- Implement provider-specific system prompt builders:
+  - OpenAI: Codex base prompt + environment context + optional project/user sections.
+  - Anthropic: Claude-style section assembly (tool descriptions, core sections, environment/git context, optional project/user sections) populated from the vendored Claude source constants.
+  - Gemini: Gemini CLI-style composed mandates/workflows/operational sections + environment footer + optional project/user sections.
+- Update coding-agent-loop profile defaults to match `swift-omnikit` profile defaults:
+  - OpenAI `gpt-5.2`
+  - Anthropic `claude-haiku-4-5`
+  - Gemini `gemini-3-flash-preview`
+
+### Consequences
+Positive:
+- Prompt behavior is provider-native and materially closer to `swift-omnikit` composition semantics.
+- Codex prompt resources are now byte-vendored in-tree, reducing drift for OpenAI model-family prompts.
+- Prompt-generation logic is centralized and easier to validate with deterministic tests.
+
+Tradeoffs:
+- Prompt subsystem complexity increased substantially versus the prior generic formatter.
+- Claude parity currently depends on parsing vendored Swift constants; upstream structural changes may require parser maintenance.
+- Default model changes can alter live smoke behavior/cost characteristics for environments relying on implicit defaults.

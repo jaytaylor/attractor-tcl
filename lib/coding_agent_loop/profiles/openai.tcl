@@ -1,7 +1,7 @@
 namespace eval ::coding_agent_loop::profiles::openai {}
 
 proc ::coding_agent_loop::profiles::openai::build {} {
-    set model gpt-4o-mini
+    set model gpt-5.2
     if {[info exists ::env(OPENAI_MODEL)] && [string trim $::env(OPENAI_MODEL)] ne ""} {
         set model [string trim $::env(OPENAI_MODEL)]
     }

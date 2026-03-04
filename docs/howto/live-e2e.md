@@ -45,9 +45,9 @@ TCLSH=/path/to/modern/tclsh make test-e2e
   - `E2E_LIVE_PROVIDERS` (optional, comma-separated allowlist)
   - Example: `openai,anthropic`
 - Model overrides:
-  - `OPENAI_MODEL` (default `gpt-4o-mini`)
-  - `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`)
-  - `GEMINI_MODEL` (default `gemini-2.5-flash`)
+  - `OPENAI_MODEL` (default `gpt-5.2`)
+  - `ANTHROPIC_MODEL` (default `claude-haiku-4-5`)
+  - `GEMINI_MODEL` (default `gemini-3-flash-preview`)
 - Base URL overrides:
   - `OPENAI_BASE_URL` (default `https://api.openai.com`)
   - `ANTHROPIC_BASE_URL` (default `https://api.anthropic.com`)

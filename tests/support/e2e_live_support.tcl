@@ -12,9 +12,9 @@ namespace eval ::tests::e2e_live {
 
 proc ::tests::e2e_live::provider_specs {} {
     return [dict create \
-        openai [dict create key_var OPENAI_API_KEY model_var OPENAI_MODEL model_default gpt-4o-mini base_url_var OPENAI_BASE_URL base_url_default https://api.openai.com] \
-        anthropic [dict create key_var ANTHROPIC_API_KEY model_var ANTHROPIC_MODEL model_default claude-sonnet-4-5 base_url_var ANTHROPIC_BASE_URL base_url_default https://api.anthropic.com] \
-        gemini [dict create key_var GEMINI_API_KEY model_var GEMINI_MODEL model_default gemini-2.5-flash base_url_var GEMINI_BASE_URL base_url_default https://generativelanguage.googleapis.com]]
+        openai [dict create key_var OPENAI_API_KEY model_var OPENAI_MODEL model_default gpt-5.2 base_url_var OPENAI_BASE_URL base_url_default https://api.openai.com] \
+        anthropic [dict create key_var ANTHROPIC_API_KEY model_var ANTHROPIC_MODEL model_default claude-haiku-4-5 base_url_var ANTHROPIC_BASE_URL base_url_default https://api.anthropic.com] \
+        gemini [dict create key_var GEMINI_API_KEY model_var GEMINI_MODEL model_default gemini-3-flash-preview base_url_var GEMINI_BASE_URL base_url_default https://generativelanguage.googleapis.com]]
 }
 
 proc ::tests::e2e_live::timestamp_utc {} {

@@ -129,6 +129,42 @@ test coding_agent_loop-profile-1.0 {provider profiles expose expected toolsets} 
       [expr {[lsearch -exact [dict get $gemini enabled_tools] edit_file] >= 0}]
 } -result {1 1 1}
 
+test coding_agent_loop-openai-system-prompt-parity-1.0 {openai prompt uses codex resources and model-specific variant selection} -setup {
+    set session [::coding_agent_loop::session new -profile openai -config [dict create model gpt-5.1]]
+} -body {
+    set prompt [::coding_agent_loop::__build_system_prompt [$session config]]
+    list \
+      [expr {[string first "You are GPT-5.1 running in the Codex CLI" $prompt] >= 0}] \
+      [expr {[string first "# Environment Context" $prompt] >= 0}] \
+      [expr {[string first "workdir parameter" $prompt] >= 0}]
+} -cleanup {
+    $session close
+} -result {1 1 1}
+
+test coding_agent_loop-anthropic-system-prompt-parity-1.0 {anthropic prompt is derived from Claude system sections} -setup {
+    set session [::coding_agent_loop::session new -profile anthropic]
+} -body {
+    set prompt [::coding_agent_loop::__build_system_prompt [$session config]]
+    list \
+      [expr {[string first "You are Claude Code, Anthropic's official CLI for Claude." $prompt] >= 0}] \
+      [expr {[string first "# Tool: Read" $prompt] >= 0}] \
+      [expr {[string first "Assistant knowledge cutoff is May 2025." $prompt] >= 0}]
+} -cleanup {
+    $session close
+} -result {1 1 1}
+
+test coding_agent_loop-gemini-system-prompt-parity-1.0 {gemini prompt mirrors Gemini CLI composition and env footer} -setup {
+    set session [::coding_agent_loop::session new -profile gemini]
+} -body {
+    set prompt [::coding_agent_loop::__build_system_prompt [$session config]]
+    list \
+      [expr {[string first "You are Gemini CLI, an interactive CLI agent" $prompt] >= 0}] \
+      [expr {[string first "# Final Reminder" $prompt] >= 0}] \
+      [expr {[string first "<env>" $prompt] >= 0}]
+} -cleanup {
+    $session close
+} -result {1 1 1}
+
 test coding_agent_loop-model-config-forwarded-1.0 {session config model is forwarded to unified_llm requests} -setup {
     set ::tests::coding_agent_loop::seen {}
     proc ::tests::coding_agent_loop::transport_model_capture {req} {

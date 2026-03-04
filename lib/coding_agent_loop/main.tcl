@@ -9,6 +9,7 @@ package require unified_llm
 package require attractor_core
 
 source [file join [file dirname [info script]] tools core.tcl]
+source [file join [file dirname [info script]] prompts.tcl]
 source [file join [file dirname [info script]] profiles openai.tcl]
 source [file join [file dirname [info script]] profiles anthropic.tcl]
 source [file join [file dirname [info script]] profiles gemini.tcl]
@@ -52,37 +53,7 @@ proc ::coding_agent_loop::__collect_project_docs {} {
 }
 
 proc ::coding_agent_loop::__build_system_prompt {state} {
-    if {[dict exists $state config system_prompt] && [string trim [dict get $state config system_prompt]] ne ""} {
-        return [dict get $state config system_prompt]
-    }
-
-    set profile [dict get $state profile]
-    set identity "You are a coding agent."
-    if {[dict exists $profile identity]} {
-        set identity [dict get $profile identity]
-    }
-
-    set guidance "Use tools carefully and deterministically."
-    if {[dict exists $profile tool_guidance]} {
-        set guidance [dict get $profile tool_guidance]
-    }
-
-    set cwd [pwd]
-    set now [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%SZ" -gmt 1]
-    set platform "$::tcl_platform(os) $::tcl_platform(osVersion)"
-
-    set branch "unknown"
-    if {[catch {exec git rev-parse --abbrev-ref HEAD} branchOut] == 0} {
-        set branch [string trim $branchOut]
-    }
-
-    set docs [::coding_agent_loop::__collect_project_docs]
-    set docsLine "none"
-    if {[llength $docs] > 0} {
-        set docsLine [join $docs ", "]
-    }
-
-    return "$identity\n\n$guidance\n\nEnvironment:\n- cwd: $cwd\n- git branch: $branch\n- platform: $platform\n- utc_now: $now\n- project_docs: $docsLine"
+    return [::coding_agent_loop::prompts::build $state]
 }
 
 proc ::coding_agent_loop::session {subcommand args} {
