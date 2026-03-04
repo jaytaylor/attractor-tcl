@@ -50,7 +50,7 @@ test e2e-attractor-cli-validate-1.0 {CLI validates dot pipelines without executi
 test e2e-attractor-cli-validate-negative-1.0 {CLI validate fails on malformed graph} -setup {
     set bad [file join $root .scratch verification SPRINT-003 integration e2e-bad-[pid].dot]
     set fh [open $bad w]
-    puts -nonewline $fh {digraph bad { start [shape=start]; node -> ; }}
+    puts -nonewline $fh {digraph bad { node_a [handler=codergen]; }}
     close $fh
 } -body {
     set cmd [list [file join $root bin attractor] validate $bad]

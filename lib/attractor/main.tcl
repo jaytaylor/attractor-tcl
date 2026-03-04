@@ -302,6 +302,12 @@ proc ::attractor::validate {graphDict} {
     set nodes [dict get $graphDict nodes]
     set edges [dict get $graphDict edges]
 
+    foreach nodeId [dict keys $nodes] {
+        if {![regexp {^[A-Za-z_][A-Za-z0-9_]*$} $nodeId]} {
+            lappend diagnostics [::attractor::__diag error validation.node_id.invalid {node id must match [A-Za-z_][A-Za-z0-9_]*} node $nodeId]
+        }
+    }
+
     set starts [::attractor::__find_nodes_by_shape $graphDict Mdiamond]
     set exits [::attractor::__find_nodes_by_shape $graphDict Msquare]
 
@@ -542,6 +548,23 @@ proc ::attractor::__write_text_file {path payload} {
     set fh [open $path w]
     puts -nonewline $fh $payload
     close $fh
+}
+
+proc ::attractor::__timestamp_iso8601 {} {
+    return [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%SZ" -gmt 1]
+}
+
+proc ::attractor::__emit_event {callback runId seqVar type args} {
+    if {$callback eq ""} {
+        return
+    }
+    upvar 1 $seqVar seq
+    incr seq
+    set event [dict create ts [::attractor::__timestamp_iso8601] run_id $runId type $type seq $seq]
+    foreach {k v} $args {
+        dict set event $k $v
+    }
+    {*}$callback $event
 }
 
 proc ::attractor::default_interviewer {request} {
@@ -976,6 +999,8 @@ proc ::attractor::run {graphDict args} {
         -transforms {}
         -stylesheet ""
         -handlers {}
+        -on_event ""
+        -run_id ""
     }
     array set opts $args
 
@@ -997,6 +1022,10 @@ proc ::attractor::run {graphDict args} {
 
     if {$opts(-logs_root) eq ""} {
         set opts(-logs_root) [file join .scratch runs attractor [clock seconds]]
+    }
+    set runId $opts(-run_id)
+    if {$runId eq ""} {
+        set runId [file tail $opts(-logs_root)]
     }
 
     file mkdir [file join $opts(-logs_root) artifacts]
@@ -1029,6 +1058,8 @@ proc ::attractor::run {graphDict args} {
     }
 
     set steps 0
+    set eventSeq 0
+    ::attractor::__emit_event $opts(-on_event) $runId eventSeq PipelineStarted
     while {$steps < $opts(-max_steps)} {
         if {$current eq ""} {
             return -code error "no current node"
@@ -1048,6 +1079,7 @@ proc ::attractor::run {graphDict args} {
             }
         }
 
+        ::attractor::__emit_event $opts(-on_event) $runId eventSeq StageStarted node_id $current handler $handler
         set outcome [::attractor::__execute_handler $handler $current $attrs $context $opts(-backend) $opts(-interviewer) $outgoing $opts(-logs_root) $customHandlers]
 
         if {[dict exists $attrs goal_key] && [dict exists $attrs goal_value]} {
@@ -1083,6 +1115,12 @@ proc ::attractor::run {graphDict args} {
             ::attractor::__write_text_file [file join $nodeDir response.md] [dict get $outcome response_text]
         }
 
+        ::attractor::__emit_event $opts(-on_event) $runId eventSeq StageCompleted \
+            node_id $current \
+            handler $handler \
+            status [dict get $outcome status] \
+            preferred_next_label $preferred
+
         lappend completed $current
 
         ::attractor::__write_json_file $checkpointPath [dict create \
@@ -1091,17 +1129,21 @@ proc ::attractor::run {graphDict args} {
             completed_nodes $completed \
             node_retries $retries \
             context_values $context]
+        ::attractor::__emit_event $opts(-on_event) $runId eventSeq CheckpointSaved node_id $current
 
         if {[dict exists $outcome terminal] && [dict get $outcome terminal]} {
             if {[dict get $outcome status] eq "success"} {
+                ::attractor::__emit_event $opts(-on_event) $runId eventSeq PipelineCompleted status success current_node $current
                 return [dict create status success current_node $current completed_nodes $completed context $context logs_root $opts(-logs_root) diagnostics $diagnostics]
             }
             set failureReason [expr {[dict exists $outcome failure_reason] ? [dict get $outcome failure_reason] : "handler_failed"}]
+            ::attractor::__emit_event $opts(-on_event) $runId eventSeq PipelineCompleted status failed current_node $current reason $failureReason
             return [dict create status failed reason $failureReason current_node $current completed_nodes $completed context $context logs_root $opts(-logs_root) diagnostics $diagnostics]
         }
 
         set nextEdge [::attractor::__select_next_edge $outgoing $outcome $context]
         if {[llength $nextEdge] == 0} {
+            ::attractor::__emit_event $opts(-on_event) $runId eventSeq PipelineCompleted status failed current_node $current reason no_next_edge
             return [dict create status failed reason no_next_edge current_node $current logs_root $opts(-logs_root) diagnostics $diagnostics]
         }
 
@@ -1109,6 +1151,7 @@ proc ::attractor::run {graphDict args} {
         incr steps
     }
 
+    ::attractor::__emit_event $opts(-on_event) $runId eventSeq PipelineCompleted status failed current_node $current reason max_steps_exceeded
     return [dict create status failed reason max_steps_exceeded current_node $current logs_root $opts(-logs_root) diagnostics $diagnostics]
 }
 

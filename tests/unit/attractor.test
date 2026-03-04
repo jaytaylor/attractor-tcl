@@ -16,6 +16,11 @@ proc ::tests::attractor::backend {request} {
     return [dict create text "ok"]
 }
 
+proc ::tests::attractor::event_sink {event} {
+    variable events
+    lappend events $event
+}
+
 test attractor-parse-validate-1.0 {parse and validate simple graph} -body {
     set dot {
         digraph demo {
@@ -62,6 +67,26 @@ test attractor-validation-rules-1.0 {validation catches missing start/exit and e
     }
     list [expr {[lsearch -exact $rules validation.start.required] >= 0}] [expr {[lsearch -exact $rules validation.exit.required] >= 0}] [expr {[lsearch -exact $rules validation.edge.to_unknown] >= 0}]
 } -result {1 1 1}
+
+test attractor-validation-node-id-1.0 {validation rejects node ids that are not bare identifiers} -body {
+    set graph [::attractor::parse_dot {
+        digraph badid {
+            start [shape=Mdiamond];
+            "bad-id" [handler=codergen];
+            exit [shape=Msquare];
+            start -> "bad-id";
+            "bad-id" -> exit;
+        }
+    }]
+    set diagnostics [::attractor::validate $graph]
+    set hit 0
+    foreach d $diagnostics {
+        if {[dict get $d rule] eq "validation.node_id.invalid"} {
+            set hit 1
+        }
+    }
+    set hit
+} -result 1
 
 test attractor-reachability-warning-1.0 {unreachable node emits warning metadata} -body {
     set graph [::attractor::parse_dot {
@@ -160,6 +185,44 @@ test attractor-run-artifacts-1.0 {run creates checkpoint and node artifacts} -se
 } -cleanup {
     file delete -force $logsRoot
 } -result {success 1 1 1 1}
+
+test attractor-run-event-hook-1.0 {run emits deterministic lifecycle events when callback is configured} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-008 attractor event-hook-[pid]]
+    file delete -force $logsRoot
+    namespace eval ::tests::attractor { variable events {} }
+    set graph [::attractor::parse_dot {
+        digraph evented {
+            start [shape=Mdiamond];
+            build [handler=codergen, prompt="build"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit [label=success, weight=1];
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph \
+        -backend ::tests::attractor::backend \
+        -logs_root $logsRoot \
+        -run_id run-test \
+        -on_event ::tests::attractor::event_sink]
+    set eventTypes {}
+    set seqs {}
+    foreach e $::tests::attractor::events {
+        lappend eventTypes [dict get $e type]
+        lappend seqs [dict get $e seq]
+    }
+    list \
+      [dict get $result status] \
+      [lindex $eventTypes 0] \
+      [lindex $eventTypes end] \
+      [expr {[lsort -integer $seqs] eq $seqs}] \
+      [expr {[lsearch -exact $eventTypes StageStarted] >= 0}] \
+      [expr {[lsearch -exact $eventTypes StageCompleted] >= 0}] \
+      [expr {[lsearch -exact $eventTypes CheckpointSaved] >= 0}]
+} -cleanup {
+    file delete -force $logsRoot
+    namespace eval ::tests::attractor { unset -nocomplain events }
+} -result {success PipelineStarted PipelineCompleted 1 1 1 1}
 
 test attractor-edge-selection-1.0 {edge selection uses label then weight} -body {
     set edges [list \
