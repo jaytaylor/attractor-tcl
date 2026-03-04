@@ -280,6 +280,38 @@ digraph PipelineName {
 }}
 }
 
+proc ::attractor_web::__dot_generation_examples_prompt {} {
+    set sampleDir [file normalize ~/src/swift-omnikit/sampleDOTs]
+    set files [list \
+        consensus_task_parity.dot \
+        megaplan_quality.dot \
+        semport.dot \
+        vulnerability_analyzer.dot \
+        consensus_task.dot \
+        megaplan.dot \
+        sprint_exec.dot]
+
+    set blocks {}
+    foreach name $files {
+        set path [file join $sampleDir $name]
+        if {![file exists $path]} {
+            continue
+        }
+        if {[catch {set body [string trim [::attractor_web::__read_file $path]]}]} {
+            continue
+        }
+        if {$body eq ""} {
+            continue
+        }
+        lappend blocks "Example: $name\n```dot\n$body\n```"
+    }
+
+    if {[llength $blocks] == 0} {
+        return ""
+    }
+    return "## Gold DOT Examples\nThe following are high-quality Attractor DOT files. Use them as style and structure references for generation.\n\n[join $blocks \"\n\n\"]"
+}
+
 proc ::attractor_web::__json_safe_text {text} {
     # Force scalar string encoding in attractor_core::json_encode.
     return [format "%s\n%c" $text 123]
@@ -365,7 +397,7 @@ proc ::attractor_web::__dot_client_from_state {state} {
     return [list [::unified_llm::from_env -transport ::unified_llm::transports::https_json::call] 1]
 }
 
-proc ::attractor_web::__dot_build_request {state payload userPrompt client} {
+proc ::attractor_web::__dot_build_request {state payload userPrompt client mode} {
     set provider ""
     if {[dict exists $state dot_llm_provider] && [string trim [dict get $state dot_llm_provider]] ne ""} {
         set provider [string tolower [string trim [dict get $state dot_llm_provider]]]
@@ -401,8 +433,16 @@ proc ::attractor_web::__dot_build_request {state payload userPrompt client} {
         set providerOptions [dict get $payload provider_options]
     }
 
+    set systemPrompt [::attractor_web::__dot_system_prompt]
+    if {$mode eq "generate"} {
+        set examplesPrompt [::attractor_web::__dot_generation_examples_prompt]
+        if {$examplesPrompt ne ""} {
+            append systemPrompt "\n\n" $examplesPrompt
+        }
+    }
+
     set messages [list \
-        [::unified_llm::message system [::attractor_web::__json_safe_text [::attractor_web::__dot_system_prompt]]] \
+        [::unified_llm::message system [::attractor_web::__json_safe_text $systemPrompt]] \
         [::unified_llm::message user [::attractor_web::__json_safe_text $userPrompt]]]
     set args [list -client $client -provider $provider -messages $messages -model $model -provider_options $providerOptions]
     return $args
@@ -463,7 +503,7 @@ proc ::attractor_web::__dot_stream_generate {state payload mode chan} {
     lassign [::attractor_web::__dot_client_from_state $state] client isTemp
 
     set code [catch {
-        set requestArgs [::attractor_web::__dot_build_request $state $payload $userPrompt $client]
+        set requestArgs [::attractor_web::__dot_build_request $state $payload $userPrompt $client $mode]
         set response [::unified_llm::generate {*}$requestArgs -max_tool_rounds 0]
     } err opts]
 
