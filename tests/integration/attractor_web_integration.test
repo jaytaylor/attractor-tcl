@@ -68,6 +68,18 @@ test integration-attractor-web-api-pipelines-empty-1.0 {server starts and return
     file delete -force $runsRoot
 } -result {200 0}
 
+test integration-attractor-web-favicon-1.0 {dashboard favicon endpoint returns no-content to avoid browser 404 noise} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root favicon]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+} -body {
+    set resp [::tests::http_client::request "$base/favicon.ico"]
+    list [dict get $resp status] [string length [dict get $resp body]]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {204 0}
+
 
 test integration-attractor-web-run-human-gate-1.0 {run starts, blocks on wait.human, accepts answer, and completes} -setup {
     set runsRoot [::tests::integration::attractor_web::new_runs_root run-human-gate]

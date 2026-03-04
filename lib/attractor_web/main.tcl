@@ -977,6 +977,11 @@ proc ::attractor_web::__dispatch_route {id chan request} {
         return 0
     }
 
+    if {$method eq "GET" && $path eq "/favicon.ico"} {
+        ::attractor_web::__send_response $chan 204 "image/x-icon" ""
+        return 0
+    }
+
     if {$method eq "GET" && $path eq "/api/pipelines"} {
         ::attractor_web::__send_response $chan 200 application/json [::attractor_web::__pipelines_snapshot_json $runsRoot]
         return 0
