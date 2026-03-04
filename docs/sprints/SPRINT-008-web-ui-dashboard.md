@@ -346,9 +346,16 @@ Server streams per-run SSE by tailing `events.ndjson` and emitting `data: <json>
 Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 
 ## Track 0 - Baseline, ADR, and Contracts
-- [ ] **T0.1 - Add ADR for web dashboard architecture**
+- [X] **T0.1 - Add ADR for web dashboard architecture**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-0/adr-015.log rg -n "ADR-015|attractor_web|bin/attractor-worker|SSE" docs/ADR.md` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/final/make-build.log timeout 180 make build` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/final/make-test.log timeout 180 make test` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-0/adr-015.log`
+  - `.scratch/verification/SPRINT-008/final/make-build.log`
+  - `.scratch/verification/SPRINT-008/final/make-test.log`
   ```
   - Decision: worker subprocess model + filesystem run store + SSE.
   - Files: `docs/ADR.md`
@@ -356,9 +363,14 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - `make build`
     - `make test`
 
-- [ ] **T0.2 - Add/adjust spec traceability mappings for web+events**
+- [X] **T0.2 - Add/adjust spec traceability mappings for web+events**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-0/traceability-web.log rg -n "ATR-REQ-HUMAN-GATES-MUST-OPERABLE-VIA-WEB|attractor_web|attractor-worker|attractor-web" docs/spec-coverage/traceability.md` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-0/spec-coverage.log tclsh tools/spec_coverage.tcl` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-0/traceability-web.log`
+  - `.scratch/verification/SPRINT-008/track-0/spec-coverage.log`
   ```
   - Fix mapping accuracy for `ATR-REQ-HUMAN-GATES-MUST-OPERABLE-VIA-WEB` and event streaming requirements to include the new web server + tests.
   - Files: `docs/spec-coverage/traceability.md`
@@ -370,9 +382,12 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 - `tclsh tools/spec_coverage.tcl` passes and traceability references the new web server + tests for the human-gate web-operability requirement.
 
 ## Track A - Engine Hooks + Worker
-- [ ] **A0 - Enforce filesystem-safe node IDs (spec parity)**
+- [X] **A0 - Enforce filesystem-safe node IDs (spec parity)**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/node-id-validation.log tclsh tests/all.tcl -match '*attractor-validation-node-id*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-a/node-id-validation.log`
   ```
   - Why: the engine uses `node_id` as a filesystem directory name (`${logs_root}/${node_id}/...`), so node IDs must be safe and must match the spec’s bare-identifier constraint.
   - Implementation:
@@ -384,9 +399,12 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor*`
 
-- [ ] **A1 - Add event emission hooks to `::attractor::run`**
+- [X] **A1 - Add event emission hooks to `::attractor::run`**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/run-event-hook.log tclsh tests/all.tcl -match '*attractor-run-event-hook*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-a/run-event-hook.log`
   ```
   - Implementation:
     - Add a new optional `-on_event` callback option.
@@ -398,9 +416,12 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor*`
 
-- [ ] **A2 - Add filesystem-backed interviewer for `wait.human`**
+- [X] **A2 - Add filesystem-backed interviewer for `wait.human`**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-human-gate.log tclsh tests/all.tcl -match '*integration-attractor-web-run-human-gate*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-a/worker-human-gate.log`
   ```
   - Implementation:
     - Implement an interviewer that writes `questions/<qid>.pending.json` and blocks (poll/sleep) until `questions/<qid>.answer.json` appears.
@@ -411,9 +432,14 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor*`
 
-- [ ] **A3 - Introduce worker entrypoint**
+- [X] **A3 - Introduce worker entrypoint**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-stage-artifacts.log tclsh tests/all.tcl -match '*integration-attractor-web-stage-endpoint*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-human-gate.log tclsh tests/all.tcl -match '*integration-attractor-web-run-human-gate*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-a/worker-stage-artifacts.log`
+  - `.scratch/verification/SPRINT-008/track-a/worker-human-gate.log`
   ```
   - Implementation: new script `bin/attractor-worker` that:
     - accepts `--logs-root` (which is the run dir in web mode)
@@ -432,9 +458,16 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 - `wait.human` gates can be satisfied via `questions/*.answer.json`; exceeding the wait limit fails deterministically with on-disk evidence.
 
 ## Track B - Web Server + API + SSE
-- [ ] **B0 - Add CLI `serve` subcommand**
+- [X] **B0 - Add CLI `serve` subcommand**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/serve-api-pipelines.log tclsh tests/all.tcl -match '*integration-attractor-web-api-pipelines-empty*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/cli-serve-invalid-port.log tclsh tests/all.tcl -match '*e2e-attractor-cli-serve-invalid-port*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-c/serve-startup.log timeout 5 bin/attractor serve --bind 127.0.0.1 --web-port 0 --runs-root .scratch/runs/attractor-web` (exit code 124, expected timeout after startup confirmation)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-b/serve-api-pipelines.log`
+  - `.scratch/verification/SPRINT-008/track-b/cli-serve-invalid-port.log`
+  - `.scratch/verification/SPRINT-008/track-c/serve-startup.log`
   ```
   - Implement `bin/attractor serve` with flags:
     - `--web-port <n>` (default `7070`)
@@ -446,9 +479,14 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **B1 - Minimal HTTP server and router**
+- [X] **B1 - Minimal HTTP server and router**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/api-validation.log tclsh tests/all.tcl -match '*integration-attractor-web-api-validation*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/serve-api-pipelines.log tclsh tests/all.tcl -match '*integration-attractor-web-api-pipelines-empty*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-b/api-validation.log`
+  - `.scratch/verification/SPRINT-008/track-b/serve-api-pipelines.log`
   ```
   - Implement `socket -server` HTTP listener with:
     - request parsing (method/path/query/headers/body)
@@ -461,9 +499,14 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **B2 - Run registry + subprocess management**
+- [X] **B2 - Run registry + subprocess management**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-stage-artifacts.log tclsh tests/all.tcl -match '*integration-attractor-web-stage-endpoint*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-human-gate.log tclsh tests/all.tcl -match '*integration-attractor-web-run-human-gate*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-a/worker-stage-artifacts.log`
+  - `.scratch/verification/SPRINT-008/track-a/worker-human-gate.log`
   ```
   - Start worker subprocesses, capture PID, and mark running/terminal states.
   - Provide cancellation by PID kill (best-effort).
@@ -474,9 +517,16 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **B3 - Implement API endpoints (runs + artifacts + human answers)**
+- [X] **B3 - Implement API endpoints (runs + artifacts + human answers)**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/api-validation.log tclsh tests/all.tcl -match '*integration-attractor-web-api-validation*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-stage-artifacts.log tclsh tests/all.tcl -match '*integration-attractor-web-stage-endpoint*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-a/worker-human-gate.log tclsh tests/all.tcl -match '*integration-attractor-web-run-human-gate*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-b/api-validation.log`
+  - `.scratch/verification/SPRINT-008/track-a/worker-stage-artifacts.log`
+  - `.scratch/verification/SPRINT-008/track-a/worker-human-gate.log`
   ```
   - Implement:
     - `GET /api/pipelines`
@@ -496,9 +546,12 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **B4 - DOT render endpoint**
+- [X] **B4 - DOT render endpoint**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/render-endpoint.log tclsh tests/all.tcl -match '*integration-attractor-web-render-endpoint*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-b/render-endpoint.log`
   ```
   - Implement `POST /api/render` using Graphviz `dot` if present:
     - success returns `{ "svg": "<svg...>" }`
@@ -513,9 +566,12 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **B5 - SSE endpoints**
+- [X] **B5 - SSE endpoints**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/sse-endpoint.log tclsh tests/all.tcl -match '*integration-attractor-web-sse*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-b/sse-endpoint.log`
   ```
   - `/events`: broadcast full snapshots on changes + heartbeat comments.
   - `/events/<run_id>`: tail `events.ndjson` safely.
@@ -532,9 +588,14 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 - SSE streams are stable under connect/disconnect and do not leak resources.
 
 ## Track C - Dashboard UI (No Build Step)
-- [ ] **C1 - Port the dashboard structure (Corey-inspired)**
+- [X] **C1 - Port the dashboard structure (Corey-inspired)**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-c/dashboard-template.log tclsh tests/all.tcl -match '*attractor_web-dashboard-template*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-c/serve-startup.log timeout 5 bin/attractor serve --bind 127.0.0.1 --web-port 0 --runs-root .scratch/runs/attractor-web` (exit code 124, expected timeout after startup confirmation)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-c/dashboard-template.log`
+  - `.scratch/verification/SPRINT-008/track-c/serve-startup.log`
   ```
   - Single HTML page with:
     - pipeline list (left)
@@ -549,9 +610,12 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web-ui*`
 
-- [ ] **C2 - Human gate UI**
+- [X] **C2 - Human gate UI**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-c/ui-human-gate-flow.log tclsh tests/all.tcl -match '*integration-attractor-web-run-human-gate*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-c/ui-human-gate-flow.log`
   ```
   - When `pending_questions` present for a run:
     - show modal with question + choice buttons
@@ -568,18 +632,26 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 - UI can complete a `wait.human` flow end-to-end.
 
 ## Track D - Tests, Docs, and Final Regression Gates
-- [ ] **D1 - Integration tests for end-to-end web flow**
+- [X] **D1 - Integration tests for end-to-end web flow**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-d/integration-web-flow.log tclsh tests/all.tcl -match '*integration-attractor-web-*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-d/integration-web-flow.log`
   ```
   - Start server on ephemeral port; run a pipeline with `wait.human`; answer; verify terminal success and artifacts exist.
   - Ensure tests do not require a real browser (HTTP-level e2e is sufficient).
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **D2 - Security and robustness tests**
+- [X] **D2 - Security and robustness tests**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-d/web-selector.log tclsh tests/all.tcl -match '*attractor-web*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/sse-endpoint.log tclsh tests/all.tcl -match '*integration-attractor-web-sse*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-d/web-selector.log`
+  - `.scratch/verification/SPRINT-008/track-b/sse-endpoint.log`
   ```
   - Path traversal rejection for stage/artifact fetch endpoints.
   - SSE client disconnect handling and bounded queues.
@@ -587,9 +659,16 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
   - Verification:
     - `tclsh tests/all.tcl -match *attractor-web*`
 
-- [ ] **D3 - Regression gates**
+- [X] **D3 - Regression gates**
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/final/make-build.log timeout 180 make build` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/final/make-test.log timeout 180 make test` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-d/docs-lint.log bash tools/docs_lint.sh` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/final/make-build.log`
+  - `.scratch/verification/SPRINT-008/final/make-test.log`
+  - `.scratch/verification/SPRINT-008/track-d/docs-lint.log`
   ```
   - Verification:
     - `make build`
@@ -602,17 +681,36 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
 - `make build`, `make test`, and `bash tools/docs_lint.sh` all pass.
 
 ## Final Closeout Checklist
-- [ ] All new/updated tests pass locally.
+- [X] All new/updated tests pass locally.
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-d/web-selector.log tclsh tests/all.tcl -match '*attractor-web*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-d/web-unit-selector.log tclsh tests/all.tcl -match '*attractor_web*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/final/make-test.log timeout 180 make test` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-d/web-selector.log`
+  - `.scratch/verification/SPRINT-008/track-d/web-unit-selector.log`
+  - `.scratch/verification/SPRINT-008/final/make-test.log`
   ```
-- [ ] `tools/spec_coverage.tcl` passes with updated traceability mappings.
+- [X] `tools/spec_coverage.tcl` passes with updated traceability mappings.
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/final/spec-coverage.log tclsh tools/spec_coverage.tcl` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-0/traceability-web.log rg -n "ATR-REQ-HUMAN-GATES-MUST-OPERABLE-VIA-WEB|attractor_web|attractor-worker|attractor-web" docs/spec-coverage/traceability.md` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/final/spec-coverage.log`
+  - `.scratch/verification/SPRINT-008/track-0/traceability-web.log`
   ```
-- [ ] UI can run a human-gate pipeline end-to-end via the browser.
+- [X] UI can run a human-gate pipeline end-to-end via the browser.
   ```text
-  {placeholder for verification justification/reasoning and evidence log}
+  Verification commands:
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-c/serve-startup.log timeout 5 bin/attractor serve --bind 127.0.0.1 --web-port 0 --runs-root .scratch/runs/attractor-web` (exit code 124, expected timeout after startup confirmation)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-c/ui-human-gate-flow.log tclsh tests/all.tcl -match '*integration-attractor-web-run-human-gate*'` (exit code 0)
+  - `tools/verify_cmd.sh .scratch/verification/SPRINT-008/track-b/sse-endpoint.log tclsh tests/all.tcl -match '*integration-attractor-web-sse*'` (exit code 0)
+  Evidence artifacts:
+  - `.scratch/verification/SPRINT-008/track-c/serve-startup.log`
+  - `.scratch/verification/SPRINT-008/track-c/ui-human-gate-flow.log`
+  - `.scratch/verification/SPRINT-008/track-b/sse-endpoint.log`
   ```
 
 ## Appendix - Diagrams (Mermaid)

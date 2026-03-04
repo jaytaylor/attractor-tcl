@@ -404,3 +404,34 @@ Positive:
 Tradeoffs:
 - Unified LLM client state and Anthropic translation paths are more complex and require ongoing fixture coverage as provider payload schemas evolve.
 - Manager-loop behavior is intentionally minimal and synchronous; future enhancements may be required for fully asynchronous child lifecycle control.
+
+## ADR-015: Sprint #008 Local-First Web Dashboard via Filesystem Run Store, Worker Subprocesses, and SSE
+- Date: 2026-03-04
+- Status: Accepted
+
+### Context
+The Attractor runtime already supported deterministic CLI execution and filesystem artifacts, but lacked a web control plane required by spec section 9.5/9.6. Human gates were operable only through non-web interviewers, and there was no server-side event stream for live UI updates.
+
+### Decision
+- Add a local-first web runtime package (`attractor_web`) served by `bin/attractor serve` with default bind `127.0.0.1`.
+- Keep the engine headless and synchronous; web-mode execution runs each pipeline in a dedicated worker subprocess (`bin/attractor-worker`) to keep the HTTP server responsive.
+- Use a filesystem run-store contract under `runs_root/run_id/`:
+  - `pipeline.dot`, `web.json`, `manifest.json`, `checkpoint.json`, `events.ndjson`, `questions/*.pending.json`, `questions/*.answer.json`, per-node artifacts.
+- Add additive event hooks to `::attractor::run` (`-on_event`, `-run_id`) to emit lifecycle events without changing default CLI behavior.
+- Implement web-operable `wait.human` via a filesystem interviewer handshake in the worker:
+  - write pending question files
+  - unblock on answer files or fail deterministically on timeout.
+- Implement SSE endpoints:
+  - `GET /events` for global snapshot updates
+  - `GET /events/<run_id>` for replay + tail of `events.ndjson`.
+
+### Consequences
+Positive:
+- Satisfies web-operable human-gate and real-time event-stream requirements with deterministic, offline-testable behavior.
+- Preserves Tcl 8.5 compatibility and existing CLI workflows.
+- Avoids introducing a database or in-process async runtime complexity.
+
+Tradeoffs:
+- Filesystem polling for SSE convergence is simple but less efficient than in-memory publish/subscribe.
+- JSON persistence uses existing project encoding helpers; empty-string representation in some persisted artifacts may require future normalization work.
+- Worker supervision is best-effort and intentionally lightweight for localhost usage.

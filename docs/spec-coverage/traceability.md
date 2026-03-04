@@ -54,9 +54,9 @@ verify: `tclsh tests/all.tcl -match *attractor*`
 ---
 id: ATR-REQ-HUMAN-GATES-MUST-OPERABLE-VIA-WEB
 spec: attractor-spec.md#L1608
-impl: lib/attractor/main.tcl, bin/attractor
-tests: tests/unit/attractor.test, tests/integration/attractor_integration.test, tests/e2e/attractor_cli_e2e.test
-verify: `tclsh tests/all.tcl -match *attractor*`
+impl: lib/attractor/main.tcl, lib/attractor_web/main.tcl, bin/attractor, bin/attractor-worker
+tests: tests/unit/attractor.test, tests/unit/attractor_web.test, tests/integration/attractor_web_integration.test, tests/e2e/attractor_cli_e2e.test
+verify: `tclsh tests/all.tcl -match *attractor-web*`
 ---
 id: ATR-REQ-ALL-CLAUSES-MUST-EVALUATE-TO-TRUE
 spec: attractor-spec.md#L1688
