@@ -5,6 +5,7 @@
 - `unified_llm`
 - `coding_agent_loop`
 - `attractor`
+- `attractor_web` DOT streaming endpoints (`/api/v1/dot/generate|fix|iterate/stream`)
 
 These tests call real provider HTTPS APIs and require API keys.
 
@@ -90,6 +91,7 @@ Key files:
 - `unified_llm/<provider>/...`
 - `coding_agent_loop/<provider>/...`
 - `attractor/<provider>/...`
+- `attractor_web/<provider>/...`
 
 ## Redaction Checklist
 - `response.request.headers` in saved artifacts must not contain raw:

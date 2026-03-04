@@ -30,6 +30,9 @@ The dashboard supports:
 - `GET /api/stage?id=<run_id>&node=<node_id>`
 - `POST /api/answer`
 - `POST /api/render`
+- `POST /api/v1/dot/generate/stream`
+- `POST /api/v1/dot/fix/stream`
+- `POST /api/v1/dot/iterate/stream`
 - `GET /events`
 - `GET /events/<run_id>`
 

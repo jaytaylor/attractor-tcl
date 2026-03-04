@@ -1,0 +1,8 @@
+package require tcltest
+namespace import ::tcltest::*
+
+foreach provider [::tests::e2e_live::selected_providers] {
+    test e2e-live-attractor-web-$provider-dot-stream-smoke-1.0 "live attractor_web dot stream smoke for $provider" \
+        -body [list ::tests::e2e_live::run_attractor_web_dot_stream_smoke $provider] \
+        -result 1
+}

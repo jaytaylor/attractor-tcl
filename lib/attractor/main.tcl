@@ -571,9 +571,65 @@ proc ::attractor::default_interviewer {request} {
     return [::attractor::interviewer::autoapprove $request]
 }
 
+proc ::attractor::__default_provider {} {
+    if {[info exists ::env(ATTRACTOR_PROVIDER)] && [string trim $::env(ATTRACTOR_PROVIDER)] ne ""} {
+        return [string tolower [string trim $::env(ATTRACTOR_PROVIDER)]]
+    }
+    if {[info exists ::env(UNIFIED_LLM_PROVIDER)] && [string trim $::env(UNIFIED_LLM_PROVIDER)] ne ""} {
+        return [string tolower [string trim $::env(UNIFIED_LLM_PROVIDER)]]
+    }
+    return ""
+}
+
+proc ::attractor::__default_model {provider} {
+    switch -- $provider {
+        openai {
+            if {[info exists ::env(OPENAI_MODEL)] && [string trim $::env(OPENAI_MODEL)] ne ""} {
+                return [string trim $::env(OPENAI_MODEL)]
+            }
+            return gpt-5.2
+        }
+        anthropic {
+            if {[info exists ::env(ANTHROPIC_MODEL)] && [string trim $::env(ANTHROPIC_MODEL)] ne ""} {
+                return [string trim $::env(ANTHROPIC_MODEL)]
+            }
+            return claude-haiku-4-5
+        }
+        gemini {
+            if {[info exists ::env(GEMINI_MODEL)] && [string trim $::env(GEMINI_MODEL)] ne ""} {
+                return [string trim $::env(GEMINI_MODEL)]
+            }
+            return gemini-3-flash-preview
+        }
+        default {
+            return ""
+        }
+    }
+}
+
+proc ::attractor::__json_safe_text {text} {
+    # Force scalar string encoding in attractor_core::json_encode.
+    return [format "%s\n%c" $text 123]
+}
+
 proc ::attractor::default_codergen_backend {request} {
     set prompt [dict get $request prompt]
-    set response [::unified_llm::generate -prompt $prompt -provider mock]
+    set prompt [::attractor::__json_safe_text $prompt]
+    set provider [::attractor::__default_provider]
+    set model [::attractor::__default_model $provider]
+    set client [::unified_llm::from_env -transport ::unified_llm::transports::https_json::call]
+    set args [list -client $client -prompt $prompt -max_tool_rounds 0]
+    if {$provider ne ""} {
+        lappend args -provider $provider
+    }
+    if {$model ne ""} {
+        lappend args -model $model
+    }
+    set code [catch {::unified_llm::generate {*}$args} response opts]
+    catch {$client close}
+    if {$code} {
+        return -options $opts $response
+    }
     return [dict create text [dict get $response text] usage [dict get $response usage]]
 }
 

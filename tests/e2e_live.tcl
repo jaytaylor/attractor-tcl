@@ -10,8 +10,10 @@ package require attractor_core
 package require unified_llm
 package require coding_agent_loop
 package require attractor
+package require attractor_web
 
 source [file join $root tests support e2e_live_support.tcl]
+source [file join $root tests support http_client.tcl]
 
 set matchPattern "*"
 set skipPattern ""

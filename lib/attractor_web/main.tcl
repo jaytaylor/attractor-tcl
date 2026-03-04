@@ -3,12 +3,15 @@ namespace eval ::attractor_web {
     variable server_seq 0
     variable run_seq 0
     variable servers {}
+    variable dot_stream_seq 0
+    variable dot_stream_states {}
     variable root [file normalize [file join [file dirname [info script]] .. ..]]
 }
 
 package require Tcl 8.5
 package require attractor
 package require attractor_core
+package require unified_llm
 
 proc ::attractor_web::__json_quote {value} {
     return "\"[string map [list "\\" "\\\\" "\"" "\\\"" "\n" "\\n" "\r" "\\r" "\t" "\\t"] $value]\""
@@ -182,6 +185,313 @@ proc ::attractor_web::normalize_dot_source {dotSource} {
     return $trimmed
 }
 
+proc ::attractor_web::__env_nonempty {name} {
+    return [expr {[info exists ::env($name)] && [string trim $::env($name)] ne ""}]
+}
+
+proc ::attractor_web::__dot_provider_default {} {
+    if {[::attractor_web::__env_nonempty ATTRACTOR_DOT_PROVIDER]} {
+        return [string tolower [string trim $::env(ATTRACTOR_DOT_PROVIDER)]]
+    }
+    if {[::attractor_web::__env_nonempty ATTRACTOR_PROVIDER]} {
+        return [string tolower [string trim $::env(ATTRACTOR_PROVIDER)]]
+    }
+    if {[::attractor_web::__env_nonempty UNIFIED_LLM_PROVIDER]} {
+        return [string tolower [string trim $::env(UNIFIED_LLM_PROVIDER)]]
+    }
+    return ""
+}
+
+proc ::attractor_web::__dot_model_default {provider} {
+    switch -- $provider {
+        openai {
+            if {[::attractor_web::__env_nonempty OPENAI_MODEL]} {
+                return [string trim $::env(OPENAI_MODEL)]
+            }
+            return gpt-5.2
+        }
+        anthropic {
+            if {[::attractor_web::__env_nonempty ANTHROPIC_MODEL]} {
+                return [string trim $::env(ANTHROPIC_MODEL)]
+            }
+            return claude-haiku-4-5
+        }
+        gemini {
+            if {[::attractor_web::__env_nonempty GEMINI_MODEL]} {
+                return [string trim $::env(GEMINI_MODEL)]
+            }
+            return gemini-3-flash-preview
+        }
+    }
+    return ""
+}
+
+proc ::attractor_web::__dot_system_prompt {} {
+    return {You are an expert at writing Attractor pipeline files in Graphviz DOT format.
+Attractor is a DOT-based pipeline runner that orchestrates multi-stage AI workflows.
+
+## Pipeline Structure
+
+Every pipeline is a `digraph` with required graph attributes:
+  digraph PipelineName {
+    graph [goal="High-level goal description", label="Human-readable name"]
+    ...
+  }
+
+## Node Types (by shape attribute)
+
+| shape         | purpose                                            |
+|---------------|----------------------------------------------------|
+| Mdiamond      | Start node - exactly one required                  |
+| Msquare       | Exit node - exactly one required                   |
+| box           | LLM codergen stage (default shape)                 |
+| hexagon       | Wait for human approval / input                    |
+| diamond       | Conditional branch - routes by edge label          |
+| component     | Spawn parallel branches                            |
+| tripleoctagon | Fan-in - joins parallel branches back together     |
+| parallelogram | Tool / shell execution stage                       |
+| house         | Stack manager loop                                 |
+
+## Key Node Attributes
+
+- label       - display name (required on all nodes)
+- prompt      - LLM prompt for box nodes; supports $variable and $goal substitution
+- max_retries - integer, how many times to retry on failure (default 3)
+- timeout     - duration string e.g. "30s", "5m", "1h"
+- goal_gate   - condition expression checked at exit node
+
+## Edge Attributes (for conditional routing out of diamond nodes)
+
+- label     - branch name shown in UI
+- condition - expression like "outcome=success", "outcome!=success", "score>80"
+
+## Variable Expansion in Prompts
+
+Use $name syntax to reference context values set by previous stages:
+- $goal         - the pipeline's graph[goal] attribute
+- $variableName - any key set by a prior stage's output
+
+## Rules
+
+1. Exactly one start node (shape=Mdiamond)
+2. Exactly one exit node (shape=Msquare)
+3. All nodes must be reachable; no isolated nodes
+4. Conditional (diamond) nodes must have labelled outgoing edges for every branch
+5. For parallel execution: component fan-out node -> parallel work -> tripleoctagon fan-in
+6. Keep prompts specific, actionable, and relevant to the pipeline goal
+7. Use concise camelCase or snake_case for node IDs (no spaces)
+8. Output ONLY the raw DOT source - no markdown fences, no explanations}
+}
+
+proc ::attractor_web::__json_safe_text {text} {
+    # Force scalar string encoding in attractor_core::json_encode.
+    return [format "%s\n%c" $text 123]
+}
+
+proc ::attractor_web::__dot_stream_state_new {chan} {
+    variable dot_stream_seq
+    variable dot_stream_states
+    incr dot_stream_seq
+    set id "dot-stream-$dot_stream_seq"
+    dict set dot_stream_states $id [dict create chan $chan text "" error ""]
+    return $id
+}
+
+proc ::attractor_web::__dot_stream_state_take {id} {
+    variable dot_stream_states
+    if {![dict exists $dot_stream_states $id]} {
+        return [dict create text "" error "stream state not found"]
+    }
+    set state [dict get $dot_stream_states $id]
+    dict unset dot_stream_states $id
+    return $state
+}
+
+proc ::attractor_web::__dot_stream_event {id event} {
+    variable dot_stream_states
+    if {![dict exists $dot_stream_states $id]} {
+        return
+    }
+    set state [dict get $dot_stream_states $id]
+    set eventType [dict get $event type]
+    if {$eventType eq "TEXT_DELTA"} {
+        if {![dict exists $event delta]} {
+            return
+        }
+        set delta [dict get $event delta]
+        dict set state text "[dict get $state text]$delta"
+        set chan [dict get $state chan]
+        catch {
+            ::attractor_web::__send_sse_data $chan "{\"delta\":[::attractor_web::__json_quote $delta]}"
+        }
+        dict set dot_stream_states $id $state
+        return
+    }
+
+    if {$eventType eq "ERROR"} {
+        set message "provider stream error"
+        if {[dict exists $event error message] && [string trim [dict get $event error message]] ne ""} {
+            set message [dict get $event error message]
+        } elseif {[dict exists $event error] && [string trim [dict get $event error]] ne ""} {
+            set message [dict get $event error]
+        }
+        dict set state error $message
+        dict set dot_stream_states $id $state
+        return
+    }
+
+    if {$eventType eq "FINISH"} {
+        if {[dict get $state text] eq "" && [dict exists $event response text]} {
+            dict set state text [dict get $event response text]
+            dict set dot_stream_states $id $state
+        }
+    }
+}
+
+proc ::attractor_web::__dot_client_from_state {state} {
+    if {[dict exists $state dot_llm_client]} {
+        set client [dict get $state dot_llm_client]
+        if {$client ne "" && [llength [info commands $client]] > 0} {
+            return [list $client 0]
+        }
+    }
+
+    if {[dict exists $state dot_llm_transport] && [dict get $state dot_llm_transport] ne ""} {
+        set transport [dict get $state dot_llm_transport]
+        set providers {}
+        foreach provider {openai anthropic gemini} {
+            dict set providers $provider [dict create api_key "test-key-$provider" base_url "" transport $transport provider_options {}]
+        }
+        return [list [::unified_llm::client_new -providers $providers -default_provider openai] 1]
+    }
+
+    return [list [::unified_llm::from_env -transport ::unified_llm::transports::https_json::call] 1]
+}
+
+proc ::attractor_web::__dot_build_request {state payload userPrompt client} {
+    set provider ""
+    if {[dict exists $state dot_llm_provider] && [string trim [dict get $state dot_llm_provider]] ne ""} {
+        set provider [string tolower [string trim [dict get $state dot_llm_provider]]]
+    } else {
+        set provider [::attractor_web::__dot_provider_default]
+    }
+    if {[dict exists $payload provider] && [string trim [dict get $payload provider]] ne ""} {
+        set provider [string tolower [string trim [dict get $payload provider]]]
+    }
+
+    if {$provider eq ""} {
+        set config [$client config]
+        if {[dict exists $config default_provider]} {
+            set provider [dict get $config default_provider]
+        }
+    }
+    if {$provider ni {openai anthropic gemini}} {
+        return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "provider must be one of openai, anthropic, gemini"
+    }
+
+    set model ""
+    if {[dict exists $state dot_llm_model] && [string trim [dict get $state dot_llm_model]] ne ""} {
+        set model [string trim [dict get $state dot_llm_model]]
+    } else {
+        set model [::attractor_web::__dot_model_default $provider]
+    }
+    if {[dict exists $payload model] && [string trim [dict get $payload model]] ne ""} {
+        set model [string trim [dict get $payload model]]
+    }
+
+    set providerOptions {}
+    if {[dict exists $payload provider_options]} {
+        set providerOptions [dict get $payload provider_options]
+    }
+
+    set messages [list \
+        [::unified_llm::message system [::attractor_web::__json_safe_text [::attractor_web::__dot_system_prompt]]] \
+        [::unified_llm::message user [::attractor_web::__json_safe_text $userPrompt]]]
+    set args [list -client $client -provider $provider -messages $messages -model $model -provider_options $providerOptions]
+    return $args
+}
+
+proc ::attractor_web::__dot_user_prompt {mode payload} {
+    switch -- $mode {
+        generate {
+            if {![dict exists $payload prompt] || [string trim [dict get $payload prompt]] eq ""} {
+                return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "prompt is required"
+            }
+            return [string trim [dict get $payload prompt]]
+        }
+        fix {
+            if {![dict exists $payload dotSource] || [string trim [dict get $payload dotSource]] eq ""} {
+                return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "dotSource is required"
+            }
+            if {![dict exists $payload error] || [string trim [dict get $payload error]] eq ""} {
+                return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "error is required"
+            }
+            set broken [::attractor_web::normalize_dot_source [dict get $payload dotSource]]
+            set errText [string trim [dict get $payload error]]
+            return "The following Graphviz DOT pipeline has a syntax error. Fix it so it renders correctly.\n\nGraphviz error:\n$errText\n\nBroken DOT source:\n$broken\n\nOutput ONLY the corrected raw DOT source - no markdown fences, no explanations."
+        }
+        iterate {
+            if {![dict exists $payload baseDot] || [string trim [dict get $payload baseDot]] eq ""} {
+                return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "baseDot is required"
+            }
+            if {![dict exists $payload changes] || [string trim [dict get $payload changes]] eq ""} {
+                return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "changes is required"
+            }
+            set baseDot [::attractor_web::normalize_dot_source [dict get $payload baseDot]]
+            set changes [string trim [dict get $payload changes]]
+            return "Given the following existing Attractor pipeline DOT source:\n\n$baseDot\n\nModify it according to these instructions: $changes\n\nOutput ONLY the modified raw DOT source - no markdown fences, no explanations.\nKeep all existing nodes and edges unless explicitly told to remove them."
+        }
+        default {
+            return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "unknown dot stream mode: $mode"
+        }
+    }
+}
+
+proc ::attractor_web::__chunk_text {text chunkSize} {
+    if {$text eq ""} {
+        return {}
+    }
+    if {$chunkSize < 1} {
+        set chunkSize 1
+    }
+    set out {}
+    for {set idx 0} {$idx < [string length $text]} {incr idx $chunkSize} {
+        lappend out [string range $text $idx [expr {$idx + $chunkSize - 1}]]
+    }
+    return $out
+}
+
+proc ::attractor_web::__dot_stream_generate {state payload mode chan} {
+    set userPrompt [::attractor_web::__dot_user_prompt $mode $payload]
+    lassign [::attractor_web::__dot_client_from_state $state] client isTemp
+
+    set code [catch {
+        set requestArgs [::attractor_web::__dot_build_request $state $payload $userPrompt $client]
+        set response [::unified_llm::generate {*}$requestArgs -max_tool_rounds 0]
+    } err opts]
+
+    if {$isTemp} {
+        catch {$client close}
+    }
+    if {$code} {
+        return -options $opts $err
+    }
+
+    set text ""
+    if {[dict exists $response text]} {
+        set text [dict get $response text]
+    }
+    set dotSource [::attractor_web::normalize_dot_source $text]
+    if {[string trim $dotSource] eq ""} {
+        return -code error -errorcode [list ATTRACTOR_WEB GENERATION_ERROR] "model returned empty DOT source"
+    }
+
+    foreach chunk [::attractor_web::__chunk_text $dotSource 64] {
+        ::attractor_web::__send_sse_data $chan "{\"delta\":[::attractor_web::__json_quote $chunk]}"
+    }
+    return $dotSource
+}
+
 proc ::attractor_web::__html_dashboard {} {
     return {<!doctype html>
 <html lang="en">
@@ -197,6 +507,7 @@ proc ::attractor_web::__html_dashboard {} {
     aside { border-right: 1px solid #d5e4d7; padding: 14px; overflow: auto; }
     section { padding: 14px; overflow: auto; }
     textarea { width: 100%; min-height: 140px; }
+    textarea.small { min-height: 72px; }
     input, button, textarea { font: inherit; }
     button { cursor: pointer; }
     .run { border: 1px solid #cadccf; padding: 10px; border-radius: 10px; margin-bottom: 10px; background: #fff; }
@@ -219,10 +530,29 @@ proc ::attractor_web::__html_dashboard {} {
   <main>
     <aside>
       <h3>Start Run</h3>
+      <textarea id="dotPrompt" class="small" placeholder="Describe the pipeline you want"></textarea>
+      <div class="row">
+        <select id="provider">
+          <option value="">auto provider</option>
+          <option value="openai">openai</option>
+          <option value="anthropic">anthropic</option>
+          <option value="gemini">gemini</option>
+        </select>
+        <input id="model" class="grow" placeholder="optional model override">
+      </div>
+      <div class="row">
+        <button id="generateBtn">Generate DOT</button>
+      </div>
       <div class="row">
         <input id="dotfile" class="grow" type="file" accept=".dot,text/plain">
       </div>
       <textarea id="dot" placeholder="Paste DOT source"></textarea>
+      <textarea id="dotChanges" class="small" placeholder="Iterate changes (optional)"></textarea>
+      <textarea id="dotFixErr" class="small" placeholder="Graphviz/validation error for Fix (optional)"></textarea>
+      <div class="row">
+        <button id="iterateBtn">Iterate DOT</button>
+        <button id="fixBtn">Fix DOT</button>
+      </div>
       <div class="row">
         <button id="runBtn">Run</button>
         <button id="refreshBtn">Refresh</button>
@@ -265,6 +595,146 @@ proc ::attractor_web::__html_dashboard {} {
         throw new Error(msg);
       }
       return body;
+    }
+
+    function dotOptions() {
+      const provider = document.getElementById('provider').value.trim();
+      const model = document.getElementById('model').value.trim();
+      const out = {};
+      if (provider) out.provider = provider;
+      if (model) out.model = model;
+      return out;
+    }
+
+    async function readSseJsonFrames(response, onEvent) {
+      if (!response.body) throw new Error('stream body not available');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        buffer = buffer.replace(/\r\n/g, '\n');
+        while (true) {
+          const sep = buffer.indexOf('\n\n');
+          if (sep < 0) break;
+          const frame = buffer.slice(0, sep);
+          buffer = buffer.slice(sep + 2);
+          const lines = frame.split('\n');
+          const payload = [];
+          for (const line of lines) {
+            if (line.startsWith('data:')) payload.push(line.slice(5).trimStart());
+          }
+          if (!payload.length) continue;
+          try {
+            onEvent(JSON.parse(payload.join('\n')));
+          } catch (_) {}
+        }
+      }
+    }
+
+    async function streamDot(path, payload, onDelta) {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let parsed = null;
+        try {
+          parsed = JSON.parse(text);
+        } catch (_) {}
+        if (parsed && parsed.error) {
+          throw new Error(`${parsed.code || 'ERROR'}: ${parsed.error}`);
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      let doneDot = '';
+      let streamErr = '';
+      await readSseJsonFrames(res, (evt) => {
+        if (typeof evt.delta === 'string') {
+          onDelta(evt.delta);
+        } else if (evt.done && typeof evt.dotSource === 'string') {
+          doneDot = evt.dotSource;
+        } else if (evt.error) {
+          streamErr = evt.error;
+        }
+      });
+
+      if (streamErr) throw new Error(streamErr);
+      if (!doneDot) throw new Error('stream ended without done event');
+      return doneDot;
+    }
+
+    async function generateDot() {
+      showError('');
+      const prompt = document.getElementById('dotPrompt').value.trim();
+      if (!prompt) {
+        showError('Prompt is required for DOT generation');
+        return;
+      }
+      const dotEl = document.getElementById('dot');
+      dotEl.value = '';
+      try {
+        const finalDot = await streamDot('/api/v1/dot/generate/stream', { prompt, ...dotOptions() }, (delta) => {
+          dotEl.value += delta;
+        });
+        dotEl.value = finalDot;
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    async function fixDot() {
+      showError('');
+      const dotSource = document.getElementById('dot').value;
+      const error = document.getElementById('dotFixErr').value.trim();
+      if (!dotSource.trim()) {
+        showError('DOT source is required for Fix');
+        return;
+      }
+      if (!error) {
+        showError('Fix error text is required');
+        return;
+      }
+      const dotEl = document.getElementById('dot');
+      dotEl.value = '';
+      try {
+        const finalDot = await streamDot('/api/v1/dot/fix/stream', { dotSource, error, ...dotOptions() }, (delta) => {
+          dotEl.value += delta;
+        });
+        dotEl.value = finalDot;
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    async function iterateDot() {
+      showError('');
+      const baseDot = document.getElementById('dot').value;
+      const changes = document.getElementById('dotChanges').value.trim();
+      if (!baseDot.trim()) {
+        showError('DOT source is required for Iterate');
+        return;
+      }
+      if (!changes) {
+        showError('Iterate changes are required');
+        return;
+      }
+      const dotEl = document.getElementById('dot');
+      dotEl.value = '';
+      try {
+        const finalDot = await streamDot('/api/v1/dot/iterate/stream', { baseDot, changes, ...dotOptions() }, (delta) => {
+          dotEl.value += delta;
+        });
+        dotEl.value = finalDot;
+      } catch (err) {
+        showError(err.message);
+      }
     }
 
     function renderRuns() {
@@ -390,6 +860,9 @@ proc ::attractor_web::__html_dashboard {} {
       };
     }
 
+    document.getElementById('generateBtn').onclick = generateDot;
+    document.getElementById('fixBtn').onclick = fixDot;
+    document.getElementById('iterateBtn').onclick = iterateDot;
     document.getElementById('runBtn').onclick = startRun;
     document.getElementById('refreshBtn').onclick = refreshRuns;
     document.getElementById('dotfile').onchange = async (evt) => {
@@ -838,6 +1311,14 @@ proc ::attractor_web::__send_sse_headers {chan} {
     flush $chan
 }
 
+proc ::attractor_web::__send_sse_headers_close {chan} {
+    puts -nonewline $chan "HTTP/1.1 200 OK\r\n"
+    puts -nonewline $chan "Content-Type: text/event-stream\r\n"
+    puts -nonewline $chan "Cache-Control: no-cache\r\n"
+    puts -nonewline $chan "Connection: close\r\n\r\n"
+    flush $chan
+}
+
 proc ::attractor_web::__send_sse_data {chan payload} {
     foreach line [split $payload "\n"] {
         puts -nonewline $chan "data: $line\n"
@@ -1170,6 +1651,33 @@ proc ::attractor_web::__dispatch_route {id chan request} {
         return 0
     }
 
+    if {$method eq "POST" && $path in {"/api/v1/dot/generate/stream" "/api/v1/dot/fix/stream" "/api/v1/dot/iterate/stream"}} {
+        if {[catch {set payload [::attractor_web::__request_json request]} err opts]} {
+            ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error $err INVALID_JSON]
+            return 0
+        }
+
+        set mode ""
+        switch -- $path {
+            "/api/v1/dot/generate/stream" { set mode generate }
+            "/api/v1/dot/fix/stream" { set mode fix }
+            "/api/v1/dot/iterate/stream" { set mode iterate }
+        }
+
+        if {[catch {::attractor_web::__dot_user_prompt $mode $payload} inputErr]} {
+            ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error $inputErr BAD_REQUEST]
+            return 0
+        }
+
+        ::attractor_web::__send_sse_headers_close $chan
+        if {[catch {set dotSource [::attractor_web::__dot_stream_generate $state $payload $mode $chan]} genErr]} {
+            ::attractor_web::__send_sse_data $chan "{\"error\":[::attractor_web::__json_quote $genErr],\"code\":\"GENERATION_ERROR\"}"
+            return 0
+        }
+        ::attractor_web::__send_sse_data $chan "{\"done\":true,\"dotSource\":[::attractor_web::__json_quote $dotSource]}"
+        return 0
+    }
+
     if {$method eq "GET" && $path eq "/events"} {
         ::attractor_web::__sse_add_global $id $chan
         return 1
@@ -1333,6 +1841,10 @@ proc ::attractor_web::server_new {args} {
         -max_body_bytes 2097152
         -max_question_wait_ms 300000
         -dot_bin dot
+        -dot_llm_provider ""
+        -dot_llm_model ""
+        -dot_llm_transport ""
+        -dot_llm_client ""
     }
     array set opts $args
 
@@ -1359,6 +1871,10 @@ proc ::attractor_web::server_new {args} {
         max_body_bytes $opts(-max_body_bytes) \
         max_question_wait_ms $opts(-max_question_wait_ms) \
         dot_bin $opts(-dot_bin) \
+        dot_llm_provider $opts(-dot_llm_provider) \
+        dot_llm_model $opts(-dot_llm_model) \
+        dot_llm_transport $opts(-dot_llm_transport) \
+        dot_llm_client $opts(-dot_llm_client) \
         clients {} \
         sse_clients {} \
         workers {} \

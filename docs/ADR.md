@@ -468,3 +468,33 @@ Tradeoffs:
 - Prompt subsystem complexity increased substantially versus the prior generic formatter.
 - Claude parity currently depends on parsing vendored Swift constants; upstream structural changes may require parser maintenance.
 - Default model changes can alter live smoke behavior/cost characteristics for environments relying on implicit defaults.
+
+## ADR-017: Provider-Backed DOT Streaming Endpoints and Real Default Codergen Backend
+- Date: 2026-03-04
+- Status: Accepted
+
+### Context
+The web dashboard lacked a prompt-to-DOT generator path, and the default Attractor codergen backend still used the mock provider. This blocked end-to-end "create from prompt -> run pipeline" behavior against real providers and diverged from the expected DOT generate/fix/iterate loop.
+
+### Decision
+- Add provider-backed streaming DOT endpoints in `attractor_web`:
+  - `POST /api/v1/dot/generate/stream`
+  - `POST /api/v1/dot/fix/stream`
+  - `POST /api/v1/dot/iterate/stream`
+- Implement server-side DOT generation with `::unified_llm::stream` and SSE frames:
+  - `data: {"delta":"..."}`
+  - `data: {"done":true,"dotSource":"..."}`
+  - terminal stream failures emit `data: {"error":"...","code":"GENERATION_ERROR"}`
+- Add a shared DOT system prompt and markdown-fence stripping (`normalize_dot_source`) before returning final DOT source.
+- Replace `::attractor::default_codergen_backend` mock behavior with a real Unified LLM call using provider/model resolution from environment defaults (`ATTRACTOR_PROVIDER`, `UNIFIED_LLM_PROVIDER`, provider model env vars).
+- Extend live e2e coverage to include `attractor_web` DOT streaming smoke tests for selected real providers.
+
+### Consequences
+Positive:
+- Prompt-driven DOT generation/fix/iterate is now implemented end-to-end with real providers.
+- Default codergen behavior now reflects production provider-backed execution rather than mock output.
+- Live e2e coverage includes the web DOT stream loop, improving confidence in API-level create workflows.
+
+Tradeoffs:
+- Local runs with codergen nodes now require valid provider configuration instead of silently using mock output.
+- Streaming endpoint implementation introduces additional server-side LLM configuration surface and associated failure modes.

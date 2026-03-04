@@ -19,8 +19,8 @@ test e2e-attractor-cli-linear-1.0 {CLI runs linear pipeline and writes artifacts
     set logsRoot [file join $root .scratch verification SPRINT-003 integration e2e-linear-[pid]]
     file delete -force $logsRoot
 } -body {
-    set result [::tests::e2e::run_attractor [file join $root examples linear.dot] $logsRoot]
-    list [dict get $result ok] [file exists [file join $logsRoot checkpoint.json]] [file exists [file join $logsRoot build status.json]]
+    set result [::tests::e2e::run_attractor [file join $root examples tool-handler.dot] $logsRoot]
+    list [dict get $result ok] [file exists [file join $logsRoot checkpoint.json]] [file exists [file join $logsRoot shellstep status.json]]
 } -cleanup {
     file delete -force $logsRoot
 } -result {1 1 1}
@@ -31,18 +31,18 @@ test e2e-attractor-cli-resume-1.0 {CLI supports resume from checkpoint} -setup {
     file mkdir $logsRoot
     set checkpoint [file join $logsRoot checkpoint.json]
     set fh [open $checkpoint w]
-    puts -nonewline $fh {{"timestamp":"now","current_node":"build","completed_nodes":["start"],"node_retries":{},"context_values":{}}}
+    puts -nonewline $fh {{"timestamp":"now","current_node":"shellstep","completed_nodes":["start"],"node_retries":{},"context_values":{}}}
     close $fh
 } -body {
-    set cmd [list [file join $root bin attractor] run [file join $root examples linear.dot] --logs-root $logsRoot --resume]
+    set cmd [list [file join $root bin attractor] run [file join $root examples tool-handler.dot] --logs-root $logsRoot --resume]
     catch {exec {*}$cmd} out
-    list [expr {[string first "\"status\":\"success\"" $out] >= 0}] [file exists [file join $logsRoot build status.json]]
+    list [expr {[string first "\"status\":\"success\"" $out] >= 0}] [file exists [file join $logsRoot shellstep status.json]]
 } -cleanup {
     file delete -force $logsRoot
 } -result {1 1}
 
 test e2e-attractor-cli-validate-1.0 {CLI validates dot pipelines without execution} -body {
-    set cmd [list [file join $root bin attractor] validate [file join $root examples linear.dot]]
+    set cmd [list [file join $root bin attractor] validate [file join $root examples tool-handler.dot]]
     set out [exec {*}$cmd]
     expr {[string first "\"status\":\"valid\"" $out] >= 0}
 } -result 1
@@ -69,7 +69,7 @@ test e2e-attractor-cli-resume-negative-1.0 {CLI resume fails on corrupted checkp
     puts -nonewline $fh "not-json"
     close $fh
 } -body {
-    set cmd [list [file join $root bin attractor] run [file join $root examples linear.dot] --logs-root $logsRoot --resume]
+    set cmd [list [file join $root bin attractor] run [file join $root examples tool-handler.dot] --logs-root $logsRoot --resume]
     set code [catch {exec {*}$cmd} out]
     list $code [expr {[string length $out] > 0}]
 } -cleanup {

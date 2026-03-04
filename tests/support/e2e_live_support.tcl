@@ -5,7 +5,7 @@ namespace eval ::tests::e2e_live {
     variable selected_providers {}
     variable skipped_providers {}
     variable provider_configs {}
-    variable component_list {unified_llm coding_agent_loop attractor}
+    variable component_list {unified_llm coding_agent_loop attractor attractor_web}
     variable loaded_key_values {}
     variable runtime_preflight {}
 }
@@ -549,6 +549,130 @@ proc ::tests::e2e_live::run_attractor_invalid_key {provider} {
     ::tests::e2e_live::assert_true [expr {[lindex $ec 0] eq "UNIFIED_LLM" && [lindex $ec 1] eq "TRANSPORT" && [lindex $ec 2] eq "HTTP" && [lindex $ec 3] eq $provider}] "unexpected attractor invalid-key errorcode"
     ::tests::e2e_live::assert_no_real_secret_in_text $provider $err
     return 1
+}
+
+proc ::tests::e2e_live::__dot_stream_events {rawBody} {
+    set events {}
+    foreach sse [::attractor_core::parse_sse $rawBody] {
+        if {![dict exists $sse data]} {
+            continue
+        }
+        set payload [string trim [dict get $sse data]]
+        if {$payload eq ""} {
+            continue
+        }
+        if {[catch {set decoded [::attractor_core::json_decode $payload]}]} {
+            continue
+        }
+        lappend events $decoded
+    }
+    return $events
+}
+
+proc ::tests::e2e_live::__dot_stream_done_dot {events} {
+    foreach evt $events {
+        if {[dict exists $evt done] && [dict get $evt done] && [dict exists $evt dotSource]} {
+            return [dict get $evt dotSource]
+        }
+    }
+    return ""
+}
+
+proc ::tests::e2e_live::__dot_stream_has_error {events} {
+    foreach evt $events {
+        if {[dict exists $evt error] && [string trim [dict get $evt error]] ne ""} {
+            return 1
+        }
+    }
+    return 0
+}
+
+proc ::tests::e2e_live::run_attractor_web_dot_stream_smoke {provider} {
+    variable artifact_root
+    set cfg [::tests::e2e_live::provider_config $provider]
+    set runsRoot [file join $artifact_root attractor_web $provider runs]
+    file delete -force $runsRoot
+    file mkdir $runsRoot
+
+    set server [::attractor_web::server_new \
+        -bind 127.0.0.1 \
+        -web_port 0 \
+        -runs_root $runsRoot \
+        -dot_llm_provider $provider \
+        -dot_llm_model [dict get $cfg model]]
+    set base [$server url]
+
+    set code [catch {
+        set generateResp [::tests::http_client::request \
+            "$base/api/v1/dot/generate/stream" \
+            -method POST \
+            -body [::attractor_core::json_encode [dict create prompt "Create a minimal valid Attractor DOT pipeline with start, one build node, and exit. Output DOT only."]] \
+            -headers [list Content-Type application/json Accept text/event-stream] \
+            -type application/json \
+            -timeout 90000]
+        ::tests::e2e_live::assert_true [expr {[dict get $generateResp status] == 200}] "generate stream endpoint should return HTTP 200"
+        set generateEvents [::tests::e2e_live::__dot_stream_events [dict get $generateResp body]]
+        ::tests::e2e_live::assert_true [expr {[llength $generateEvents] > 1}] "expected generate stream events"
+        set generatedDot [::tests::e2e_live::__dot_stream_done_dot $generateEvents]
+        set generatedHasError [::tests::e2e_live::__dot_stream_has_error $generateEvents]
+        ::tests::e2e_live::assert_true [expr {[string trim $generatedDot] ne "" || $generatedHasError}] "expected generate done or error stream event"
+
+        set fixResp [::tests::http_client::request \
+            "$base/api/v1/dot/fix/stream" \
+            -method POST \
+            -body [::attractor_core::json_encode [dict create dotSource {digraph broken { start [shape=Mdiamond]; exit [shape=Msquare]; start -> ; }} error "syntax error near ;"]] \
+            -headers [list Content-Type application/json Accept text/event-stream] \
+            -type application/json \
+            -timeout 90000]
+        ::tests::e2e_live::assert_true [expr {[dict get $fixResp status] == 200}] "fix stream endpoint should return HTTP 200"
+        set fixEvents [::tests::e2e_live::__dot_stream_events [dict get $fixResp body]]
+        ::tests::e2e_live::assert_true [expr {[llength $fixEvents] > 0}] "expected fix stream events"
+        set fixedDot [::tests::e2e_live::__dot_stream_done_dot $fixEvents]
+        set fixHasError [::tests::e2e_live::__dot_stream_has_error $fixEvents]
+        ::tests::e2e_live::assert_true [expr {[string trim $fixedDot] ne "" || $fixHasError}] "expected fix done or error stream event"
+
+        set iterateBaseDot $generatedDot
+        if {[string trim $iterateBaseDot] eq ""} {
+            set iterateBaseDot {digraph fallback { start [shape=Mdiamond]; build [label="Build", prompt="Build"]; exit [shape=Msquare]; start -> build; build -> exit; }}
+        }
+        set iterateResp [::tests::http_client::request \
+            "$base/api/v1/dot/iterate/stream" \
+            -method POST \
+            -body [::attractor_core::json_encode [dict create baseDot $iterateBaseDot changes "Add a human review node before exit."]] \
+            -headers [list Content-Type application/json Accept text/event-stream] \
+            -type application/json \
+            -timeout 90000]
+        ::tests::e2e_live::assert_true [expr {[dict get $iterateResp status] == 200}] "iterate stream endpoint should return HTTP 200"
+        set iterateEvents [::tests::e2e_live::__dot_stream_events [dict get $iterateResp body]]
+        ::tests::e2e_live::assert_true [expr {[llength $iterateEvents] > 0}] "expected iterate stream events"
+        set iteratedDot [::tests::e2e_live::__dot_stream_done_dot $iterateEvents]
+        set iterateHasError [::tests::e2e_live::__dot_stream_has_error $iterateEvents]
+        ::tests::e2e_live::assert_true [expr {[string trim $iteratedDot] ne "" || $iterateHasError}] "expected iterate done or error stream event"
+
+        set artifact [::tests::e2e_live::artifact_path attractor_web $provider dot-streams.json]
+        ::tests::e2e_live::write_json_file $artifact [dict create \
+            provider $provider \
+            model [dict get $cfg model] \
+            generate_events $generateEvents \
+            generate_has_error $generatedHasError \
+            fix_events $fixEvents \
+            fix_has_error $fixHasError \
+            iterate_events $iterateEvents \
+            iterate_has_error $iterateHasError \
+            generated_dot $generatedDot \
+            fixed_dot $fixedDot \
+            iterated_dot $iteratedDot]
+        set result 1
+    } err opts]
+
+    catch {$server close}
+    if {$code} {
+        set errorArtifact [::tests::e2e_live::artifact_path attractor_web $provider failure.txt]
+        ::tests::e2e_live::write_text_file $errorArtifact $err
+        return -options $opts $err
+    }
+
+    return $result
 }
 
 proc ::tests::e2e_live::__collect_files {rootDir} {

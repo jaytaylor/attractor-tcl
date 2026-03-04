@@ -34,5 +34,23 @@ test attractor_web-id-validation-1.0 {run and node ids enforce allowlist pattern
 
 test attractor_web-dashboard-template-1.0 {dashboard html contains expected markers} -body {
     set html [::attractor_web::__html_dashboard]
-    list [expr {[string first "Attractor Web Dashboard" $html] >= 0}] [expr {[string first "EventSource('/events')" $html] >= 0}]
-} -result {1 1}
+    list \
+      [expr {[string first "Attractor Web Dashboard" $html] >= 0}] \
+      [expr {[string first "EventSource('/events')" $html] >= 0}] \
+      [expr {[string first "Generate DOT" $html] >= 0}] \
+      [expr {[string first "/api/v1/dot/generate/stream" $html] >= 0}]
+} -result {1 1 1 1}
+
+test attractor_web-dot-user-prompt-1.0 {dot stream payload validation enforces required fields} -body {
+    list \
+      [catch {::attractor_web::__dot_user_prompt generate {}}] \
+      [catch {::attractor_web::__dot_user_prompt fix [dict create dotSource "digraph x { }"]}] \
+      [catch {::attractor_web::__dot_user_prompt iterate [dict create baseDot "digraph x { }"]}]
+} -result {1 1 1}
+
+test attractor_web-dot-model-defaults-1.0 {dot model defaults map per provider} -body {
+    list \
+      [::attractor_web::__dot_model_default openai] \
+      [::attractor_web::__dot_model_default anthropic] \
+      [::attractor_web::__dot_model_default gemini]
+} -result {gpt-5.2 claude-haiku-4-5 gemini-3-flash-preview}

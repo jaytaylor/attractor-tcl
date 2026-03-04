@@ -5,6 +5,7 @@ set root [file normalize [file join [file dirname [info script]] .. ..]]
 lappend auto_path $root
 package require attractor_web
 package require attractor_core
+package require attractor
 
 namespace eval ::tests::integration::attractor_web {}
 
@@ -54,6 +55,102 @@ proc ::tests::integration::attractor_web::wait_for_run_status {baseUrl runId tar
         after 50
     }
     return 0
+}
+
+proc ::tests::integration::attractor_web::parse_stream_events {payload} {
+    set out {}
+    foreach event [::attractor_core::parse_sse $payload] {
+        if {![dict exists $event data]} {
+            continue
+        }
+        set data [string trim [dict get $event data]]
+        if {$data eq ""} {
+            continue
+        }
+        if {[catch {set decoded [::attractor_core::json_decode $data]}]} {
+            continue
+        }
+        lappend out $decoded
+    }
+    return $out
+}
+
+proc ::tests::integration::attractor_web::dot_stream_sse {text} {
+    set chunks {}
+    set size 24
+    for {set idx 0} {$idx < [string length $text]} {incr idx $size} {
+        lappend chunks [string range $text $idx [expr {$idx + $size - 1}]]
+    }
+
+    set lines {}
+    lappend lines {data: {"type":"response.created","response":{"id":"resp-dot"}}}
+    lappend lines ""
+    foreach chunk $chunks {
+        set escaped [string map [list "\\" "\\\\" "\"" "\\\"" "\n" "\\n" "\r" "\\r" "\t" "\\t"] $chunk]
+        set body "{\"type\":\"response.output_text.delta\",\"delta\":\"$escaped\",\"output_index\":0}"
+        lappend lines "data: $body"
+        lappend lines ""
+    }
+    lappend lines {data: {"type":"response.completed","response":{"id":"resp-dot","usage":{"input_tokens":5,"output_tokens":7}}}}
+    lappend lines ""
+    return "[join $lines \n]\n"
+}
+
+proc ::tests::integration::attractor_web::dot_llm_transport {req} {
+    set provider [dict get $req provider]
+    if {$provider ne "openai"} {
+        return [dict create status_code 400 headers {} body [::attractor_core::json_encode [dict create error [dict create message "unsupported test provider"]]]]
+    }
+
+    set userPrompt ""
+    foreach item [dict get $req payload input] {
+        if {[dict exists $item role] && [dict get $item role] eq "user"} {
+            foreach part [dict get $item content] {
+                if {[dict exists $part text]} {
+                    set userPrompt [dict get $part text]
+                }
+            }
+        }
+    }
+
+    if {[string first "Graphviz error:" $userPrompt] >= 0} {
+        set dot {
+            digraph fixed {
+                start [shape=Mdiamond];
+                build [label="Build", prompt="Build the target"];
+                exit [shape=Msquare];
+                start -> build;
+                build -> exit;
+            }
+        }
+    } elseif {[string first "Given the following existing Attractor pipeline DOT source:" $userPrompt] >= 0} {
+        set dot {
+            digraph iterated {
+                start [shape=Mdiamond];
+                build [label="Build", prompt="Build the target"];
+                review [shape=hexagon, label="Review"];
+                exit [shape=Msquare];
+                start -> build;
+                build -> review;
+                review -> exit [label=approved];
+            }
+        }
+    } else {
+        set dot {
+            digraph generated {
+                start [shape=Mdiamond];
+                build [label="Build", prompt="Build the target"];
+                exit [shape=Msquare];
+                start -> build;
+                build -> exit;
+            }
+        }
+    }
+
+    if {[dict exists $req payload stream] && [dict get $req payload stream]} {
+        return [dict create status_code 200 headers [dict create x-request-id req-dot] body [::tests::integration::attractor_web::dot_stream_sse [string trim $dot]]]
+    }
+    return [dict create status_code 200 headers [dict create x-request-id req-dot] body [::attractor_core::json_encode [dict create output_text [string trim $dot] usage [dict create input_tokens 5 output_tokens 7 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]]]
 }
 
 test integration-attractor-web-api-pipelines-empty-1.0 {server starts and returns an empty pipeline list} -setup {
@@ -140,11 +237,80 @@ test integration-attractor-web-api-validation-1.0 {api rejects invalid file name
 } -result {400 INVALID_FILE_NAME 400 INVALID_DOT_SOURCE}
 
 
+test integration-attractor-web-dot-stream-endpoints-1.0 {dot generate/fix/iterate stream endpoints emit delta and done payloads} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root dot-stream]
+    set server [::attractor_web::server_new \
+        -bind 127.0.0.1 \
+        -web_port 0 \
+        -runs_root $runsRoot \
+        -dot_llm_transport ::tests::integration::attractor_web::dot_llm_transport \
+        -dot_llm_provider openai \
+        -dot_llm_model gpt-5.2]
+    set base [$server url]
+} -body {
+    set generateResp [::tests::http_client::request \
+        "$base/api/v1/dot/generate/stream" \
+        -method POST \
+        -body [::attractor_core::json_encode [dict create prompt "Generate a CI pipeline."]] \
+        -headers [list Content-Type application/json Accept text/event-stream] \
+        -type application/json]
+    set generateEvents [::tests::integration::attractor_web::parse_stream_events [dict get $generateResp body]]
+    set generatedDot [dict get [lindex $generateEvents end] dotSource]
+    set generatedGraph [::attractor::parse_dot $generatedDot]
+    set generatedDiagnostics [::attractor::validate $generatedGraph]
+
+    set fixResp [::tests::http_client::request \
+        "$base/api/v1/dot/fix/stream" \
+        -method POST \
+        -body [::attractor_core::json_encode [dict create dotSource "digraph x { start -> bad ; }" error "syntax error near bad"]] \
+        -headers [list Content-Type application/json Accept text/event-stream] \
+        -type application/json]
+    set fixEvents [::tests::integration::attractor_web::parse_stream_events [dict get $fixResp body]]
+    set fixedDot [dict get [lindex $fixEvents end] dotSource]
+    set fixedGraph [::attractor::parse_dot $fixedDot]
+    set fixedDiagnostics [::attractor::validate $fixedGraph]
+
+    set iterateResp [::tests::http_client::request \
+        "$base/api/v1/dot/iterate/stream" \
+        -method POST \
+        -body [::attractor_core::json_encode [dict create baseDot $fixedDot changes "Add a review gate before exit."]] \
+        -headers [list Content-Type application/json Accept text/event-stream] \
+        -type application/json]
+    set iterateEvents [::tests::integration::attractor_web::parse_stream_events [dict get $iterateResp body]]
+    set iteratedDot [dict get [lindex $iterateEvents end] dotSource]
+    set iteratedGraph [::attractor::parse_dot $iteratedDot]
+    set iteratedDiagnostics [::attractor::validate $iteratedGraph]
+
+    list \
+      [dict get $generateResp status] \
+      [expr {[dict exists [lindex $generateEvents 0] delta]}] \
+      [expr {[dict exists [lindex $generateEvents end] done] && [dict get [lindex $generateEvents end] done]}] \
+      [expr {![::attractor::__has_validation_errors $generatedDiagnostics]}] \
+      [dict get $fixResp status] \
+      [expr {[dict exists [lindex $fixEvents end] done] && [dict get [lindex $fixEvents end] done]}] \
+      [expr {![::attractor::__has_validation_errors $fixedDiagnostics]}] \
+      [dict get $iterateResp status] \
+      [expr {[dict exists [lindex $iterateEvents end] done] && [dict get [lindex $iterateEvents end] done]}] \
+      [expr {[dict exists $iteratedGraph id] && [dict get $iteratedGraph id] ne ""}]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {200 1 1 1 200 1 1 200 1 1}
+
+
 test integration-attractor-web-stage-endpoint-1.0 {stage endpoint returns artifacts and rejects invalid node IDs} -setup {
     set runsRoot [::tests::integration::attractor_web::new_runs_root stage-endpoint]
     set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
     set base [$server url]
-    set dotSource [::tests::integration::attractor_web::read_file [file join $root examples linear.dot]]
+    set dotSource {
+        digraph stage_tool {
+            start [shape=Mdiamond];
+            build [type=tool, tool_command="echo stage-ok"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit;
+        }
+    }
 } -body {
     set startResp [::tests::http_client::json_post "$base/api/run" [dict create dotSource $dotSource]]
     set runId [dict get [dict get $startResp body] id]
@@ -196,7 +362,15 @@ test integration-attractor-web-sse-1.0 {global and per-run sse endpoints stream 
     set runsRoot [::tests::integration::attractor_web::new_runs_root sse]
     set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
     set base [$server url]
-    set dotSource [::tests::integration::attractor_web::read_file [file join $root examples linear.dot]]
+    set dotSource {
+        digraph sse_tool {
+            start [shape=Mdiamond];
+            build [type=tool, tool_command="echo sse-ok"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit;
+        }
+    }
     regexp {^http://([^:]+):([0-9]+)$} $base -> host port
 } -body {
     set globalPayload [::tests::integration::attractor_web::capture_sse $host $port "/events" 350]
