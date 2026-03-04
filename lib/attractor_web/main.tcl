@@ -956,6 +956,9 @@ proc ::attractor_web::__html_dashboard {} {
       background: rgba(255, 255, 255, 0.13);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
+    .activity.busy { background: #f3d58b; border-color: #ebc067; color: #3b2a00; }
+    .activity.error { background: #f6c6c6; border-color: #e39494; color: #5f1515; }
+    .activity.ok { background: #b9e5cb; border-color: #8fcdaa; color: #103726; }
     main {
       display: grid;
       grid-template-columns: 376px 1fr;
@@ -1008,9 +1011,32 @@ proc ::attractor_web::__html_dashboard {} {
     }
     button:hover { background: #e8f6ee; transform: translateY(-1px); }
     button:disabled { opacity: 0.58; cursor: not-allowed; transform: none; }
+    button.loading {
+      background: #d3ecdf;
+      border-color: #96c7ad;
+      position: relative;
+      padding-left: 27px;
+    }
+    button.loading::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      width: 11px;
+      height: 11px;
+      margin-top: -6px;
+      border: 2px solid #2f7658;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
     #generateBtn, #runBtn, #previewBtn { background: #def4e7; border-color: #9dcfb2; }
     #generateBtn:hover, #runBtn:hover, #previewBtn:hover { background: #d0eedf; }
     .hint { color: var(--ink-muted); font-size: 12px; margin: 6px 0 2px 1px; }
+    .stream-status { min-height: 16px; margin: 2px 1px 8px; transition: color 120ms ease; }
+    .stream-status.active { color: #14593d; }
+    .stream-status.error { color: #8e2222; }
+    .stream-status.ok { color: #0f5135; }
     .workflow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
     .step {
       font-size: 12px;
@@ -1089,6 +1115,10 @@ proc ::attractor_web::__html_dashboard {} {
       section { order: 1; }
       header { position: static; }
     }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -1121,6 +1151,7 @@ proc ::attractor_web::__html_dashboard {} {
           <button id="generateBtn">Generate DOT</button>
           <button id="previewBtn">Preview DOT</button>
         </div>
+        <div id="streamStatus" class="hint stream-status">Ready</div>
         <div class="row">
           <input id="dotfile" class="grow" type="file" accept=".dot,text/plain">
         </div>
@@ -1189,7 +1220,17 @@ proc ::attractor_web::__html_dashboard {} {
     }
 
     function setActivity(message) {
-      document.getElementById('activity').textContent = message || 'Idle';
+      const el = document.getElementById('activity');
+      el.textContent = message || 'Idle';
+      el.classList.remove('busy', 'error', 'ok');
+    }
+
+    function setActivityTone(tone) {
+      const el = document.getElementById('activity');
+      el.classList.remove('busy', 'error', 'ok');
+      if (tone) {
+        el.classList.add(tone);
+      }
     }
 
     function setWorkflow(stepName) {
@@ -1211,6 +1252,40 @@ proc ::attractor_web::__html_dashboard {} {
         const el = document.getElementById(id);
         if (el) el.disabled = isBusy;
       }
+    }
+
+    function setButtonLoading(id, enabled, label) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (enabled) {
+        if (!el.dataset.baseLabel) {
+          el.dataset.baseLabel = el.textContent;
+        }
+        el.textContent = label || el.dataset.baseLabel;
+        el.classList.add('loading');
+        el.setAttribute('aria-busy', 'true');
+      } else {
+        if (el.dataset.baseLabel) {
+          el.textContent = el.dataset.baseLabel;
+        }
+        el.classList.remove('loading');
+        el.removeAttribute('aria-busy');
+      }
+    }
+
+    function showStreamStatus(message, tone) {
+      const el = document.getElementById('streamStatus');
+      el.textContent = message || 'Ready';
+      el.classList.remove('active', 'error', 'ok');
+      if (tone) {
+        el.classList.add(tone);
+      }
+    }
+
+    function showGraphMessage(message) {
+      const graph = document.getElementById('graph');
+      graph.innerHTML = '';
+      graph.textContent = message || '';
     }
 
     function formatDiagnostics(details) {
@@ -1261,13 +1336,14 @@ proc ::attractor_web::__html_dashboard {} {
 
       if (!dotSource || !dotSource.trim()) {
         if (!quiet) {
-          graph.textContent = '(DOT source is empty)';
+          showGraphMessage('(DOT source is empty)');
         }
         return;
       }
 
       try {
         if (!quiet) setActivity('Rendering graph preview');
+        if (!quiet) setActivityTone('busy');
         const rendered = await api('/api/render', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1279,27 +1355,46 @@ proc ::attractor_web::__html_dashboard {} {
           throw new Error('DOT_RENDER_INVALID_OUTPUT: renderer returned non-SVG output');
         }
         graph.innerHTML = svg;
-        if (!quiet) setActivity('Preview updated');
+        if (!quiet) {
+          setActivity('Preview updated');
+          setActivityTone('ok');
+        }
       } catch (err) {
         if (reqId !== state.previewReq) return;
-        graph.textContent = err.message;
+        showGraphMessage(err.message);
         if (!quiet) {
           showError(err.message, err.details);
           setActivity('Preview failed');
+          setActivityTone('error');
         }
       }
     }
 
     async function previewDot(opts) {
+      if (state.previewTimer) {
+        clearTimeout(state.previewTimer);
+        state.previewTimer = null;
+      }
       showError('');
       setWorkflow('preview');
+      const quiet = Boolean(opts && opts.quiet);
+      if (!quiet) {
+        showStreamStatus('Rendering preview...', 'active');
+      }
       await renderGraphFromDot(document.getElementById('dot').value, opts);
+      if (!quiet) {
+        showStreamStatus('Preview updated', 'ok');
+      }
     }
 
     function schedulePreview() {
       if (state.previewTimer) clearTimeout(state.previewTimer);
+      showStreamStatus('DOT changed. Preview pending...', 'active');
+      showGraphMessage('Preview pending...');
       state.previewTimer = setTimeout(() => {
+        state.previewTimer = null;
         previewDot({ quiet: true });
+        showStreamStatus('Ready');
       }, 420);
     }
 
@@ -1345,8 +1440,34 @@ proc ::attractor_web::__html_dashboard {} {
       return lines.join('\n');
     }
 
+    function parseSseFramesChunk(chunk, onEvent) {
+      const frame = chunk.trim();
+      if (!frame) return;
+      const lines = frame.split('\n');
+      const payload = [];
+      for (const line of lines) {
+        if (line.startsWith('data:')) payload.push(line.slice(5).trimStart());
+      }
+      if (!payload.length) return;
+      try {
+        onEvent(JSON.parse(payload.join('\n')));
+      } catch (_) {}
+    }
+
     async function readSseJsonFrames(response, onEvent) {
-      if (!response.body) throw new Error('stream body not available');
+      const parseText = (text) => {
+        const normalized = (text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const frames = normalized.split('\n\n');
+        for (const frame of frames) {
+          parseSseFramesChunk(frame, onEvent);
+        }
+      };
+
+      if (!response.body || !response.body.getReader) {
+        parseText(await response.text());
+        return;
+      }
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -1355,31 +1476,29 @@ proc ::attractor_web::__html_dashboard {} {
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        buffer = buffer.replace(/\r\n/g, '\n');
+        buffer = buffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         while (true) {
           const sep = buffer.indexOf('\n\n');
           if (sep < 0) break;
           const frame = buffer.slice(0, sep);
           buffer = buffer.slice(sep + 2);
-          const lines = frame.split('\n');
-          const payload = [];
-          for (const line of lines) {
-            if (line.startsWith('data:')) payload.push(line.slice(5).trimStart());
-          }
-          if (!payload.length) continue;
-          try {
-            onEvent(JSON.parse(payload.join('\n')));
-          } catch (_) {}
+          parseSseFramesChunk(frame, onEvent);
         }
+      }
+      if (buffer.trim()) {
+        parseSseFramesChunk(buffer, onEvent);
       }
     }
 
     async function streamDot(path, payload, onDelta) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 150000);
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-        body: JSON.stringify(payload)
-      });
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
       if (!res.ok) {
         const text = await res.text();
         let parsed = null;
@@ -1394,13 +1513,20 @@ proc ::attractor_web::__html_dashboard {} {
 
       let doneDot = '';
       let streamErr = '';
+      let deltaCount = 0;
+      let deltaChars = 0;
       await readSseJsonFrames(res, (evt) => {
         if (typeof evt.delta === 'string') {
+          deltaCount += 1;
+          deltaChars += evt.delta.length;
+          showStreamStatus(`Receiving model output: ${deltaChars} chars`, 'active');
           onDelta(evt.delta);
         } else if (evt.done && typeof evt.dotSource === 'string') {
           doneDot = evt.dotSource;
+          showStreamStatus(`Generation complete (${deltaCount} chunks)`, 'ok');
         } else if (evt.error) {
           streamErr = evt.error;
+          showStreamStatus(`Generation error: ${evt.error}`, 'error');
         }
       });
 
@@ -1415,12 +1541,20 @@ proc ::attractor_web::__html_dashboard {} {
       const prompt = document.getElementById('dotPrompt').value.trim();
       if (!prompt) {
         showError('Prompt is required for DOT generation');
+        showStreamStatus('Enter a prompt before generating', 'error');
+        setActivity('Prompt required');
+        setActivityTone('error');
+        document.getElementById('dotPrompt').focus();
         return;
       }
       const dotEl = document.getElementById('dot');
       dotEl.value = '';
       setBusy(true);
       setActivity('Generating DOT');
+      setActivityTone('busy');
+      showStreamStatus('Submitting generation request...', 'active');
+      showGraphMessage('Generating DOT...');
+      setButtonLoading('generateBtn', true, 'Generating...');
       try {
         const finalDot = await streamDot('/api/v1/dot/generate/stream', { prompt, ...dotOptions() }, (delta) => {
           dotEl.value += delta;
@@ -1428,10 +1562,15 @@ proc ::attractor_web::__html_dashboard {} {
         dotEl.value = finalDot;
         await previewDot({ quiet: true });
         setActivity('DOT generated');
+        setActivityTone('ok');
+        showStreamStatus('DOT generated successfully', 'ok');
       } catch (err) {
         showError(err.message, err.details);
         setActivity('Generation failed');
+        setActivityTone('error');
+        showStreamStatus('Generation failed', 'error');
       } finally {
+        setButtonLoading('generateBtn', false);
         setBusy(false);
       }
     }
@@ -1443,16 +1582,22 @@ proc ::attractor_web::__html_dashboard {} {
       const error = document.getElementById('dotFixErr').value.trim();
       if (!dotSource.trim()) {
         showError('DOT source is required for Fix');
+        showStreamStatus('DOT source is required for Fix', 'error');
         return;
       }
       if (!error) {
         showError('Fix error text is required');
+        showStreamStatus('Fix error text is required', 'error');
         return;
       }
       const dotEl = document.getElementById('dot');
       dotEl.value = '';
       setBusy(true);
       setActivity('Fixing DOT');
+      setActivityTone('busy');
+      showStreamStatus('Submitting fix request...', 'active');
+      showGraphMessage('Fixing DOT...');
+      setButtonLoading('fixBtn', true, 'Fixing...');
       try {
         const finalDot = await streamDot('/api/v1/dot/fix/stream', { dotSource, error, ...dotOptions() }, (delta) => {
           dotEl.value += delta;
@@ -1460,10 +1605,15 @@ proc ::attractor_web::__html_dashboard {} {
         dotEl.value = finalDot;
         await previewDot({ quiet: true });
         setActivity('DOT fixed');
+        setActivityTone('ok');
+        showStreamStatus('DOT fixed successfully', 'ok');
       } catch (err) {
         showError(err.message, err.details);
         setActivity('Fix failed');
+        setActivityTone('error');
+        showStreamStatus('Fix failed', 'error');
       } finally {
+        setButtonLoading('fixBtn', false);
         setBusy(false);
       }
     }
@@ -1475,16 +1625,22 @@ proc ::attractor_web::__html_dashboard {} {
       const changes = document.getElementById('dotChanges').value.trim();
       if (!baseDot.trim()) {
         showError('DOT source is required for Iterate');
+        showStreamStatus('DOT source is required for Iterate', 'error');
         return;
       }
       if (!changes) {
         showError('Iterate changes are required');
+        showStreamStatus('Iterate changes are required', 'error');
         return;
       }
       const dotEl = document.getElementById('dot');
       dotEl.value = '';
       setBusy(true);
       setActivity('Iterating DOT');
+      setActivityTone('busy');
+      showStreamStatus('Submitting iterate request...', 'active');
+      showGraphMessage('Iterating DOT...');
+      setButtonLoading('iterateBtn', true, 'Iterating...');
       try {
         const finalDot = await streamDot('/api/v1/dot/iterate/stream', { baseDot, changes, ...dotOptions() }, (delta) => {
           dotEl.value += delta;
@@ -1492,10 +1648,15 @@ proc ::attractor_web::__html_dashboard {} {
         dotEl.value = finalDot;
         await previewDot({ quiet: true });
         setActivity('DOT updated');
+        setActivityTone('ok');
+        showStreamStatus('DOT iterated successfully', 'ok');
       } catch (err) {
         showError(err.message, err.details);
         setActivity('Iterate failed');
+        setActivityTone('error');
+        showStreamStatus('Iterate failed', 'error');
       } finally {
+        setButtonLoading('iterateBtn', false);
         setBusy(false);
       }
     }
@@ -1537,6 +1698,8 @@ proc ::attractor_web::__html_dashboard {} {
       setWorkflow('run');
       setBusy(true);
       setActivity('Starting run');
+      setActivityTone('busy');
+      setButtonLoading('runBtn', true, 'Starting...');
       try {
         const payload = { dotSource: document.getElementById('dot').value };
         const opts = dotOptions();
@@ -1551,6 +1714,8 @@ proc ::attractor_web::__html_dashboard {} {
         await refreshRuns();
         await selectRun(out.id);
         setActivity('Run started');
+        setActivityTone('ok');
+        showStreamStatus('Run started successfully', 'ok');
       } catch (err) {
         showError(err.message, err.details);
         if (err.details && err.details.code === 'INVALID_DOT_SOURCE') {
@@ -1560,7 +1725,10 @@ proc ::attractor_web::__html_dashboard {} {
           }
         }
         setActivity('Run failed');
+        setActivityTone('error');
+        showStreamStatus('Run failed', 'error');
       } finally {
+        setButtonLoading('runBtn', false);
         setBusy(false);
       }
     }

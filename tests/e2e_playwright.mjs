@@ -108,7 +108,9 @@ async function main() {
   async function captureStep(name) {
     if (!page) return;
     const out = path.join(screenshotsDir, `${name}.png`);
-    await page.screenshot({ path: out, fullPage: true });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(80);
+    await page.screenshot({ path: out, fullPage: false });
     stageScreenshots[name] = out;
   }
 
@@ -171,7 +173,7 @@ async function main() {
     }
 
     const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1700 } });
     page = await context.newPage();
 
     step = "open-dashboard";
@@ -255,6 +257,8 @@ async function main() {
       "#dot",
       "digraph web_e2e { start [shape=Mdiamond]; build [handler=codergen, prompt=\"Say hello in one sentence.\"]; exit [shape=Msquare]; start -> build; build -> exit [label=success, weight=1]; }"
     );
+    await page.click("#previewBtn");
+    await page.waitForSelector("#graph svg", { timeout: 15000 });
     await captureStep("06-set-known-good-dot");
 
     step = "start-run";
@@ -289,7 +293,31 @@ async function main() {
     }, null, { timeout: 30000 });
     await captureStep("08-run-completed");
 
-    await page.screenshot({ path: screenshotPath, fullPage: true });
+    step = "capture-run-details";
+    await page.evaluate(() => {
+      const stage = document.querySelector("#stage");
+      if (stage) {
+        stage.scrollIntoView({ behavior: "instant", block: "start" });
+      }
+    });
+    await page.waitForTimeout(120);
+    {
+      const stageText = ((await page.textContent("#stage")) || "").trim();
+      const eventsText = ((await page.textContent("#events")) || "").trim();
+      if (stageText === "" || stageText === "(none)") {
+        throw new Error("stage artifact details are missing");
+      }
+      if (!eventsText.includes("PipelineCompleted")) {
+        throw new Error("run events panel missing PipelineCompleted");
+      }
+    }
+    const detailsShot = path.join(screenshotsDir, "09-run-details.png");
+    await page.screenshot({ path: detailsShot, fullPage: false });
+    stageScreenshots["09-run-details"] = detailsShot;
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(80);
+    await page.screenshot({ path: screenshotPath, fullPage: false });
 
     await fs.writeFile(
       resultPath,
@@ -316,7 +344,9 @@ async function main() {
   } catch (err) {
     try {
       if (page) {
-        await page.screenshot({ path: screenshotPath, fullPage: true });
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(80);
+        await page.screenshot({ path: screenshotPath, fullPage: false });
       }
     } catch (_screenshotErr) {
       // Best-effort failure evidence.
