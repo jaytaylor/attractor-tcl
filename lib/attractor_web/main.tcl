@@ -261,6 +261,16 @@ Hard constraints:
 8. Use double quotes around attribute string values.
 9. For tool stages, use `type=tool` and `tool_command="..."`.
 
+Validation-first requirements (mandatory for generated workflows):
+10. Include an explicit validation stage (e.g., `validate_outputs`) that checks outputs against requirements.
+11. Include an explicit review/decision stage (e.g., `review_consensus`) with `goal_gate=true`.
+12. The review/decision stage must be able to kick work back via `retry_target` to an implementation or planning stage.
+13. Route review outcomes explicitly:
+    - success -> exit
+    - retry -> implementation or planning stage
+    - fail -> exit (or postmortem -> exit)
+14. Prefer deterministic verification using tool nodes for validation commands whenever possible.
+
 Common shapes:
 - `box` (default): LLM step
 - `parallelogram`: tool step
@@ -273,10 +283,18 @@ Common shapes:
 Canonical minimal template:
 digraph PipelineName {
   start [shape=Mdiamond, label="Start"];
-  build [label="Build", prompt="Do the work"];
+  plan [label="Plan", prompt="Plan implementation steps against requirements"];
+  implement [label="Implement", prompt="Implement the planned changes"];
+  validate_outputs [type=tool, label="Validate Outputs", tool_command="echo validate"];
+  review_consensus [label="Review Consensus", goal_gate=true, retry_target="implement", prompt="Verify requirements are satisfied; return success/retry/fail."];
   exit [shape=Msquare, label="Exit"];
-  start -> build;
-  build -> exit;
+  start -> plan;
+  plan -> implement;
+  implement -> validate_outputs;
+  validate_outputs -> review_consensus;
+  review_consensus -> exit [condition="outcome=success", label="success"];
+  review_consensus -> implement [condition="outcome=retry", label="retry"];
+  review_consensus -> exit [condition="outcome=fail", label="fail"];
 }}
 }
 
@@ -454,7 +472,13 @@ proc ::attractor_web::__dot_user_prompt {mode payload} {
             if {![dict exists $payload prompt] || [string trim [dict get $payload prompt]] eq ""} {
                 return -code error -errorcode [list ATTRACTOR_WEB BAD_REQUEST] "prompt is required"
             }
-            return [string trim [dict get $payload prompt]]
+            set prompt [string trim [dict get $payload prompt]]
+            append prompt "\n\nMandatory workflow requirements:\n"
+            append prompt "- Include explicit planning, implementation, validation, and review/decision stages.\n"
+            append prompt "- Validation must verify work against requirements with concrete evidence checks.\n"
+            append prompt "- Review/decision must support success/retry/fail and kick rework to planning or implementation using retry routing.\n"
+            append prompt "- Output ONLY valid raw DOT."
+            return $prompt
         }
         fix {
             if {![dict exists $payload dotSource] || [string trim [dict get $payload dotSource]] eq ""} {

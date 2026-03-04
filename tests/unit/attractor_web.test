@@ -64,3 +64,21 @@ test attractor_web-dot-model-defaults-1.0 {dot model defaults map per provider} 
       [::attractor_web::__dot_model_default anthropic] \
       [::attractor_web::__dot_model_default gemini]
 } -result {gpt-5.2 claude-haiku-4-5 gemini-3-flash-preview}
+
+test attractor_web-dot-system-prompt-validation-1.0 {generate system prompt enforces validation and retry routing concepts} -body {
+    set prompt [string tolower [::attractor_web::__dot_system_prompt]]
+    list \
+      [expr {[string first "validation-first requirements" $prompt] >= 0}] \
+      [expr {[string first "goal_gate=true" $prompt] >= 0}] \
+      [expr {[string first "retry_target" $prompt] >= 0}] \
+      [expr {[string first "success -> exit" $prompt] >= 0}] \
+      [expr {[string first "retry -> implementation or planning stage" $prompt] >= 0}]
+} -result {1 1 1 1 1}
+
+test attractor_web-dot-user-prompt-generate-validation-1.0 {generate user prompt appends validation-loop requirements} -body {
+    set prompt [string tolower [::attractor_web::__dot_user_prompt generate [dict create prompt "build me a pipeline"]]]
+    list \
+      [expr {[string first "mandatory workflow requirements" $prompt] >= 0}] \
+      [expr {[string first "validation must verify work against requirements" $prompt] >= 0}] \
+      [expr {[string first "kick rework to planning or implementation" $prompt] >= 0}]
+} -result {1 1 1}
