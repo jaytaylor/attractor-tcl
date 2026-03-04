@@ -39,6 +39,7 @@ if {$skipPattern ne ""} {
 }
 
 source [file join $root tests support mock_http_server.tcl]
+source [file join $root tests support http_client.tcl]
 
 set files {}
 foreach dir {unit integration e2e} {

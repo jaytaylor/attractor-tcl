@@ -743,6 +743,11 @@ proc ::attractor::__execute_handler {handler nodeId nodeAttrs context backend in
                 lappend choices [dict create label $label to [dict get $edge to]]
             }
             set decision [{*}$interviewer [dict create node_id $nodeId question $question choices $choices context $context]]
+            if {[dict exists $decision failure_reason]} {
+                set failureReason [dict get $decision failure_reason]
+                set failureNotes [expr {[dict exists $decision notes] ? [dict get $decision notes] : $failureReason}]
+                return [dict create status failed preferred_label "" suggested_next_ids {} context_updates {} notes $failureNotes terminal 1 failure_reason $failureReason]
+            }
             if {[dict exists $decision chosen_label]} {
                 return [dict create status success preferred_label [dict get $decision chosen_label] suggested_next_ids {} context_updates {} notes "human-selected" terminal 0]
             }

@@ -75,3 +75,9 @@ test e2e-attractor-cli-resume-negative-1.0 {CLI resume fails on corrupted checkp
 } -cleanup {
     file delete -force $logsRoot
 } -result {1 1}
+
+test e2e-attractor-cli-serve-invalid-port-1.0 {CLI serve rejects invalid web port argument} -body {
+    set cmd [list [file join $root bin attractor] serve --web-port invalid]
+    set code [catch {exec {*}$cmd} out]
+    list $code [expr {[string first "invalid --web-port" $out] >= 0}]
+} -result {1 1}

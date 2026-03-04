@@ -1,0 +1,228 @@
+#!/usr/bin/env tclsh
+set root [file normalize [file join [file dirname [info script]] ..]]
+lappend auto_path $root
+package require attractor
+package require attractor_core
+
+namespace eval ::attractor_worker {
+    variable run_id ""
+    variable run_dir ""
+    variable max_wait_ms 300000
+    variable question_seq 0
+    variable event_seq 0
+}
+
+proc ::attractor_worker::usage {} {
+    puts stderr "usage: bin/attractor-worker --run-id ID --run-dir PATH ?--max-question-wait-ms N?"
+    exit 2
+}
+
+proc ::attractor_worker::now_iso8601 {} {
+    return [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%SZ" -gmt 1]
+}
+
+proc ::attractor_worker::write_json {path payload} {
+    file mkdir [file dirname $path]
+    set fh [open $path w]
+    puts -nonewline $fh [::attractor_core::json_encode $payload]
+    close $fh
+}
+
+proc ::attractor_worker::read_json {path} {
+    set fh [open $path r]
+    set payload [read $fh]
+    close $fh
+    return [::attractor_core::json_decode $payload]
+}
+
+proc ::attractor_worker::append_event {event} {
+    variable run_id
+    variable run_dir
+    variable event_seq
+
+    incr event_seq
+    set out $event
+    dict set out run_id $run_id
+    dict set out seq $event_seq
+    if {![dict exists $out ts]} {
+        dict set out ts [::attractor_worker::now_iso8601]
+    }
+
+    set fh [open [file join $run_dir events.ndjson] a]
+    puts $fh [::attractor_core::json_encode $out]
+    close $fh
+}
+
+proc ::attractor_worker::interviewer {request} {
+    variable run_dir
+    variable max_wait_ms
+    variable question_seq
+
+    incr question_seq
+    set qid "q-$question_seq"
+    set questionDir [file join $run_dir questions]
+    set pendingPath [file join $questionDir "$qid.pending.json"]
+    set answerPath [file join $questionDir "$qid.answer.json"]
+
+    set pending [dict create \
+        qid $qid \
+        node_id [dict get $request node_id] \
+        question [dict get $request question] \
+        choices [dict get $request choices] \
+        status pending \
+        created_at [::attractor_worker::now_iso8601]]
+    ::attractor_worker::write_json $pendingPath $pending
+
+    ::attractor_worker::append_event [dict create \
+        type InterviewStarted \
+        qid $qid \
+        node_id [dict get $request node_id] \
+        question [dict get $request question] \
+        choices [dict get $request choices]]
+
+    set wait_step_ms 100
+    set waited_ms 0
+    while {$waited_ms < $max_wait_ms} {
+        if {[file exists $answerPath]} {
+            if {[catch {set answer [::attractor_worker::read_json $answerPath]} answerErr]} {
+                return [dict create failure_reason invalid_answer notes $answerErr]
+            }
+            if {![dict exists $answer chosen_label]} {
+                return [dict create failure_reason invalid_answer notes "answer missing chosen_label"]
+            }
+            set chosen [dict get $answer chosen_label]
+            set validChoices {}
+            foreach choice [dict get $request choices] {
+                lappend validChoices [dict get $choice label]
+            }
+            if {[lsearch -exact $validChoices $chosen] < 0} {
+                return [dict create failure_reason invalid_answer notes "chosen_label is not one of the available choices"]
+            }
+
+            ::attractor_worker::append_event [dict create type InterviewCompleted qid $qid chosen_label $chosen]
+            return [dict create chosen_label $chosen]
+        }
+
+        after $wait_step_ms
+        incr waited_ms $wait_step_ms
+    }
+
+    ::attractor_worker::append_event [dict create type InterviewTimeout qid $qid node_id [dict get $request node_id] wait_ms $max_wait_ms]
+    return [dict create failure_reason interview_timeout notes "timed out waiting for human answer"]
+}
+
+set idx 0
+while {$idx < $argc} {
+    set token [lindex $argv $idx]
+    switch -- $token {
+        --run-id {
+            incr idx
+            if {$idx >= $argc} {
+                ::attractor_worker::usage
+            }
+            set ::attractor_worker::run_id [lindex $argv $idx]
+        }
+        --run-dir {
+            incr idx
+            if {$idx >= $argc} {
+                ::attractor_worker::usage
+            }
+            set ::attractor_worker::run_dir [file normalize [lindex $argv $idx]]
+        }
+        --max-question-wait-ms {
+            incr idx
+            if {$idx >= $argc} {
+                ::attractor_worker::usage
+            }
+            set ::attractor_worker::max_wait_ms [lindex $argv $idx]
+        }
+        default {
+            ::attractor_worker::usage
+        }
+    }
+    incr idx
+}
+
+if {$::attractor_worker::run_id eq "" || $::attractor_worker::run_dir eq ""} {
+    ::attractor_worker::usage
+}
+if {![string is integer -strict $::attractor_worker::max_wait_ms] || $::attractor_worker::max_wait_ms < 1} {
+    puts stderr "invalid --max-question-wait-ms: $::attractor_worker::max_wait_ms"
+    exit 2
+}
+
+file mkdir $::attractor_worker::run_dir
+set pipelinePath [file join $::attractor_worker::run_dir pipeline.dot]
+if {![file exists $pipelinePath]} {
+    ::attractor_worker::write_json [file join $::attractor_worker::run_dir worker-result.json] [dict create \
+        run_id $::attractor_worker::run_id \
+        status failed \
+        reason missing_pipeline_dot \
+        ended_at [::attractor_worker::now_iso8601]]
+    exit 1
+}
+
+set parseCode [catch {
+    set fh [open $pipelinePath r]
+    set dotSource [read $fh]
+    close $fh
+    set graph [::attractor::parse_dot $dotSource]
+} parseErr]
+if {$parseCode != 0} {
+    ::attractor_worker::append_event [dict create type PipelineCompleted status failed reason parse_failed]
+    ::attractor_worker::write_json [file join $::attractor_worker::run_dir worker-result.json] [dict create \
+        run_id $::attractor_worker::run_id \
+        status failed \
+        reason parse_failed \
+        error $parseErr \
+        ended_at [::attractor_worker::now_iso8601]]
+    exit 1
+}
+
+set diagnostics [::attractor::validate $graph]
+if {[::attractor::__has_validation_errors $diagnostics]} {
+    ::attractor_worker::append_event [dict create type PipelineCompleted status failed reason validation_failed]
+    ::attractor_worker::write_json [file join $::attractor_worker::run_dir worker-result.json] [dict create \
+        run_id $::attractor_worker::run_id \
+        status failed \
+        reason validation_failed \
+        diagnostics $diagnostics \
+        ended_at [::attractor_worker::now_iso8601]]
+    exit 1
+}
+
+set code [catch {
+    ::attractor::run $graph \
+        -logs_root $::attractor_worker::run_dir \
+        -run_id $::attractor_worker::run_id \
+        -interviewer ::attractor_worker::interviewer \
+        -on_event ::attractor_worker::append_event
+} runResult]
+
+if {$code != 0} {
+    ::attractor_worker::append_event [dict create type PipelineCompleted status failed reason runtime_error]
+    ::attractor_worker::write_json [file join $::attractor_worker::run_dir worker-result.json] [dict create \
+        run_id $::attractor_worker::run_id \
+        status failed \
+        reason runtime_error \
+        error $runResult \
+        ended_at [::attractor_worker::now_iso8601]]
+    exit 1
+}
+
+set status [dict get $runResult status]
+set payload [dict create \
+    run_id $::attractor_worker::run_id \
+    status $status \
+    current_node [expr {[dict exists $runResult current_node] ? [dict get $runResult current_node] : ""}] \
+    completed_nodes [expr {[dict exists $runResult completed_nodes] ? [dict get $runResult completed_nodes] : {}}] \
+    ended_at [::attractor_worker::now_iso8601]]
+if {[dict exists $runResult reason]} {
+    dict set payload reason [dict get $runResult reason]
+}
+::attractor_worker::write_json [file join $::attractor_worker::run_dir worker-result.json] $payload
+
+if {$status eq "success"} {
+    exit 0
+}
+exit 1

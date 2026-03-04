@@ -1,0 +1,203 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require attractor_web
+package require attractor_core
+
+namespace eval ::tests::integration::attractor_web {}
+
+proc ::tests::integration::attractor_web::new_runs_root {name} {
+    variable root
+    set path [file join $::root .scratch verification SPRINT-008 integration ${name}-[pid]-[clock seconds]]
+    file delete -force $path
+    file mkdir $path
+    return $path
+}
+
+proc ::tests::integration::attractor_web::read_file {path} {
+    set fh [open $path r]
+    set data [read $fh]
+    close $fh
+    return $data
+}
+
+proc ::tests::integration::attractor_web::capture_sse {host port path duration_ms} {
+    set chan [socket $host $port]
+    fconfigure $chan -blocking 0 -buffering none -translation binary -encoding utf-8
+    puts -nonewline $chan "GET $path HTTP/1.1\r\nHost: $host:$port\r\nAccept: text/event-stream\r\nConnection: close\r\n\r\n"
+    flush $chan
+
+    set data ""
+    set deadline [expr {[clock milliseconds] + $duration_ms}]
+    while {[clock milliseconds] < $deadline} {
+        update
+        append data [read $chan]
+        after 10
+    }
+    update
+    append data [read $chan]
+    catch {close $chan}
+    return $data
+}
+
+proc ::tests::integration::attractor_web::wait_for_run_status {baseUrl runId target timeout_ms} {
+    set deadline [expr {[clock milliseconds] + $timeout_ms}]
+    while {[clock milliseconds] < $deadline} {
+        set detail [::tests::http_client::json_get "$baseUrl/api/pipeline?id=$runId"]
+        if {[dict get $detail status] == 200} {
+            if {[dict get [dict get $detail body] status] eq $target} {
+                return 1
+            }
+        }
+        after 50
+    }
+    return 0
+}
+
+test integration-attractor-web-api-pipelines-empty-1.0 {server starts and returns an empty pipeline list} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root pipelines-empty]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+} -body {
+    set resp [::tests::http_client::json_get "$base/api/pipelines"]
+    list [dict get $resp status] [llength [dict get $resp body]]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {200 0}
+
+
+test integration-attractor-web-run-human-gate-1.0 {run starts, blocks on wait.human, accepts answer, and completes} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root run-human-gate]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+    set dotSource [::tests::integration::attractor_web::read_file [file join $root examples human-gate.dot]]
+} -body {
+    set startResp [::tests::http_client::json_post "$base/api/run" [dict create dotSource "```dot\n$dotSource\n```" fileName human-gate.dot]]
+    if {[dict get $startResp status] != 200} {
+        return [list 0 [dict get $startResp status] "start_failed" 0]
+    }
+    set runId [dict get [dict get $startResp body] id]
+
+    set gotQuestion 0
+    set qid ""
+    for {set i 0} {$i < 120} {incr i} {
+        set detail [::tests::http_client::json_get "$base/api/pipeline?id=$runId"]
+        if {[dict get $detail status] == 200} {
+            set pending [dict get [dict get $detail body] pending_questions]
+            if {[llength $pending] > 0} {
+                set gotQuestion 1
+                set qid [dict get [lindex $pending 0] qid]
+                break
+            }
+        }
+        after 50
+    }
+    if {!$gotQuestion} {
+        return [list 0 0 "no_question" 0]
+    }
+
+    set answerResp [::tests::http_client::json_post "$base/api/answer" [dict create id $runId qid $qid chosen_label approved]]
+    set reachedSuccess [::tests::integration::attractor_web::wait_for_run_status $base $runId success 7000]
+
+    set eventsPath [file join $runsRoot $runId events.ndjson]
+    list $gotQuestion [dict get $answerResp status] [expr {$reachedSuccess ? "success" : "timeout"}] [expr {[file exists $eventsPath]}]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {1 200 success 1}
+
+
+test integration-attractor-web-api-validation-1.0 {api rejects invalid file names and empty normalized dot source} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root api-validation]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+} -body {
+    set badName [::tests::http_client::json_post "$base/api/run" [dict create dotSource {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }} fileName ../bad.dot]]
+    set emptyDot [::tests::http_client::json_post "$base/api/run" [dict create dotSource "```dot\n\n```"]]
+    list \
+      [dict get $badName status] \
+      [dict get [dict get $badName body] code] \
+      [dict get $emptyDot status] \
+      [dict get [dict get $emptyDot body] code]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {400 INVALID_FILE_NAME 400 INVALID_DOT_SOURCE}
+
+
+test integration-attractor-web-stage-endpoint-1.0 {stage endpoint returns artifacts and rejects invalid node IDs} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root stage-endpoint]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+    set dotSource [::tests::integration::attractor_web::read_file [file join $root examples linear.dot]]
+} -body {
+    set startResp [::tests::http_client::json_post "$base/api/run" [dict create dotSource $dotSource]]
+    set runId [dict get [dict get $startResp body] id]
+    set done [::tests::integration::attractor_web::wait_for_run_status $base $runId success 5000]
+
+    set good [::tests::http_client::json_get "$base/api/stage?id=$runId&node=build"]
+    set bad [::tests::http_client::json_get "$base/api/stage?id=$runId&node=../oops"]
+    set missing [::tests::http_client::json_get "$base/api/stage?id=$runId&node=missing_node"]
+
+    list $done [dict get $good status] [dict get $bad status] [dict get [dict get $bad body] code] [dict get $missing status]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {1 200 400 INVALID_ID 404}
+
+
+test integration-attractor-web-render-endpoint-1.0 {render endpoint handles positive and missing-binary paths deterministically} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root render-endpoint]
+    set fakeDot [file join $runsRoot fake-dot.sh]
+    set fh [open $fakeDot w]
+    puts $fh "#!/usr/bin/env bash"
+    puts $fh "echo '<svg>fake</svg>'"
+    close $fh
+    file attributes $fakeDot -permissions 0755
+
+    set fakeServer [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot -dot_bin $fakeDot]
+    set fakeBase [$fakeServer url]
+
+    set missingServer [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root [file join $runsRoot missing] -dot_bin definitely-missing-dot]
+    set missingBase [$missingServer url]
+} -body {
+    set okResp [::tests::http_client::json_post "$fakeBase/api/render" [dict create dotSource {```graphviz
+digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }
+```}]]
+    set missingResp [::tests::http_client::json_post "$missingBase/api/render" [dict create dotSource {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }}]]
+    list \
+      [dict get $okResp status] \
+      [expr {[string first "<svg>" [dict get [dict get $okResp body] svg]] >= 0}] \
+      [dict get $missingResp status] \
+      [dict get [dict get $missingResp body] code]
+} -cleanup {
+    $fakeServer close
+    $missingServer close
+    file delete -force $runsRoot
+} -result {200 1 500 DOT_BINARY_MISSING}
+
+
+test integration-attractor-web-sse-1.0 {global and per-run sse endpoints stream data} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root sse]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+    set dotSource [::tests::integration::attractor_web::read_file [file join $root examples linear.dot]]
+    regexp {^http://([^:]+):([0-9]+)$} $base -> host port
+} -body {
+    set globalPayload [::tests::integration::attractor_web::capture_sse $host $port "/events" 350]
+    set startResp [::tests::http_client::json_post "$base/api/run" [dict create dotSource $dotSource]]
+    set runId [dict get [dict get $startResp body] id]
+    set _ok [::tests::integration::attractor_web::wait_for_run_status $base $runId success 5000]
+    set runPayload [::tests::integration::attractor_web::capture_sse $host $port "/events/$runId" 500]
+
+    list \
+      [expr {[string first "data:" $globalPayload] >= 0}] \
+      [expr {[string first "PipelineStarted" $runPayload] >= 0}] \
+      [expr {[string first "PipelineCompleted" $runPayload] >= 0}]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {1 1 1}

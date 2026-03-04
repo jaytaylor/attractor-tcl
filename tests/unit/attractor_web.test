@@ -1,0 +1,38 @@
+package require tcltest
+namespace import ::tcltest::*
+
+set root [file normalize [file join [file dirname [info script]] .. ..]]
+lappend auto_path $root
+package require attractor_web
+
+
+test attractor_web-normalize-dot-source-1.0 {raw dot source is preserved} -body {
+    ::attractor_web::normalize_dot_source {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }}
+} -result {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }}
+
+test attractor_web-normalize-dot-source-2.0 {markdown fenced dot source is stripped} -body {
+    ::attractor_web::normalize_dot_source {```dot
+digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }
+```}
+} -result {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }}
+
+test attractor_web-filename-validation-1.0 {filename validation enforces leaf-only names} -body {
+    list \
+      [::attractor_web::__filename_valid "flow.dot"] \
+      [::attractor_web::__filename_valid "../flow.dot"] \
+      [::attractor_web::__filename_valid "dir/flow.dot"] \
+      [::attractor_web::__filename_valid "dir\\flow.dot"]
+} -result {1 0 0 0}
+
+test attractor_web-id-validation-1.0 {run and node ids enforce allowlist patterns} -body {
+    list \
+      [::attractor_web::__run_id_valid "run-123-1"] \
+      [::attractor_web::__run_id_valid "../run-123"] \
+      [::attractor_web::__node_id_valid "build_stage"] \
+      [::attractor_web::__node_id_valid "build-stage"]
+} -result {1 0 1 0}
+
+test attractor_web-dashboard-template-1.0 {dashboard html contains expected markers} -body {
+    set html [::attractor_web::__html_dashboard]
+    list [expr {[string first "Attractor Web Dashboard" $html] >= 0}] [expr {[string first "EventSource('/events')" $html] >= 0}]
+} -result {1 1}

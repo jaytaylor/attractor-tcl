@@ -4,16 +4,71 @@ lappend auto_path $root
 package require attractor
 
 proc usage {} {
-    puts stderr "usage: bin/attractor <run|validate> <pipeline.dot> ?--logs-root PATH? ?--resume?"
+    puts stderr "usage:"
+    puts stderr "  bin/attractor <run|validate> <pipeline.dot> ?--logs-root PATH? ?--resume?"
+    puts stderr "  bin/attractor serve ?--bind IP? ?--web-port PORT? ?--runs-root PATH?"
     exit 2
 }
 
-if {$argc < 2} {
+if {$argc < 1} {
     usage
 }
 
 set cmd [lindex $argv 0]
-if {$cmd ni {run validate}} {
+if {$cmd ni {run validate serve}} {
+    usage
+}
+
+if {$cmd eq "serve"} {
+    package require attractor_web
+    set bind 127.0.0.1
+    set webPort 7070
+    set runsRoot [file join .scratch runs attractor-web]
+
+    set idx 1
+    while {$idx < $argc} {
+        set token [lindex $argv $idx]
+        switch -- $token {
+            --bind {
+                incr idx
+                if {$idx >= $argc} {
+                    usage
+                }
+                set bind [lindex $argv $idx]
+            }
+            --web-port {
+                incr idx
+                if {$idx >= $argc} {
+                    usage
+                }
+                set webPort [lindex $argv $idx]
+            }
+            --runs-root {
+                incr idx
+                if {$idx >= $argc} {
+                    usage
+                }
+                set runsRoot [lindex $argv $idx]
+            }
+            default {
+                usage
+            }
+        }
+        incr idx
+    }
+
+    if {![string is integer -strict $webPort] || $webPort < 0 || $webPort > 65535} {
+        puts stderr "invalid --web-port: $webPort"
+        exit 2
+    }
+
+    set server [::attractor_web::server_new -bind $bind -web_port $webPort -runs_root $runsRoot]
+    puts [::attractor_core::json_encode [dict create status serving bind $bind web_port [$server port] runs_root [file normalize $runsRoot]]]
+    vwait ::attractor_web::__serve_block
+    exit 0
+}
+
+if {$argc < 2} {
     usage
 }
 
