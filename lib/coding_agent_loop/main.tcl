@@ -4,7 +4,7 @@ namespace eval ::coding_agent_loop {
     variable sessions {}
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require unified_llm
 package require attractor_core
 

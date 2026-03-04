@@ -30,7 +30,7 @@ proc ::tests::http_fixture_server::new {responses} {
     set sockname [fconfigure $listener -sockname]
     set host [lindex $sockname 0]
     set port [lindex $sockname 2]
-    if {$host eq "::" || $host eq ""} {
+    if {$host in {"::" "" "0.0.0.0"}} {
         set host 127.0.0.1
     }
 

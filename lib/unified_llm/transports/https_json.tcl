@@ -8,9 +8,10 @@ namespace eval ::unified_llm::transports::https_json {
     variable tls_require_impl [list ::unified_llm::transports::https_json::__tls_require_impl_default]
     variable tls_provide_impl [list ::unified_llm::transports::https_json::__tls_provide_impl_default]
     variable tls_register_impl [list ::unified_llm::transports::https_json::__tls_register_impl_default]
+    variable async_seq 0
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require http
 package require attractor_core
 
@@ -112,6 +113,11 @@ proc ::unified_llm::transports::https_json::__summarize_body {body} {
         return "[string range $compact 0 511]..."
     }
     return $compact
+}
+
+proc ::unified_llm::transports::https_json::__http_done {flagVar _token} {
+    upvar #0 $flagVar done
+    set done 1
 }
 
 proc ::unified_llm::transports::https_json::__tls_require_impl_default {} {
@@ -306,15 +312,42 @@ proc ::unified_llm::transports::https_json::call {request} {
     set status 0
     set responseBody ""
     set responseHeaders {}
+    set httpStatus ""
+    set httpError ""
 
     set code [catch {
-        set token [::http::geturl $url \
-            -method POST \
-            -type $contentType \
-            -headers $headerList \
-            -query $payloadBody \
-            -timeout $timeoutMs]
+        # Local fixture HTTP requests are more reliable in blocking mode.
+        if {[string match "http://*" [string tolower $url]]} {
+            set token [::http::geturl $url \
+                -method POST \
+                -type $contentType \
+                -headers $headerList \
+                -query $payloadBody \
+                -timeout $timeoutMs]
+        } else {
+            variable async_seq
+            incr async_seq
+            set doneVar "::unified_llm::transports::https_json::async_done_$async_seq"
+            set $doneVar 0
+            set token [::http::geturl $url \
+                -method POST \
+                -type $contentType \
+                -headers $headerList \
+                -query $payloadBody \
+                -command [list ::unified_llm::transports::https_json::__http_done $doneVar] \
+                -timeout $timeoutMs]
+            vwait $doneVar
+            unset $doneVar
+        }
         set status [::http::ncode $token]
+        set httpStatus [::http::status $token]
+        set httpError [::http::error $token]
+        if {$status eq ""} {
+            set rawCode [::http::code $token]
+            if {[regexp { ([0-9]{3}) } $rawCode -> parsedStatus]} {
+                set status $parsedStatus
+            }
+        }
         set responseBody [::http::data $token]
         set responseHeaders [::unified_llm::transports::https_json::__normalize_headers [::http::meta $token]]
     } err opts]
@@ -328,6 +361,19 @@ proc ::unified_llm::transports::https_json::call {request} {
         set detail ""
         if {$summary ne ""} {
             set detail ": $summary"
+        }
+        return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "network request failed for provider $provider$detail"
+    }
+
+    if {$status eq ""} {
+        set detail ""
+        set statusSummary [::unified_llm::transports::https_json::__summarize_body $httpStatus]
+        set errorSummary [::unified_llm::transports::https_json::__summarize_body $httpError]
+        if {$statusSummary ne ""} {
+            append detail " status=$statusSummary"
+        }
+        if {$errorSummary ne ""} {
+            append detail " error=$errorSummary"
         }
         return -code error -errorcode [list UNIFIED_LLM TRANSPORT NETWORK $provider] "network request failed for provider $provider$detail"
     }

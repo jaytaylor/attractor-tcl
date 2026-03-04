@@ -1,6 +1,6 @@
 namespace eval ::unified_llm::adapters::gemini {}
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require attractor_core
 
 proc ::unified_llm::adapters::gemini::__translate_part {part} {
@@ -38,7 +38,7 @@ proc ::unified_llm::adapters::gemini::__translate_tools {tools} {
     set functionDecls {}
     foreach name [dict keys $tools] {
         set desc [dict get $tools $name]
-        set schema [dict create type object properties {}]
+        set schema [dict create type object properties [dict create]]
         if {[dict exists $desc schema]} {
             set schema [dict get $desc schema]
         }

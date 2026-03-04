@@ -2,7 +2,7 @@ namespace eval ::attractor_core {
     variable version 0.1.0
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require json
 package require json::write
 
@@ -17,78 +17,61 @@ proc ::attractor_core::__json_escape {value} {
     return [string map [list "\\" "\\\\" "\"" "\\\"" "\n" "\\n" "\r" "\\r" "\t" "\\t"] $value]
 }
 
-proc ::attractor_core::__is_dict_like {value} {
-    if {[catch {set vlen [llength $value]}]} {
-        return 0
-    }
-    if {$vlen == 0} {
-        return 1
-    }
-    if {$vlen == 2} {
-        set key [lindex $value 0]
-        set val [lindex $value 1]
-        if {[::attractor_core::__is_dict_like $key]} {
-            return 0
-        }
-        if {![regexp {^[A-Za-z_][A-Za-z0-9_:-]*$} $key]} {
-            return 0
-        }
-        if {[::attractor_core::__is_dict_like $val] || [regexp {\s} $val] || [regexp {\}\s+\{} $val] || [regexp {[^A-Za-z0-9_.-]} $val]} {
-            return 1
-        }
-        return 0
-    }
-    if {$vlen < 4} {
-        return 0
-    }
-    if {[expr {$vlen % 2}] != 0} {
-        return 0
-    }
-    if {[catch {dict size $value}]} {
-        return 0
-    }
-
-    # Reject list-of-dicts payloads that can be parsed as dicts accidentally.
-    for {set idx 0} {$idx < $vlen} {incr idx 2} {
-        set key [lindex $value $idx]
-        if {[::attractor_core::__is_dict_like $key]} {
-            return 0
+proc ::attractor_core::__value_container_type {value} {
+    # Prefer Tcl internal typing to avoid list/dict string heuristics.
+    if {[llength [info commands ::tcl::unsupported::representation]] > 0} {
+        if {![catch {set repr [::tcl::unsupported::representation $value]}]} {
+            if {[regexp {value is a ([^ ]+)} $repr -> rawType]} {
+                set type [string tolower $rawType]
+                if {$type eq "dict"} {
+                    return object
+                }
+                if {$type eq "list"} {
+                    set listLen [llength $value]
+                    if {$listLen == 0} {
+                        return object
+                    }
+                    # Treat scalar-only list representations as plain strings.
+                    # This avoids misencoding natural language text values that
+                    # happen to be list-parseable Tcl strings.
+                    foreach item $value {
+                        if {[llength [info commands ::tcl::unsupported::representation]] > 0} {
+                            if {![catch {set itemRepr [::tcl::unsupported::representation $item]}]} {
+                                if {[regexp {value is a ([^ ]+)} $itemRepr -> itemRawType]} {
+                                    set itemType [string tolower $itemRawType]
+                                    if {$itemType in {dict list}} {
+                                        return array
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return scalar
+                }
+                return scalar
+            }
         }
     }
 
-    return 1
-}
-
-proc ::attractor_core::__is_list_like {value} {
-    if {[catch {llength $value}]} {
-        return 0
+    # Conservative fallback for runtimes without representation introspection.
+    if {[catch {set listLen [llength $value]}]} {
+        return scalar
     }
-    if {[llength $value] == 0} {
-        return 0
+    if {$listLen == 0} {
+        return object
     }
-    if {[::attractor_core::__is_dict_like $value]} {
-        return 0
+    if {$listLen > 0 && [expr {$listLen % 2}] == 0 && [catch {dict size $value}] == 0} {
+        return object
     }
-
-    # Container-style Tcl list representations must be treated as JSON arrays.
-    if {[regexp {\}\s+\{} $value]} {
-        return 1
+    if {$listLen > 1} {
+        return array
     }
-
-    # Lists containing dictionary-like items should always serialize as arrays,
-    # including the one-item case used by provider request payloads.
-    foreach item $value {
-        if {[::attractor_core::__is_dict_like $item]} {
-            return 1
-        }
-    }
-
-    # Treat whitespace-delimited scalar text as a JSON string, not an array.
-    return 0
+    return scalar
 }
 
 proc ::attractor_core::__json_encode_value {value} {
-    if {[::attractor_core::__is_dict_like $value]} {
+    set containerType [::attractor_core::__value_container_type $value]
+    if {$containerType eq "object"} {
         set parts {}
         foreach key [dict keys $value] {
             set encodedKey "\"[::attractor_core::__json_escape $key]\""
@@ -98,7 +81,7 @@ proc ::attractor_core::__json_encode_value {value} {
         return "{[join $parts ,]}"
     }
 
-    if {[::attractor_core::__is_list_like $value]} {
+    if {$containerType eq "array"} {
         set parts {}
         foreach item $value {
             lappend parts [::attractor_core::__json_encode_value $item]

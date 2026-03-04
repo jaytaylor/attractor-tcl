@@ -25,6 +25,24 @@ proc ::tests::coding_agent_loop::transport_tool {req} {
     return [dict create status_code 200 headers {} body $body]
 }
 
+proc ::tests::coding_agent_loop::transport_plain {req} {
+    set prompt ""
+    if {[dict exists $req payload input]} {
+        foreach item [dict get $req payload input] {
+            if {![dict exists $item role] || [dict get $item role] ne "user"} {
+                continue
+            }
+            foreach part [dict get $item content] {
+                if {[dict exists $part text]} {
+                    set prompt [dict get $part text]
+                }
+            }
+        }
+    }
+    set body [::attractor_core::json_encode [dict create id plain output_text "ok:$prompt" usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]]
+    return [dict create status_code 200 headers {} body $body]
+}
+
 test coding_agent_loop-env-filter-1.0 {default env filter removes secrets} -setup {
     set ::env(TEST_API_KEY) hidden
     set ::env(TEST_SECRET) hidden
@@ -75,7 +93,7 @@ test coding_agent_loop-shell-cancel-1.0 {shell cancellation marker} -body {
 } -result 1
 
 test coding_agent_loop-session-events-1.0 {session emits required events} -setup {
-    set client [::unified_llm::client_new -provider mock]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_plain]
     ::unified_llm::set_default_client $client
     set session [::coding_agent_loop::session new -profile openai -env ::coding_agent_loop::default_env]
 } -body {
@@ -231,7 +249,7 @@ test coding_agent_loop-steer-injection-1.0 {steer is injected into next model re
 } -result 1
 
 test coding_agent_loop-turn-limit-1.0 {turn limits raise error and emit warning event} -setup {
-    set client [::unified_llm::client_new -provider mock]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_plain]
     ::unified_llm::set_default_client $client
     set session [::coding_agent_loop::session new -profile openai -config [dict create max_turns 1]]
 } -body {
@@ -301,7 +319,7 @@ test coding_agent_loop-invalid-tool-args-1.0 {invalid tool arguments yield schem
 } -result 1
 
 test coding_agent_loop-subagent-depth-limit-1.0 {depth limit prevents recursive spawning} -setup {
-    set client [::unified_llm::client_new -provider mock]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_plain]
     ::unified_llm::set_default_client $client
     set session [::coding_agent_loop::session new -profile openai -config [dict create max_subagent_depth 1]]
     set sid [dict get [$session config] id]
@@ -320,7 +338,7 @@ test coding_agent_loop-subagent-depth-limit-1.0 {depth limit prevents recursive 
 } -result 1
 
 test coding_agent_loop-subagent-lifecycle-1.0 {spawn/send/wait/close subagent lifecycle works} -setup {
-    set client [::unified_llm::client_new -provider mock]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_plain]
     ::unified_llm::set_default_client $client
 } -body {
     set spawned [::coding_agent_loop::tools::spawn_agent [dict create profile openai] {}]
@@ -328,13 +346,13 @@ test coding_agent_loop-subagent-lifecycle-1.0 {spawn/send/wait/close subagent li
     set sent [::coding_agent_loop::tools::send_input [dict create agent_id $agentId input "hello"] {}]
     set waited [::coding_agent_loop::tools::wait [dict create agent_id $agentId] {}]
     set closed [::coding_agent_loop::tools::close_agent [dict create agent_id $agentId] {}]
-    list [dict get $waited state] [dict get $closed state] [expr {[string match "mock:*" [dict get $sent text]] || [string match "offline-openai*" [dict get $sent text]]}]
+    list [dict get $waited state] [dict get $closed state] [string match "ok:*" [dict get $sent text]]
 } -cleanup {
     $client close
 } -result {complete closed 1}
 
 test coding_agent_loop-abort-1.0 {aborted session rejects further submit} -setup {
-    set client [::unified_llm::client_new -provider mock]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::coding_agent_loop::transport_plain]
     ::unified_llm::set_default_client $client
     set session [::coding_agent_loop::session new -profile openai]
 } -body {

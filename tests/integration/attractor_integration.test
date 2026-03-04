@@ -10,13 +10,36 @@ package require attractor_core
 
 namespace eval ::tests::integration::attractor {}
 
+proc ::tests::integration::attractor::transport_openai {req} {
+    set prompt ""
+    if {[dict exists $req payload input]} {
+        foreach item [dict get $req payload input] {
+            if {![dict exists $item role] || [dict get $item role] ne "user"} {
+                continue
+            }
+            foreach part [dict get $item content] {
+                if {[dict exists $part text]} {
+                    set prompt [dict get $part text]
+                }
+            }
+        }
+    }
+    set body [::attractor_core::json_encode [dict create \
+        id integration-openai \
+        output_text "ok-openai:$prompt" \
+        usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]]
+    return [dict create status_code 200 headers {} body $body]
+}
+
 proc ::tests::integration::attractor::ullm_backend {request} {
-    set response [::unified_llm::generate -prompt [dict get $request prompt] -provider mock -max_tool_rounds 0]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::integration::attractor::transport_openai]
+    set response [::unified_llm::generate -client $client -prompt [dict get $request prompt] -provider openai -max_tool_rounds 0]
+    catch {$client close}
     return [dict create text [dict get $response text] usage [dict get $response usage] preferred_label success]
 }
 
 proc ::tests::integration::attractor::cal_backend {request} {
-    set client [::unified_llm::client_new -provider mock]
+    set client [::unified_llm::client_new -provider openai -transport ::tests::integration::attractor::transport_openai]
     ::unified_llm::set_default_client $client
     set session [::coding_agent_loop::session new -profile openai]
     set result [$session submit [dict get $request prompt]]
@@ -69,7 +92,7 @@ test integration-attractor-cal-backend-1.0 {attractor codergen backend works wit
     set fh [open [file join $logsRoot edit response.md] r]
     set payload [read $fh]
     close $fh
-    list [dict get $result status] [expr {[string match "mock:*" $payload] || [string match "offline-openai*" $payload]}]
+    list [dict get $result status] [string match "ok-openai:*" $payload]
 } -cleanup {
     file delete -force $logsRoot
 } -result {success 1}

@@ -6,7 +6,7 @@ namespace eval ::unified_llm {
     variable package_dir [file dirname [info script]]
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require json
 package require attractor_core
 
@@ -77,7 +77,7 @@ proc ::unified_llm::from_env {args} {
     set defaultProvider [lindex $discoveredProviders 0]
     if {[info exists ::env(UNIFIED_LLM_PROVIDER)] && [string trim $::env(UNIFIED_LLM_PROVIDER)] ne ""} {
         set override [string tolower [string trim $::env(UNIFIED_LLM_PROVIDER)]]
-        if {$override ni {openai anthropic gemini mock}} {
+        if {$override ni {openai anthropic gemini}} {
             return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider in UNIFIED_LLM_PROVIDER: $override"
         }
         if {![dict exists $providers $override]} {
@@ -94,7 +94,7 @@ proc ::unified_llm::client_new {args} {
     variable clients
 
     array set opts {
-        -provider mock
+        -provider openai
         -api_key ""
         -base_url ""
         -transport ""
@@ -443,7 +443,7 @@ proc ::unified_llm::__client_complete {id request} {
     }
 
     set provider [::unified_llm::__resolve_provider $state $currentRequest]
-    if {$provider ni {openai anthropic gemini mock}} {
+    if {$provider ni {openai anthropic gemini}} {
         return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider: $provider"
     }
 
@@ -461,9 +461,6 @@ proc ::unified_llm::__client_complete {id request} {
         }
         gemini {
             set response [::unified_llm::adapters::gemini::complete $providerState $currentRequest]
-        }
-        mock {
-            set response [::unified_llm::adapters::mock_complete $providerState $currentRequest]
         }
     }
 
@@ -518,7 +515,7 @@ proc ::unified_llm::__client_stream {id request args} {
     }
 
     set provider [::unified_llm::__resolve_provider $state $currentRequest]
-    if {$provider ni {openai anthropic gemini mock}} {
+    if {$provider ni {openai anthropic gemini}} {
         return -code error -errorcode [list UNIFIED_LLM CONFIG UNKNOWN_PROVIDER] "unsupported provider: $provider"
     }
 
@@ -536,10 +533,6 @@ proc ::unified_llm::__client_stream {id request args} {
         }
         gemini {
             set streamResult [::unified_llm::adapters::gemini::stream $providerState $currentRequest]
-        }
-        mock {
-            set response [::unified_llm::adapters::mock_complete $providerState $currentRequest]
-            set streamResult [::unified_llm::__stream_from_response $provider $response]
         }
     }
 
@@ -659,7 +652,7 @@ proc ::unified_llm::__normalize_content_part {part} {
                 return -code error -errorcode [list UNIFIED_LLM INPUT IMAGE_PATH_MISSING] "image path does not exist: $path"
             }
             set fh [open $path r]
-            fconfigure $fh -translation binary -encoding binary
+            fconfigure $fh -translation binary -encoding iso8859-1
             set bytes [read $fh]
             close $fh
 
@@ -779,7 +772,7 @@ proc ::unified_llm::__normalize_tool_definitions {tools} {
     foreach name [dict keys $tools] {
         set raw [dict get $tools $name]
 
-        set descriptor [dict create name $name mode active schema [dict create type object properties {}] command ""]
+        set descriptor [dict create name $name mode active schema [dict create type object properties [dict create]] command ""]
         if {![catch {dict size $raw}] && ([dict exists $raw command] || [dict exists $raw mode] || [dict exists $raw schema])} {
             if {[dict exists $raw mode]} {
                 set mode [dict get $raw mode]
@@ -1150,29 +1143,6 @@ proc ::unified_llm::invoke_tool_call {toolCall toolDefinitions} {
         name $toolName \
         is_error 0 \
         output $outcome]
-}
-
-proc ::unified_llm::adapters::mock_complete {state request} {
-    if {[dict exists $request mock_response]} {
-        return [dict get $request mock_response]
-    }
-
-    set messages [dict get $request messages]
-    set last ""
-    if {[llength $messages] > 0 && [llength [dict get [lindex $messages end] content_parts]] > 0} {
-        set part [lindex [dict get [lindex $messages end] content_parts] 0]
-        if {[dict exists $part text]} {
-            set last [dict get $part text]
-        }
-    }
-
-    return [dict create \
-        provider mock \
-        response_id mock-response-1 \
-        text "mock:$last" \
-        tool_calls {} \
-        usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0] \
-        raw [dict create ok 1]]
 }
 
 proc ::unified_llm::__load_models {} {

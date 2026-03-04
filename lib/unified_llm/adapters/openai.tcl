@@ -1,7 +1,7 @@
 namespace eval ::unified_llm::adapters {}
 namespace eval ::unified_llm::adapters::openai {}
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require json
 package require attractor_core
 
@@ -12,13 +12,6 @@ proc ::unified_llm::adapters::__default_base_url {provider} {
         gemini { return "https://generativelanguage.googleapis.com" }
         default { return "" }
     }
-}
-
-proc ::unified_llm::adapters::__offline_response {provider} {
-    return [dict create \
-        status_code 200 \
-        headers {} \
-        body [::attractor_core::json_encode [dict create output_text "offline-$provider" usage [dict create input_tokens 1 output_tokens 1 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]]]
 }
 
 proc ::unified_llm::adapters::__provider_error_type {status} {
@@ -65,7 +58,7 @@ proc ::unified_llm::adapters::__http_invoke {state provider endpoint payload hea
     }
 
     if {$baseUrl eq ""} {
-        return [::unified_llm::adapters::__offline_response $provider]
+        return [dict create status_code 0 headers {} body "missing base URL for provider: $provider"]
     }
 
     set url "$baseUrl$endpoint"
@@ -113,10 +106,6 @@ proc ::unified_llm::adapters::__invoke_transport {state provider endpoint payloa
             endpoint $endpoint \
             payload $payload \
             headers $headers]]
-    }
-
-    if {(![dict exists $state api_key] || [dict get $state api_key] eq "") && (![dict exists $state base_url] || [dict get $state base_url] eq "")} {
-        return [::unified_llm::adapters::__offline_response $provider]
     }
 
     return [::unified_llm::adapters::__http_invoke $state $provider $endpoint $payload $headers]
@@ -192,7 +181,7 @@ proc ::unified_llm::adapters::openai::__translate_tools {tools} {
     set out {}
     foreach name [dict keys $tools] {
         set desc [dict get $tools $name]
-        set schema [dict create type object properties {}]
+        set schema [dict create type object properties [dict create]]
         if {[dict exists $desc schema]} {
             set schema [dict get $desc schema]
         }
@@ -262,6 +251,95 @@ proc ::unified_llm::adapters::openai::__translate_usage {decoded} {
     return $usage
 }
 
+proc ::unified_llm::adapters::openai::__extract_text_from_output_item {item} {
+    set text ""
+    if {![catch {dict size $item}]} {
+        if {[dict exists $item content]} {
+            foreach part [dict get $item content] {
+                if {[catch {dict size $part}]} {
+                    continue
+                }
+                if {[dict exists $part type] && [dict exists $part text]} {
+                    set partType [dict get $part type]
+                    if {$partType in {text output_text}} {
+                        append text [dict get $part text]
+                    }
+                } elseif {[dict exists $part text]} {
+                    append text [dict get $part text]
+                }
+            }
+        } elseif {[dict exists $item text]} {
+            append text [dict get $item text]
+        }
+    }
+    return $text
+}
+
+proc ::unified_llm::adapters::openai::__extract_text {decoded} {
+    set text ""
+
+    if {[dict exists $decoded output_text] && [string trim [dict get $decoded output_text]] ne ""} {
+        return [dict get $decoded output_text]
+    }
+
+    if {[dict exists $decoded output]} {
+        foreach item [dict get $decoded output] {
+            append text [::unified_llm::adapters::openai::__extract_text_from_output_item $item]
+        }
+        if {[string trim $text] ne ""} {
+            return $text
+        }
+    }
+
+    if {[dict exists $decoded text]} {
+        set maybeText [dict get $decoded text]
+        # Do not treat OpenAI response-format config objects as model output text.
+        if {[catch {dict size $maybeText}] != 0} {
+            return $maybeText
+        }
+    }
+    return ""
+}
+
+proc ::unified_llm::adapters::openai::__extract_tool_calls {decoded} {
+    set toolCalls {}
+    if {[dict exists $decoded tool_calls]} {
+        return [dict get $decoded tool_calls]
+    }
+
+    if {[dict exists $decoded output]} {
+        foreach item [dict get $decoded output] {
+            if {[catch {dict size $item}] != 0} {
+                continue
+            }
+            if {![dict exists $item type] || [dict get $item type] ne "function_call"} {
+                continue
+            }
+            set call [dict create]
+            if {[dict exists $item id]} {
+                dict set call id [dict get $item id]
+            }
+            if {[dict exists $item call_id]} {
+                dict set call id [dict get $item call_id]
+            }
+            if {![dict exists $call id]} {
+                dict set call id "openai-tool-[expr {[llength $toolCalls] + 1}]"
+            }
+            dict set call name [::unified_llm::adapters::openai::__dict_get_or $item "" name]
+            set rawArgs [::unified_llm::adapters::openai::__dict_get_or $item "" arguments]
+            if {[string trim $rawArgs] eq ""} {
+                dict set call arguments {}
+            } elseif {[catch {set parsedArgs [::attractor_core::json_decode $rawArgs]}]} {
+                dict set call arguments {}
+            } else {
+                dict set call arguments $parsedArgs
+            }
+            lappend toolCalls $call
+        }
+    }
+    return $toolCalls
+}
+
 proc ::unified_llm::adapters::openai::complete {state request} {
     set endpoint "/v1/responses"
     set payload [::unified_llm::adapters::openai::translate_request $request]
@@ -281,17 +359,8 @@ proc ::unified_llm::adapters::openai::complete {state request} {
 
     set decoded [::attractor_core::json_decode [dict get $transport body]]
 
-    set text ""
-    if {[dict exists $decoded output_text]} {
-        set text [dict get $decoded output_text]
-    } elseif {[dict exists $decoded text]} {
-        set text [dict get $decoded text]
-    }
-
-    set toolCalls {}
-    if {[dict exists $decoded tool_calls]} {
-        set toolCalls [dict get $decoded tool_calls]
-    }
+    set text [::unified_llm::adapters::openai::__extract_text $decoded]
+    set toolCalls [::unified_llm::adapters::openai::__extract_tool_calls $decoded]
 
     set responseId "openai-response-1"
     if {[dict exists $decoded id]} {

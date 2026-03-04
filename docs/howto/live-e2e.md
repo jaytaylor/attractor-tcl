@@ -6,11 +6,14 @@
 - `coding_agent_loop`
 - `attractor`
 - `attractor_web` DOT streaming endpoints (`/api/v1/dot/generate|fix|iterate/stream`)
+- browser-level dashboard flow via Playwright (`tests/e2e_playwright.mjs`)
 
 These tests call real provider HTTPS APIs and require API keys.
 
 ## Prerequisites
 - Tcl 8.5+
+- Node.js (for Playwright runner)
+- Playwright Chromium runtime (`playwright` npm package available to Node)
 - Tcl packages:
   - `http`
   - `tls` (required for `https://` transport)
@@ -55,6 +58,11 @@ TCLSH=/path/to/modern/tclsh make test-e2e
   - `GEMINI_BASE_URL` (default `https://generativelanguage.googleapis.com`)
 - Artifact root override:
   - `E2E_LIVE_ARTIFACT_ROOT` (default `.scratch/verification/SPRINT-007/live/<run_id>`)
+- Playwright options:
+  - `E2E_PLAYWRIGHT_BASE_URL` (optional; if unset, runner starts local `bin/attractor serve`)
+  - `E2E_PLAYWRIGHT_PORT` (optional host port override when runner starts local server)
+  - `E2E_PLAYWRIGHT_ARTIFACT_ROOT` (default `.scratch/verification/SPRINT-007/playwright/<timestamp-pid>`)
+  - `E2E_PLAYWRIGHT_USE_DOCKER=1` (force Docker-backed server for browser e2e)
 
 ## Provider Selection Rules
 - Default behavior: run all providers with configured keys.
@@ -82,6 +90,7 @@ E2E_LIVE_PROVIDERS=openai make test-e2e
 ## Artifacts
 Default root:
 - `.scratch/verification/SPRINT-007/live/<run_id>/`
+- `.scratch/verification/SPRINT-007/playwright/<timestamp-pid>/`
 
 Key files:
 - `run.json`
@@ -92,6 +101,10 @@ Key files:
 - `coding_agent_loop/<provider>/...`
 - `attractor/<provider>/...`
 - `attractor_web/<provider>/...`
+- Playwright artifacts:
+  - `result.json`
+  - `dashboard.png`
+  - `server.stdout.log` and `server.stderr.log` (when Playwright starts a local server)
 
 ## Redaction Checklist
 - `response.request.headers` in saved artifacts must not contain raw:

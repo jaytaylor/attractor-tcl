@@ -341,6 +341,11 @@ proc ::tests::e2e_live::run_unified_llm_smoke {provider} {
         ::tests::e2e_live::assert_true [expr {[string trim [dict get $response text]] ne ""}] "expected non-empty live response text"
         ::tests::e2e_live::assert_true [expr {[dict get $response usage input_tokens] > 0}] "expected usage.input_tokens > 0"
         ::tests::e2e_live::assert_true [expr {[dict get $response usage output_tokens] > 0}] "expected usage.output_tokens > 0"
+        if {$provider eq "openai"} {
+            set normalizedText [string tolower [string trim [dict get $response text]]]
+            ::tests::e2e_live::assert_true [expr {![string match "format *verbosity *" $normalizedText]}] "openai response text matched known bad config-object extraction output"
+            ::tests::e2e_live::assert_true [expr {[dict exists $response raw output]}] "expected openai raw.output in live response"
+        }
 
         if {$provider in {openai anthropic}} {
             ::tests::e2e_live::assert_true [expr {[dict get $response response_id] ni {"openai-response-1" "anthropic-response-1"}}] "expected provider-generated response_id"
@@ -518,6 +523,13 @@ proc ::tests::e2e_live::run_attractor_smoke {provider} {
     ::tests::e2e_live::assert_true [file exists [file join $logsRoot build status.json]] "expected build status.json"
     ::tests::e2e_live::assert_true [file exists [file join $logsRoot build prompt.md]] "expected build prompt.md"
     ::tests::e2e_live::assert_true [file exists [file join $logsRoot build response.md]] "expected build response.md"
+    if {$provider eq "openai"} {
+        set respPath [file join $logsRoot build response.md]
+        set fh [open $respPath r]
+        set responseText [string tolower [string trim [read $fh]]]
+        close $fh
+        ::tests::e2e_live::assert_true [expr {![string match "format *verbosity *" $responseText]}] "attractor openai codergen stage returned known bad config-object extraction output"
+    }
 
     ::tests::e2e_live::write_json_file [file join $logsRoot summary.json] [dict create provider $provider result $result]
     return 1
@@ -615,7 +627,11 @@ proc ::tests::e2e_live::run_attractor_web_dot_stream_smoke {provider} {
         ::tests::e2e_live::assert_true [expr {[llength $generateEvents] > 1}] "expected generate stream events"
         set generatedDot [::tests::e2e_live::__dot_stream_done_dot $generateEvents]
         set generatedHasError [::tests::e2e_live::__dot_stream_has_error $generateEvents]
-        ::tests::e2e_live::assert_true [expr {[string trim $generatedDot] ne "" || $generatedHasError}] "expected generate done or error stream event"
+        ::tests::e2e_live::assert_true [expr {!$generatedHasError}] "generate stream emitted provider error event"
+        ::tests::e2e_live::assert_true [expr {[string trim $generatedDot] ne ""}] "expected generate done dotSource event"
+        set generatedGraph [::attractor::parse_dot $generatedDot]
+        set generatedDiagnostics [::attractor::validate $generatedGraph]
+        ::tests::e2e_live::assert_true [expr {![::attractor::__has_validation_errors $generatedDiagnostics]}] "generated DOT failed validation"
 
         set fixResp [::tests::http_client::request \
             "$base/api/v1/dot/fix/stream" \
@@ -629,7 +645,11 @@ proc ::tests::e2e_live::run_attractor_web_dot_stream_smoke {provider} {
         ::tests::e2e_live::assert_true [expr {[llength $fixEvents] > 0}] "expected fix stream events"
         set fixedDot [::tests::e2e_live::__dot_stream_done_dot $fixEvents]
         set fixHasError [::tests::e2e_live::__dot_stream_has_error $fixEvents]
-        ::tests::e2e_live::assert_true [expr {[string trim $fixedDot] ne "" || $fixHasError}] "expected fix done or error stream event"
+        ::tests::e2e_live::assert_true [expr {!$fixHasError}] "fix stream emitted provider error event"
+        ::tests::e2e_live::assert_true [expr {[string trim $fixedDot] ne ""}] "expected fix done dotSource event"
+        set fixedGraph [::attractor::parse_dot $fixedDot]
+        set fixedDiagnostics [::attractor::validate $fixedGraph]
+        ::tests::e2e_live::assert_true [expr {![::attractor::__has_validation_errors $fixedDiagnostics]}] "fixed DOT failed validation"
 
         set iterateBaseDot $generatedDot
         if {[string trim $iterateBaseDot] eq ""} {
@@ -647,7 +667,11 @@ proc ::tests::e2e_live::run_attractor_web_dot_stream_smoke {provider} {
         ::tests::e2e_live::assert_true [expr {[llength $iterateEvents] > 0}] "expected iterate stream events"
         set iteratedDot [::tests::e2e_live::__dot_stream_done_dot $iterateEvents]
         set iterateHasError [::tests::e2e_live::__dot_stream_has_error $iterateEvents]
-        ::tests::e2e_live::assert_true [expr {[string trim $iteratedDot] ne "" || $iterateHasError}] "expected iterate done or error stream event"
+        ::tests::e2e_live::assert_true [expr {!$iterateHasError}] "iterate stream emitted provider error event"
+        ::tests::e2e_live::assert_true [expr {[string trim $iteratedDot] ne ""}] "expected iterate done dotSource event"
+        set iteratedGraph [::attractor::parse_dot $iteratedDot]
+        set iteratedDiagnostics [::attractor::validate $iteratedGraph]
+        ::tests::e2e_live::assert_true [expr {![::attractor::__has_validation_errors $iteratedDiagnostics]}] "iterated DOT failed validation"
 
         set artifact [::tests::e2e_live::artifact_path attractor_web $provider dot-streams.json]
         ::tests::e2e_live::write_json_file $artifact [dict create \
@@ -659,6 +683,9 @@ proc ::tests::e2e_live::run_attractor_web_dot_stream_smoke {provider} {
             fix_has_error $fixHasError \
             iterate_events $iterateEvents \
             iterate_has_error $iterateHasError \
+            generated_diagnostics $generatedDiagnostics \
+            fixed_diagnostics $fixedDiagnostics \
+            iterated_diagnostics $iteratedDiagnostics \
             generated_dot $generatedDot \
             fixed_dot $fixedDot \
             iterated_dot $iteratedDot]
@@ -701,7 +728,7 @@ proc ::tests::e2e_live::scan_artifacts_for_secret_leaks {} {
         }
         if {[catch {
             set fh [open $filePath r]
-            fconfigure $fh -translation binary -encoding binary
+            fconfigure $fh -translation binary -encoding iso8859-1
             set payload [read $fh]
             close $fh
         }]} {

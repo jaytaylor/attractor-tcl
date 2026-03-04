@@ -12,6 +12,12 @@ test attractor_core-json-roundtrip-1.0 {json encode/decode roundtrip} -body {
     expr {[dict get $decoded a] == 1 && [dict get $decoded b] eq "two" && [dict get [dict get $decoded c] nested] eq "true"}
 } -result 1
 
+test attractor_core-json-encodes-single-key-object-1.0 {single-key dict values encode as JSON objects} -body {
+    set payload [dict create wrapper [dict create key value]]
+    set decoded [::attractor_core::json_decode [::attractor_core::json_encode $payload]]
+    list [dict get [dict get $decoded wrapper] key] [dict size [dict get $decoded wrapper]]
+} -result {value 1}
+
 test attractor_core-json-encodes-space-string-as-string-1.0 {strings with spaces are encoded as JSON strings} -body {
     set payload [dict create text "Say hello in one sentence."]
     set decoded [::attractor_core::json_decode [::attractor_core::json_encode $payload]]

@@ -1,5 +1,5 @@
 #!/usr/bin/env tclsh
-package require Tcl 8.5
+package require Tcl 8.5-
 
 if {$argc < 1} {
     puts stderr "usage: tclsh tools/evidence_guardrail.tcl <doc-path> ?<doc-path> ...?"

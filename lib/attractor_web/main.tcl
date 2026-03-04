@@ -8,7 +8,7 @@ namespace eval ::attractor_web {
     variable root [file normalize [file join [file dirname [info script]] .. ..]]
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require attractor
 package require attractor_core
 package require unified_llm
@@ -179,10 +179,303 @@ proc ::attractor_web::__filename_valid {name} {
 
 proc ::attractor_web::normalize_dot_source {dotSource} {
     set trimmed [string trim $dotSource]
+
     if {[regexp {(?s)^```[ \t]*([A-Za-z0-9_-]+)?[ \t]*\n(.*)\n```[ \t]*$} $trimmed -> _ body]} {
         set trimmed [string trim $body]
+    } else {
+        set fenceStart [string first "```" $trimmed]
+        if {$fenceStart >= 0} {
+            set afterStart [string range $trimmed [expr {$fenceStart + 3}] end]
+            set newlineIdx [string first "\n" $afterStart]
+            if {$newlineIdx >= 0} {
+                set fencedBody [string range $afterStart [expr {$newlineIdx + 1}] end]
+                set fenceEnd [string first "```" $fencedBody]
+                if {$fenceEnd >= 0} {
+                    set fencedCandidate [string trim [string range $fencedBody 0 [expr {$fenceEnd - 1}]]]
+                    if {[string first "digraph" [string tolower $fencedCandidate]] >= 0} {
+                        set trimmed $fencedCandidate
+                    }
+                }
+            }
+        }
     }
+
+    set lower [string tolower $trimmed]
+    set digraphIdx [string first "digraph" $lower]
+    if {$digraphIdx >= 0 && $digraphIdx > 0} {
+        set trimmed [string trim [string range $trimmed $digraphIdx end]]
+    }
+
+    set braceStart [string first "\{" $trimmed]
+    if {$braceStart >= 0} {
+        set depth 0
+        set stop -1
+        set length [string length $trimmed]
+        for {set idx $braceStart} {$idx < $length} {incr idx} {
+            set ch [string index $trimmed $idx]
+            if {$ch eq "\{"} {
+                incr depth
+            } elseif {$ch eq "\}"} {
+                incr depth -1
+                if {$depth == 0} {
+                    set stop $idx
+                    break
+                }
+            }
+        }
+        if {$stop >= 0} {
+            set trimmed [string trim [string range $trimmed 0 $stop]]
+        }
+    }
+
     return $trimmed
+}
+
+proc ::attractor_web::__dot_diagnostics_summary {diagnostics} {
+    set lines {}
+    foreach d $diagnostics {
+        if {![dict exists $d severity] || [dict get $d severity] ne "error"} {
+            continue
+        }
+        set rule [expr {[dict exists $d rule] ? [dict get $d rule] : "validation.error"}]
+        set message [expr {[dict exists $d message] ? [dict get $d message] : "validation error"}]
+        lappend lines "$rule: $message"
+        if {[llength $lines] >= 8} {
+            break
+        }
+    }
+    if {[llength $lines] == 0} {
+        return "validation failed with unspecified diagnostics"
+    }
+    return [join $lines "\n"]
+}
+
+proc ::attractor_web::__dot_sanitize_id {raw} {
+    set candidate [string trim [string map [list "-" "_"] $raw]]
+    regsub -all {[^A-Za-z0-9_]} $candidate "_" candidate
+    regsub -all {_+} $candidate "_" candidate
+    set candidate [string trim $candidate "_"]
+    if {$candidate eq ""} {
+        return ""
+    }
+    if {![regexp {^[A-Za-z_]} $candidate]} {
+        set candidate "n_$candidate"
+    }
+    return $candidate
+}
+
+proc ::attractor_web::__dot_attr_value {value} {
+    if {[string is integer -strict $value] || [string is double -strict $value]} {
+        return $value
+    }
+    if {[string equal -nocase $value true] || [string equal -nocase $value false]} {
+        return [string tolower $value]
+    }
+    return "\"[string map [list "\\" "\\\\" "\"" "\\\"" "\n" "\\n" "\r" "\\r" "\t" "\\t"] $value]\""
+}
+
+proc ::attractor_web::__dot_graph_to_source {graph} {
+    set graphId [dict get $graph id]
+    set lines [list "digraph $graphId \{"]
+
+    foreach nodeId [lsort [dict keys [dict get $graph nodes]]] {
+        set attrs [dict get $graph nodes $nodeId attrs]
+        if {[dict exists $attrs __implicit]} {
+            dict unset attrs __implicit
+        }
+        set attrPairs {}
+        foreach key [lsort [dict keys $attrs]] {
+            lappend attrPairs "$key=[::attractor_web::__dot_attr_value [dict get $attrs $key]]"
+        }
+        if {[llength $attrPairs] == 0} {
+            lappend lines "  $nodeId;"
+        } else {
+            lappend lines "  $nodeId \[[join $attrPairs {, }]\];"
+        }
+    }
+
+    foreach edge [dict get $graph edges] {
+        set attrs [dict get $edge attrs]
+        set attrPairs {}
+        foreach key [lsort [dict keys $attrs]] {
+            lappend attrPairs "$key=[::attractor_web::__dot_attr_value [dict get $attrs $key]]"
+        }
+        if {[llength $attrPairs] == 0} {
+            lappend lines "  [dict get $edge from] -> [dict get $edge to];"
+        } else {
+            lappend lines "  [dict get $edge from] -> [dict get $edge to] \[[join $attrPairs {, }]\];"
+        }
+    }
+
+    lappend lines "\}"
+    return [join $lines "\n"]
+}
+
+proc ::attractor_web::__dot_canonicalize_graph {graph} {
+    set nodes [dict get $graph nodes]
+    set edges [dict get $graph edges]
+    set idMap {}
+    set usedIds {}
+    set fallbackSeq 0
+
+    foreach oldId [lsort [dict keys $nodes]] {
+        set base [::attractor_web::__dot_sanitize_id $oldId]
+        if {$base eq ""} {
+            set base "node_[incr fallbackSeq]"
+        }
+        set candidate $base
+        set suffix 2
+        while {[dict exists $usedIds $candidate]} {
+            set candidate "${base}_$suffix"
+            incr suffix
+        }
+        dict set usedIds $candidate 1
+        dict set idMap $oldId $candidate
+    }
+
+    set newNodes {}
+    foreach oldId [dict keys $nodes] {
+        set newId [dict get $idMap $oldId]
+        set attrs [dict get $nodes $oldId attrs]
+        if {[dict exists $attrs __implicit]} {
+            dict unset attrs __implicit
+        }
+        dict set newNodes $newId [dict create id $newId attrs $attrs]
+    }
+
+    set newEdges {}
+    foreach edge $edges {
+        if {![dict exists $idMap [dict get $edge from]] || ![dict exists $idMap [dict get $edge to]]} {
+            continue
+        }
+        set fromId [dict get $idMap [dict get $edge from]]
+        set toId [dict get $idMap [dict get $edge to]]
+        lappend newEdges [dict create from $fromId to $toId attrs [dict get $edge attrs]]
+    }
+
+    set startNodes {}
+    set exitNodes {}
+    foreach nodeId [dict keys $newNodes] {
+        set attrs [dict get $newNodes $nodeId attrs]
+        if {[dict exists $attrs shape] && [dict get $attrs shape] eq "Mdiamond"} {
+            lappend startNodes $nodeId
+        }
+        if {[dict exists $attrs shape] && [dict get $attrs shape] eq "Msquare"} {
+            lappend exitNodes $nodeId
+        }
+    }
+
+    if {[llength $startNodes] == 0} {
+        set startId start
+        set seq 2
+        while {[dict exists $newNodes $startId]} {
+            set startId "start_$seq"
+            incr seq
+        }
+        dict set newNodes $startId [dict create id $startId attrs [dict create shape Mdiamond label Start]]
+        lappend startNodes $startId
+    }
+    if {[llength $exitNodes] == 0} {
+        set exitId exit
+        set seq 2
+        while {[dict exists $newNodes $exitId]} {
+            set exitId "exit_$seq"
+            incr seq
+        }
+        dict set newNodes $exitId [dict create id $exitId attrs [dict create shape Msquare label Exit]]
+        lappend exitNodes $exitId
+    }
+
+    set keepStart [lindex $startNodes 0]
+    set keepExit [lindex $exitNodes 0]
+
+    foreach nodeId [lrange $startNodes 1 end] {
+        set attrs [dict get $newNodes $nodeId attrs]
+        if {[dict exists $attrs shape] && [dict get $attrs shape] eq "Mdiamond"} {
+            dict unset attrs shape
+        }
+        dict set newNodes $nodeId attrs $attrs
+    }
+    foreach nodeId [lrange $exitNodes 1 end] {
+        set attrs [dict get $newNodes $nodeId attrs]
+        if {[dict exists $attrs shape] && [dict get $attrs shape] eq "Msquare"} {
+            dict unset attrs shape
+        }
+        dict set newNodes $nodeId attrs $attrs
+    }
+
+    foreach nodeId [dict keys $newNodes] {
+        if {$nodeId eq $keepStart || $nodeId eq $keepExit} {
+            continue
+        }
+        set attrs [dict get $newNodes $nodeId attrs]
+        if {![dict exists $attrs label] || [string trim [dict get $attrs label]] eq ""} {
+            set defaultLabel [string map [list "_" " "] $nodeId]
+            set defaultLabel [string trim [string totitle $defaultLabel]]
+            if {$defaultLabel eq ""} {
+                set defaultLabel $nodeId
+            }
+            dict set attrs label $defaultLabel
+        }
+        dict set newNodes $nodeId attrs $attrs
+    }
+
+    set filteredEdges {}
+    foreach edge $newEdges {
+        set fromId [dict get $edge from]
+        set toId [dict get $edge to]
+        if {$toId eq $keepStart} {
+            continue
+        }
+        if {$fromId eq $keepExit} {
+            continue
+        }
+        lappend filteredEdges $edge
+    }
+
+    set graphId [::attractor_web::__dot_sanitize_id [dict get $graph id]]
+    if {$graphId eq ""} {
+        set graphId Pipeline
+    }
+
+    return [dict create \
+        id $graphId \
+        graph_attrs [dict get $graph graph_attrs] \
+        node_defaults [dict get $graph node_defaults] \
+        edge_defaults [dict get $graph edge_defaults] \
+        nodes $newNodes \
+        edges $filteredEdges]
+}
+
+proc ::attractor_web::__dot_validate_result {dotSource} {
+    set normalized [::attractor_web::normalize_dot_source $dotSource]
+    if {[string trim $normalized] eq ""} {
+        return [dict create valid 0 dot_source "" reason "DOT source is empty"]
+    }
+
+    if {[catch {set graph [::attractor::parse_dot $normalized]} parseErr]} {
+        return [dict create valid 0 dot_source $normalized reason "parse error: $parseErr"]
+    }
+
+    set diagnostics [::attractor::validate $graph]
+    if {[::attractor::__has_validation_errors $diagnostics]} {
+        set canonical [::attractor_web::__dot_canonicalize_graph $graph]
+        set canonicalDot [::attractor_web::__dot_graph_to_source $canonical]
+        if {![catch {set canonicalGraph [::attractor::parse_dot $canonicalDot]}]} {
+            set canonicalDiagnostics [::attractor::validate $canonicalGraph]
+            if {![::attractor::__has_validation_errors $canonicalDiagnostics]} {
+                return [dict create valid 1 dot_source $canonicalDot diagnostics $canonicalDiagnostics]
+            }
+        }
+        set summary [::attractor_web::__dot_diagnostics_summary $diagnostics]
+        return [dict create valid 0 dot_source $normalized reason "validation error(s):\n$summary" diagnostics $diagnostics]
+    }
+
+    return [dict create valid 1 dot_source $normalized diagnostics $diagnostics]
+}
+
+proc ::attractor_web::__dot_repair_prompt {objectivePrompt invalidDot reason} {
+    return "You previously returned Attractor DOT that failed strict parse/validation.\n\nOriginal objective:\n$objectivePrompt\n\nInvalid DOT:\n$invalidDot\n\nDetected failures:\n$reason\n\nRepair the DOT so it is syntactically valid Graphviz and passes Attractor validation rules. Preserve the objective intent. Output ONLY raw DOT."
 }
 
 proc ::attractor_web::__extract_svg_markup {payload} {
@@ -241,6 +534,42 @@ proc ::attractor_web::__dot_model_default {provider} {
         }
     }
     return ""
+}
+
+proc ::attractor_web::__graph_requires_llm {graphDict} {
+    if {![dict exists $graphDict nodes]} {
+        return 0
+    }
+    set startNode [::attractor::__find_start $graphDict]
+    set exitNode [::attractor::__find_exit $graphDict]
+    foreach nodeId [dict keys [dict get $graphDict nodes]] {
+        set attrs [dict get $graphDict nodes $nodeId attrs]
+        set handler [::attractor::__handler_from_node $nodeId $attrs $startNode $exitNode]
+        if {$handler eq "codergen"} {
+            return 1
+        }
+    }
+    return 0
+}
+
+proc ::attractor_web::__provider_runtime_preflight {provider} {
+    set probeRequest [dict create provider $provider]
+    set baseUrl [::unified_llm::transports::https_json::__resolve_base_url $probeRequest]
+    if {$baseUrl eq ""} {
+        return -code error -errorcode [list ATTRACTOR_WEB RUNTIME_PREFLIGHT MISSING_BASE_URL] "no base URL configured for provider $provider"
+    }
+
+    if {![string match "https://*" [string tolower $baseUrl]]} {
+        return
+    }
+
+    set preflight [::unified_llm::transports::https_json::runtime_preflight]
+    if {[dict get $preflight tls_supported]} {
+        return
+    }
+
+    set reason [dict get $preflight message]
+    return -code error -errorcode [list ATTRACTOR_WEB RUNTIME_PREFLIGHT TLS_UNSUPPORTED] $reason
 }
 
 proc ::attractor_web::__dot_system_prompt {} {
@@ -330,11 +659,6 @@ proc ::attractor_web::__dot_generation_examples_prompt {} {
     return "## Gold DOT Examples\nThe following are high-quality Attractor DOT files. Use them as style and structure references for generation.\n\n[join $blocks \"\n\n\"]"
 }
 
-proc ::attractor_web::__json_safe_text {text} {
-    # Force scalar string encoding in attractor_core::json_encode.
-    return [format "%s\n%c" $text 123]
-}
-
 proc ::attractor_web::__dot_stream_state_new {chan} {
     variable dot_stream_seq
     variable dot_stream_states
@@ -403,15 +727,6 @@ proc ::attractor_web::__dot_client_from_state {state} {
         }
     }
 
-    if {[dict exists $state dot_llm_transport] && [dict get $state dot_llm_transport] ne ""} {
-        set transport [dict get $state dot_llm_transport]
-        set providers {}
-        foreach provider {openai anthropic gemini} {
-            dict set providers $provider [dict create api_key "test-key-$provider" base_url "" transport $transport provider_options {}]
-        }
-        return [list [::unified_llm::client_new -providers $providers -default_provider openai] 1]
-    }
-
     return [list [::unified_llm::from_env -transport ::unified_llm::transports::https_json::call] 1]
 }
 
@@ -460,8 +775,8 @@ proc ::attractor_web::__dot_build_request {state payload userPrompt client mode}
     }
 
     set messages [list \
-        [::unified_llm::message system [::attractor_web::__json_safe_text $systemPrompt]] \
-        [::unified_llm::message user [::attractor_web::__json_safe_text $userPrompt]]]
+        [::unified_llm::message system $systemPrompt] \
+        [::unified_llm::message user $userPrompt]]
     set args [list -client $client -provider $provider -messages $messages -model $model -provider_options $providerOptions]
     return $args
 }
@@ -527,8 +842,38 @@ proc ::attractor_web::__dot_stream_generate {state payload mode chan} {
     lassign [::attractor_web::__dot_client_from_state $state] client isTemp
 
     set code [catch {
-        set requestArgs [::attractor_web::__dot_build_request $state $payload $userPrompt $client $mode]
-        set response [::unified_llm::generate {*}$requestArgs -max_tool_rounds 0]
+        set dotSource ""
+        set workingPrompt $userPrompt
+        set attempt 0
+        set maxAttempts 3
+        while {$attempt < $maxAttempts} {
+            incr attempt
+            set requestArgs [::attractor_web::__dot_build_request $state $payload $workingPrompt $client $mode]
+            set response [::unified_llm::generate {*}$requestArgs -max_tool_rounds 0]
+
+            set text ""
+            if {[dict exists $response text]} {
+                set text [dict get $response text]
+            }
+
+            set validation [::attractor_web::__dot_validate_result $text]
+            if {[dict get $validation valid]} {
+                set dotSource [dict get $validation dot_source]
+                break
+            }
+
+            if {$attempt >= $maxAttempts} {
+                set reason [dict get $validation reason]
+                return -code error -errorcode [list ATTRACTOR_WEB GENERATION_ERROR INVALID_DOT] "model returned invalid DOT after $maxAttempts attempts: $reason"
+            }
+
+            set candidate [dict get $validation dot_source]
+            if {[string trim $candidate] eq ""} {
+                set candidate [::attractor_web::normalize_dot_source $text]
+            }
+            set reason [dict get $validation reason]
+            set workingPrompt [::attractor_web::__dot_repair_prompt $userPrompt $candidate $reason]
+        }
     } err opts]
 
     if {$isTemp} {
@@ -538,11 +883,6 @@ proc ::attractor_web::__dot_stream_generate {state payload mode chan} {
         return -options $opts $err
     }
 
-    set text ""
-    if {[dict exists $response text]} {
-        set text [dict get $response text]
-    }
-    set dotSource [::attractor_web::normalize_dot_source $text]
     if {[string trim $dotSource] eq ""} {
         return -code error -errorcode [list ATTRACTOR_WEB GENERATION_ERROR] "model returned empty DOT source"
     }
@@ -875,6 +1215,9 @@ proc ::attractor_web::__html_dashboard {} {
 
     function formatDiagnostics(details) {
       if (!details || !Array.isArray(details.diagnostics) || details.diagnostics.length === 0) {
+        if (typeof details === 'string') return details;
+        if (details && typeof details.error === 'string') return details.error;
+        if (details && details.error && typeof details.error === 'object') return JSON.stringify(details.error, null, 2);
         return '';
       }
       const lines = [];
@@ -984,6 +1327,8 @@ proc ::attractor_web::__html_dashboard {} {
 
     function runSummaryText(run) {
       const web = run.web || {};
+      const worker = run.worker_result || {};
+      const reason = run.reason || worker.reason || '';
       const lines = [
         `Status: ${run.status || '-'}`,
         `Current Node: ${run.current_node || '-'}`,
@@ -991,6 +1336,12 @@ proc ::attractor_web::__html_dashboard {} {
         `Provider: ${web.provider || 'default'}`,
         `Model: ${web.model || 'default'}`
       ];
+      if (reason) lines.push(`Reason: ${reason}`);
+      if (worker.ended_at) lines.push(`Ended: ${worker.ended_at}`);
+      if (worker.error) {
+        const rawError = typeof worker.error === 'string' ? worker.error : JSON.stringify(worker.error);
+        lines.push(`Error: ${rawError.length > 320 ? `${rawError.slice(0, 320)}...` : rawError}`);
+      }
       return lines.join('\n');
     }
 
@@ -1159,7 +1510,8 @@ proc ::attractor_web::__html_dashboard {} {
       for (const run of state.runs) {
         const el = document.createElement('div');
         el.className = `run${state.selected === run.id ? ' active' : ''}`;
-        el.innerHTML = `<div><strong>${run.id}</strong></div><div class="status">${run.status}</div><div class="meta">node=${run.current_node || '-'} completed=${run.completed_nodes_count || 0}</div>`;
+        const reason = run.reason ? ` reason=${run.reason}` : '';
+        el.innerHTML = `<div><strong>${run.id}</strong></div><div class="status">${run.status}</div><div class="meta">node=${run.current_node || '-'} completed=${run.completed_nodes_count || 0}${reason}</div>`;
         el.onclick = () => selectRun(run.id);
         wrap.appendChild(el);
       }
@@ -1246,12 +1598,39 @@ proc ::attractor_web::__html_dashboard {} {
         qWrap.appendChild(node);
       }
 
-      const nodeKeys = Object.keys(run.nodes || {});
-      if (nodeKeys.length > 0) {
-        const stage = await api(`/api/stage?id=${encodeURIComponent(run.id)}&node=${encodeURIComponent(nodeKeys[nodeKeys.length - 1])}`);
+      const nodes = run.nodes || {};
+      let stageNode = '';
+      if (run.current_node && nodes[run.current_node]) {
+        stageNode = run.current_node;
+      }
+      if (!stageNode && run.checkpoint && run.checkpoint.completed_nodes) {
+        let completed = run.checkpoint.completed_nodes;
+        if (typeof completed === 'string') {
+          completed = completed.trim() ? completed.trim().split(/\s+/) : [];
+        }
+        if (Array.isArray(completed) && completed.length > 0) {
+          const candidate = completed[completed.length - 1];
+          if (nodes[candidate]) stageNode = candidate;
+        }
+      }
+      if (!stageNode) {
+        const nodeKeys = Object.keys(nodes).sort();
+        if (nodeKeys.length > 0) stageNode = nodeKeys[nodeKeys.length - 1];
+      }
+
+      if (stageNode) {
+        const stage = await api(`/api/stage?id=${encodeURIComponent(run.id)}&node=${encodeURIComponent(stageNode)}`);
         document.getElementById('stage').textContent = JSON.stringify(stage, null, 2);
       } else {
         document.getElementById('stage').textContent = '(none)';
+      }
+
+      if ((run.status || '') === 'failed') {
+        const reason = run.reason || (run.worker_result && run.worker_result.reason) || 'failed';
+        const errMeta = run.worker_result && run.worker_result.error ? { error: run.worker_result.error } : null;
+        showError(`Run failed: ${reason}`, errMeta);
+      } else {
+        showError('');
       }
     }
 
@@ -1364,14 +1743,22 @@ proc ::attractor_web::__load_checkpoint_summary {runDir} {
 proc ::attractor_web::__load_run_status {runDir} {
     set status running
     set reason ""
+    set error ""
+    set endedAt ""
     set worker [::attractor_web::__read_json_file [file join $runDir worker-result.json]]
     if {[dict size $worker] > 0 && [dict exists $worker status]} {
         set status [dict get $worker status]
         if {[dict exists $worker reason]} {
             set reason [dict get $worker reason]
         }
+        if {[dict exists $worker error]} {
+            set error [dict get $worker error]
+        }
+        if {[dict exists $worker ended_at]} {
+            set endedAt [dict get $worker ended_at]
+        }
     }
-    return [dict create status $status reason $reason]
+    return [dict create status $status reason $reason error $error ended_at $endedAt]
 }
 
 proc ::attractor_web::__pipelines_snapshot {runsRoot} {
@@ -1407,6 +1794,7 @@ proc ::attractor_web::__pipelines_snapshot {runsRoot} {
             id $runId \
             started_at $startedAt \
             status [dict get $statusInfo status] \
+            reason [dict get $statusInfo reason] \
             current_node $currentNode \
             completed_nodes_count [dict get $summary completed_nodes_count] \
             logs_root $runDir]
@@ -1433,7 +1821,7 @@ proc ::attractor_web::__events_lines {runDir} {
 proc ::attractor_web::__pipelines_snapshot_json {runsRoot} {
     set items {}
     foreach row [::attractor_web::__pipelines_snapshot $runsRoot] {
-        lappend items "{\"id\":[::attractor_web::__json_quote [dict get $row id]],\"started_at\":[::attractor_web::__json_quote [dict get $row started_at]],\"status\":[::attractor_web::__json_quote [dict get $row status]],\"current_node\":[::attractor_web::__json_quote [dict get $row current_node]],\"completed_nodes_count\":[dict get $row completed_nodes_count],\"logs_root\":[::attractor_web::__json_quote [dict get $row logs_root]]}"
+        lappend items "{\"id\":[::attractor_web::__json_quote [dict get $row id]],\"started_at\":[::attractor_web::__json_quote [dict get $row started_at]],\"status\":[::attractor_web::__json_quote [dict get $row status]],\"reason\":[::attractor_web::__json_quote [dict get $row reason]],\"current_node\":[::attractor_web::__json_quote [dict get $row current_node]],\"completed_nodes_count\":[dict get $row completed_nodes_count],\"logs_root\":[::attractor_web::__json_quote [dict get $row logs_root]]}"
     }
     return "\[[join $items ,]\]"
 }
@@ -1498,11 +1886,15 @@ proc ::attractor_web::__pipeline_detail_json {runsRoot runId} {
     }
 
     set status running
+    set reason ""
     set currentNode "-"
     set completedCount 0
     foreach row [::attractor_web::__pipelines_snapshot $runsRoot] {
         if {[dict get $row id] eq $runId} {
             set status [dict get $row status]
+            if {[dict exists $row reason]} {
+                set reason [dict get $row reason]
+            }
             set currentNode [dict get $row current_node]
             set completedCount [dict get $row completed_nodes_count]
             break
@@ -1518,10 +1910,11 @@ proc ::attractor_web::__pipeline_detail_json {runsRoot runId} {
     set webJson [::attractor_web::__json_read_raw [file join $runDir web.json] "{}"]
     set manifestJson [::attractor_web::__json_read_raw [file join $runDir manifest.json] "{}"]
     set checkpointJson [::attractor_web::__json_read_raw [file join $runDir checkpoint.json] "{}"]
+    set workerJson [::attractor_web::__json_read_raw [file join $runDir worker-result.json] "{}"]
     set nodesJson [::attractor_web::__nodes_json $runDir]
     set questionsJson [::attractor_web::__pending_questions_json $runDir]
 
-    return "{\"id\":[::attractor_web::__json_quote $runId],\"status\":[::attractor_web::__json_quote $status],\"current_node\":[::attractor_web::__json_quote $currentNode],\"completed_nodes_count\":$completedCount,\"dotSource\":[::attractor_web::__json_quote $dotSource],\"web\":$webJson,\"manifest\":$manifestJson,\"checkpoint\":$checkpointJson,\"nodes\":$nodesJson,\"pending_questions\":$questionsJson}"
+    return "{\"id\":[::attractor_web::__json_quote $runId],\"status\":[::attractor_web::__json_quote $status],\"reason\":[::attractor_web::__json_quote $reason],\"current_node\":[::attractor_web::__json_quote $currentNode],\"completed_nodes_count\":$completedCount,\"dotSource\":[::attractor_web::__json_quote $dotSource],\"web\":$webJson,\"manifest\":$manifestJson,\"checkpoint\":$checkpointJson,\"worker_result\":$workerJson,\"nodes\":$nodesJson,\"pending_questions\":$questionsJson}"
 }
 
 proc ::attractor_web::__stage_detail_json {runsRoot runId nodeId} {
@@ -1602,12 +1995,14 @@ proc ::attractor_web::__pipeline_detail {runsRoot runId} {
     return [dict create \
         id $runId \
         status [dict get $snapshot status] \
+        reason [dict get $snapshot reason] \
         current_node [dict get $snapshot current_node] \
         completed_nodes_count [dict get $snapshot completed_nodes_count] \
         dotSource $dotSource \
         web [::attractor_web::__read_json_file [file join $runDir web.json]] \
         manifest [::attractor_web::__read_json_file [file join $runDir manifest.json]] \
         checkpoint [::attractor_web::__read_json_file [file join $runDir checkpoint.json]] \
+        worker_result [::attractor_web::__read_json_file [file join $runDir worker-result.json]] \
         nodes [::attractor_web::__node_artifacts $runDir] \
         pending_questions [::attractor_web::__pending_questions $runDir]]
 }
@@ -1970,6 +2365,16 @@ proc ::attractor_web::__dispatch_route {id chan request} {
         if {[::attractor::__has_validation_errors $diagnostics]} {
             ::attractor_web::__send_json $chan 400 [dict create error "validation failed" code INVALID_DOT_SOURCE diagnostics $diagnostics]
             return 0
+        }
+
+        if {[::attractor_web::__graph_requires_llm $_graph]} {
+            if {[catch {::attractor_web::__provider_runtime_preflight $runProvider} preflightErr]} {
+                ::attractor_web::__send_json $chan 503 [dict create \
+                    error $preflightErr \
+                    code RUNTIME_UNAVAILABLE \
+                    provider $runProvider]
+                return 0
+            }
         }
 
         variable run_seq

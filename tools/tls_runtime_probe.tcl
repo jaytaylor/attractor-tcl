@@ -1,5 +1,5 @@
 #!/usr/bin/env tclsh
-package require Tcl 8.5
+package require Tcl 8.5-
 
 set root [file normalize [file join [file dirname [info script]] ..]]
 lappend auto_path $root

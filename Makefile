@@ -1,6 +1,6 @@
 .PHONY: precommit build test test-e2e dev
 
-TCLSH ?= tclsh
+TCLSH ?= $(shell if command -v tclsh9.0 >/dev/null 2>&1; then echo tclsh9.0; else echo tclsh; fi)
 WEB_BIND ?= 127.0.0.1
 WEB_PORT ?= 7070
 WEB_RUNS_ROOT ?= .scratch/runs/attractor-web
@@ -17,6 +17,7 @@ test: precommit
 test-e2e: precommit
 	@if $(TCLSH) tools/tls_runtime_probe.tcl | grep -q "tls_supported=1"; then \
 		$(TCLSH) tests/e2e_live.tcl; \
+		node tests/e2e_playwright.mjs; \
 	else \
 		echo "local tls runtime unsupported; running live e2e in docker (ubuntu:24.04)"; \
 		docker run --rm \
@@ -33,8 +34,9 @@ test-e2e: precommit
 			-v "$$PWD":/work \
 			-w /work \
 			ubuntu:24.04 \
-			bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcllib tcl-tls make ca-certificates >/dev/null && tclsh tests/e2e_live.tcl'; \
+				bash -lc 'apt-get update >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y tcl tcllib tcl-tls make ca-certificates >/dev/null && tclsh tests/e2e_live.tcl'; \
+		E2E_PLAYWRIGHT_USE_DOCKER=1 node tests/e2e_playwright.mjs; \
 	fi
 
 dev: precommit
-	@bin/attractor serve --bind $(WEB_BIND) --web-port $(WEB_PORT) --runs-root $(WEB_RUNS_ROOT)
+	@$(TCLSH) bin/attractor serve --bind $(WEB_BIND) --web-port $(WEB_PORT) --runs-root $(WEB_RUNS_ROOT)

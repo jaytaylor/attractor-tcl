@@ -10,7 +10,7 @@ namespace eval ::attractor::interviewer {
     variable queues {}
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require attractor_core
 package require unified_llm
 package require coding_agent_loop
@@ -607,14 +607,8 @@ proc ::attractor::__default_model {provider} {
     }
 }
 
-proc ::attractor::__json_safe_text {text} {
-    # Force scalar string encoding in attractor_core::json_encode.
-    return [format "%s\n%c" $text 123]
-}
-
 proc ::attractor::default_codergen_backend {request} {
     set prompt [dict get $request prompt]
-    set prompt [::attractor::__json_safe_text $prompt]
     set provider [::attractor::__default_provider]
     set model [::attractor::__default_model $provider]
     set client [::unified_llm::from_env -transport ::unified_llm::transports::https_json::call]

@@ -103,10 +103,11 @@ test unified_llm-stream-fixture-load-1.0 {stream fixtures exist and are readable
 } -result {1 1}
 
 test unified_llm-stream-event-model-1.0 {synthetic stream follows start/delta/end contract} -setup {
-    set client [::unified_llm::client_new -provider mock]
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-text.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture]]
     set ::tests::unified_llm_streaming::events {}
 } -body {
-    ::unified_llm::stream -client $client -provider mock -prompt hello -model mock-1 -on_event ::tests::unified_llm_streaming::capture_event
+    ::unified_llm::stream -client $client -provider openai -prompt hello -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event
     set types {}
     foreach event $::tests::unified_llm_streaming::events {
         lappend types [dict get $event type]
@@ -310,19 +311,20 @@ test unified_llm-stream-tool-call-assembly-1.0 {tool-call streaming assembly dec
 test unified_llm-stream-middleware-1.0 {stream middleware order and transforms are preserved} -setup {
     set ::tests::unified_llm_streaming::middleware_log {}
     set ::tests::unified_llm_streaming::events {}
-    set client [::unified_llm::client_new -provider mock -middlewares [list ::tests::unified_llm_streaming::mw1 ::tests::unified_llm_streaming::mw2]]
+    set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-text.sse]
+    set client [::unified_llm::client_new -provider openai -transport [list ::tests::unified_llm_streaming::transport_fixture $fixture] -middlewares [list ::tests::unified_llm_streaming::mw1 ::tests::unified_llm_streaming::mw2]]
 } -body {
-    set result [::unified_llm::stream -client $client -provider mock -prompt hi -model mock-1 -on_event ::tests::unified_llm_streaming::capture_event]
+    set result [::unified_llm::stream -client $client -provider openai -prompt hi -model gpt-4.1 -on_event ::tests::unified_llm_streaming::capture_event]
     set deltaText [::tests::unified_llm_streaming::collect_text_from_deltas $::tests::unified_llm_streaming::events]
     set finishText [dict get [dict get $result response] text]
     set hasEv1 [expr {[lsearch -exact $::tests::unified_llm_streaming::middleware_log ev1] >= 0}]
     set hasEv2 [expr {[lsearch -exact $::tests::unified_llm_streaming::middleware_log ev2] >= 0}]
-    list [lrange $::tests::unified_llm_streaming::middleware_log 0 3] [string match "MOCK:*" $deltaText] $hasEv1 $hasEv2 $finishText
+    list [lrange $::tests::unified_llm_streaming::middleware_log 0 3] [string match "HELLO" $deltaText] $hasEv1 $hasEv2 $finishText
 } -cleanup {
     $client close
     unset -nocomplain ::tests::unified_llm_streaming::middleware_log
     unset -nocomplain ::tests::unified_llm_streaming::events
-} -result {{req1 req2 resp2 resp1} 1 1 1 mock:hi-r2-r1}
+} -result {{req1 req2 resp2 resp1} 1 1 1 Hello-r2-r1}
 
 test unified_llm-stream-object-expanded-1.0 {stream_object parses buffered JSON after expanded event flow} -setup {
     set fixture [::tests::unified_llm_streaming::fixture_path openai/openai-json-object.sse]

@@ -6,7 +6,7 @@ namespace eval ::coding_agent_loop::tools {
     variable default_env_cmd ""
 }
 
-package require Tcl 8.5
+package require Tcl 8.5-
 package require attractor_core
 
 proc ::coding_agent_loop::tools::execution_environment_new {args} {

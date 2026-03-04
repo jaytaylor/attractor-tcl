@@ -498,3 +498,31 @@ Positive:
 Tradeoffs:
 - Local runs with codergen nodes now require valid provider configuration instead of silently using mock output.
 - Streaming endpoint implementation introduces additional server-side LLM configuration surface and associated failure modes.
+
+## ADR-018: Remove Runtime Stub Providers and Enforce Provider-Realistic E2E via Browser Automation
+- Date: 2026-03-04
+- Status: Accepted
+
+### Context
+The runtime still contained non-production fallback behavior (`mock` provider and offline adapter responses), and the dashboard flow lacked browser-level end-to-end verification in the default `make test-e2e` path.
+
+### Decision
+- Remove runtime stub provider behavior from Unified LLM:
+  - drop `mock` provider support from provider allowlists and dispatch.
+  - remove adapter offline response fallback paths.
+- Remove `attractor_web` server-level DOT transport injection (`-dot_llm_transport`) and keep only real provider env resolution plus explicit injected client support (`-dot_llm_client`) for deterministic test fixtures.
+- Rewrite affected tests to use explicit provider adapters (`openai`/`anthropic`/`gemini`) with deterministic transport fixtures, instead of `mock` provider behavior.
+- Extend `make test-e2e` to run:
+  - live provider smoke suite (`tests/e2e_live.tcl`)
+  - browser e2e dashboard flow (`tests/e2e_playwright.mjs`)
+- Add Docker-backed Playwright server mode for environments where local Tcl/TLS cannot call provider HTTPS APIs.
+
+### Consequences
+Positive:
+- Runtime behavior now consistently exercises real provider adapters rather than synthetic offline paths.
+- `make test-e2e` validates API-level and browser-level create/iterate/fix/run loops against real provider-backed endpoints.
+- Older local Tcl/TLS environments can still execute browser e2e through Docker-backed server mode.
+
+Tradeoffs:
+- Test infrastructure depends on Node + Playwright availability in addition to Tcl.
+- Browser e2e runtime is longer, especially when Docker-backed server startup is required.

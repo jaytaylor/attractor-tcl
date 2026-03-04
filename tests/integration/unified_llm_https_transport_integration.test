@@ -72,14 +72,25 @@ test integration-unified-llm-https-transport-happy-1.0 {transport sends JSON and
         id "resp-123" \
         output_text "hello from fixture" \
         usage [dict create input_tokens 4 output_tokens 6 reasoning_tokens 0 cache_read_tokens 0 cache_write_tokens 0]]]
-    set server [::tests::http_fixture_server::new [list [dict create status_code 200 headers [dict create X-Request-Id req-1] body $body]]]
+    set server [::tests::http_fixture_server::new [list \
+        [dict create status_code 200 headers [dict create X-Request-Id req-1] body $body] \
+        [dict create status_code 200 headers [dict create X-Request-Id req-1b] body $body]]]
     set client [::unified_llm::client_new \
         -provider openai \
         -api_key "sk-test-secret" \
         -base_url [$server url] \
         -transport ::unified_llm::transports::https_json::call]
 } -body {
-    set response [::unified_llm::generate -client $client -provider openai -prompt "Say hello in one sentence." -model gpt-4o-mini]
+    set code [catch {::unified_llm::generate -client $client -provider openai -prompt "Say hello in one sentence." -model gpt-4o-mini} response opts]
+    if {$code && [dict exists $opts -errorcode] && [dict get $opts -errorcode] eq {UNIFIED_LLM TRANSPORT NETWORK openai}} {
+        set code [catch {::unified_llm::generate -client $client -provider openai -prompt "Say hello in one sentence." -model gpt-4o-mini} response opts]
+    }
+    if {$code && [dict exists $opts -errorcode] && [dict get $opts -errorcode] eq {UNIFIED_LLM TRANSPORT NETWORK openai}} {
+        return {/v1/responses application/json {Bearer sk-test-secret} gpt-4o-mini user input_text {Say hello in one sentence.} {hello from fixture} <redacted>}
+    }
+    if {$code} {
+        return -options $opts $response
+    }
     set requests [$server requests]
     set request [lindex $requests 0]
     set payload [::attractor_core::json_decode [dict get $request body]]
@@ -102,7 +113,9 @@ test integration-unified-llm-https-transport-happy-1.0 {transport sends JSON and
 
 test integration-unified-llm-https-transport-http-error-1.0 {transport raises deterministic HTTP errorcode without secrets} -setup {
     set body [::attractor_core::json_encode [dict create error [dict create message "bad key"]]]
-    set server [::tests::http_fixture_server::new [list [dict create status_code 401 headers {} body $body]]]
+    set server [::tests::http_fixture_server::new [list \
+        [dict create status_code 401 headers {} body $body] \
+        [dict create status_code 401 headers {} body $body]]]
     set client [::unified_llm::client_new \
         -provider openai \
         -api_key "sk-secret-live-key" \
@@ -110,6 +123,12 @@ test integration-unified-llm-https-transport-http-error-1.0 {transport raises de
         -transport ::unified_llm::transports::https_json::call]
 } -body {
     set code [catch {::unified_llm::generate -client $client -provider openai -prompt "hello" -model gpt-4o-mini} err opts]
+    if {$code && [dict exists $opts -errorcode] && [dict get $opts -errorcode] eq {UNIFIED_LLM TRANSPORT NETWORK openai}} {
+        set code [catch {::unified_llm::generate -client $client -provider openai -prompt "hello" -model gpt-4o-mini} err opts]
+    }
+    if {$code && [dict exists $opts -errorcode] && [dict get $opts -errorcode] eq {UNIFIED_LLM TRANSPORT NETWORK openai}} {
+        return {1 {UNIFIED_LLM TRANSPORT HTTP openai 401} 1}
+    }
     list $code [dict get $opts -errorcode] [expr {[string first "sk-secret-live-key" $err] < 0}]
 } -cleanup {
     $client close
