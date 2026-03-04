@@ -221,6 +221,10 @@ All endpoints are local-first; CORS is optional but allowed for developer conven
   - `dotSource` normalization requirement:
     - Accept either raw DOT or DOT wrapped in markdown code fences (common output from DOT-generation agentic loops).
     - Strip markdown fences before validation/execute (reference: `../../.scratch/coreys-attractor/src/main/kotlin/attractor/web/DotGenerator.kt` `extractDotSource()`).
+    - If `dotSource` is empty after normalization, return HTTP `400` with error code `INVALID_DOT_SOURCE`.
+  - `fileName` requirements (when provided):
+    - Must be a display-only leaf name (reject values containing `/`, `\\`, or `..`).
+    - On rejection, return HTTP `400` with error code `INVALID_FILE_NAME`.
   - response JSON: `{ "id": "run-..." }`
 - `GET /api/pipeline?id=<run_id>` -> hydrated view for one run:
   - response JSON: `{ "id", "dotSource", "web", "manifest", "checkpoint", "nodes": {...}, "pending_questions": [...] }`
@@ -231,6 +235,10 @@ All endpoints are local-first; CORS is optional but allowed for developer conven
   - response JSON: `{ "ok": true }`
 - `POST /api/render` -> render DOT to SVG (requires Graphviz `dot`):
   - request JSON: `{ "dotSource": "..." }`
+  - `dotSource` normalization requirement:
+    - Accept either raw DOT or DOT wrapped in markdown code fences.
+    - Strip markdown fences before render (same behavior as `POST /api/run`).
+    - If `dotSource` is empty after normalization, return HTTP `400` with error code `INVALID_DOT_SOURCE`.
   - response JSON: `{ "svg": "<svg...>" }` or `{ "error": "..." }`
 
 ### SSE
