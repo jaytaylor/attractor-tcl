@@ -314,6 +314,7 @@ proc ::coding_agent_loop::tools::default_tool_schemas {} {
         shell [dict create type object required {command} properties [dict create command [dict create type string] max_ms [dict create type integer] cwd [dict create type string]]] \
         grep [dict create type object required {pattern} properties [dict create pattern [dict create type string] path [dict create type string]]] \
         glob [dict create type object required {pattern} properties [dict create pattern [dict create type string] root [dict create type string]]] \
+        update_plan [dict create type object required {plan} properties [dict create explanation [dict create type string] plan [dict create type array items [dict create type object required {step status} properties [dict create step [dict create type string] status [dict create type string]]]]] ] \
         spawn_agent [dict create type object required {profile} properties [dict create profile [dict create type string]]] \
         send_input [dict create type object required {agent_id input} properties [dict create agent_id [dict create type string] input [dict create type string]]] \
         wait [dict create type object required {agent_id} properties [dict create agent_id [dict create type string]]] \
@@ -430,6 +431,18 @@ proc ::coding_agent_loop::tools::glob_paths {args toolCall} {
     return [$envCmd glob [dict get $args pattern] $root]
 }
 
+proc ::coding_agent_loop::tools::update_plan {args toolCall} {
+    if {[dict exists $toolCall session_id]} {
+        set sessionId [::coding_agent_loop::tools::__resolve_session_id [dict get $toolCall session_id]]
+        if {$sessionId ne ""} {
+            catch {
+                ::coding_agent_loop::__emit $sessionId [dict create type PLAN_UPDATE payload $args]
+            }
+        }
+    }
+    return [dict create status ok]
+}
+
 proc ::coding_agent_loop::tools::__resolve_session_id {sessionRef} {
     if {[dict exists $::coding_agent_loop::sessions $sessionRef]} {
         return $sessionRef
@@ -539,6 +552,7 @@ proc ::coding_agent_loop::tools::default_registry {args} {
         shell ::coding_agent_loop::tools::shell
         grep ::coding_agent_loop::tools::grep
         glob ::coding_agent_loop::tools::glob_paths
+        update_plan ::coding_agent_loop::tools::update_plan
         spawn_agent ::coding_agent_loop::tools::spawn_agent
         send_input ::coding_agent_loop::tools::send_input
         wait ::coding_agent_loop::tools::wait
