@@ -250,6 +250,306 @@ proc ::attractor_web::__dot_diagnostics_summary {diagnostics} {
     return [join $lines "\n"]
 }
 
+proc ::attractor_web::__dot_text_contains_any {text needles} {
+    set lower [string tolower $text]
+    foreach needle $needles {
+        if {[string first [string tolower $needle] $lower] >= 0} {
+            return 1
+        }
+    }
+    return 0
+}
+
+proc ::attractor_web::__dot_node_text {nodeId attrs} {
+    set parts [list $nodeId]
+    foreach key {label prompt handler type tool_command retry_target question} {
+        if {[dict exists $attrs $key]} {
+            lappend parts [dict get $attrs $key]
+        }
+    }
+    return [string tolower [join $parts " "]]
+}
+
+proc ::attractor_web::__dot_edge_text {edge} {
+    if {![dict exists $edge attrs]} {
+        return ""
+    }
+    set attrs [dict get $edge attrs]
+    set parts {}
+    foreach key {label condition outcome reason} {
+        if {[dict exists $attrs $key]} {
+            lappend parts [dict get $attrs $key]
+        }
+    }
+    return [string tolower [join $parts " "]]
+}
+
+proc ::attractor_web::__dot_quality_summary {errors} {
+    if {[llength $errors] == 0} {
+        return ""
+    }
+    return [join [lrange $errors 0 7] "\n"]
+}
+
+proc ::attractor_web::__dot_quality_errors {graph} {
+    set errors {}
+    set nodes [dict get $graph nodes]
+    set edges [dict get $graph edges]
+
+    set planningNodes {}
+    set implementNodes {}
+    set validationNodes {}
+    set reviewNodes {}
+
+    foreach nodeId [dict keys $nodes] {
+        set attrs [dict get $nodes $nodeId attrs]
+        set nodeText [::attractor_web::__dot_node_text $nodeId $attrs]
+
+        if {[::attractor_web::__dot_text_contains_any $nodeText {plan planning analysis design strategy requirements}]} {
+            lappend planningNodes $nodeId
+        }
+        if {[::attractor_web::__dot_text_contains_any $nodeText {implement implementation build codergen codegen develop author create render produce craft}]} {
+            lappend implementNodes $nodeId
+        } elseif {[dict exists $attrs handler] && [string tolower [dict get $attrs handler]] eq "codergen"} {
+            lappend implementNodes $nodeId
+        }
+
+        set isTool 0
+        if {[dict exists $attrs type] && [string tolower [dict get $attrs type]] eq "tool"} {
+            set isTool 1
+        }
+        if {[dict exists $attrs tool_command]} {
+            set isTool 1
+        }
+        if {$isTool || [::attractor_web::__dot_text_contains_any $nodeText {validate verification verify test qa check lint assert proof}]} {
+            lappend validationNodes $nodeId
+        }
+
+        set goalGate 0
+        if {[dict exists $attrs goal_gate]} {
+            set raw [string tolower [string trim [dict get $attrs goal_gate]]]
+            if {$raw in {"1" "true" "yes"}} {
+                set goalGate 1
+            }
+        }
+        if {$goalGate || [::attractor_web::__dot_text_contains_any $nodeText {review consensus gate decision approve adjudicate}]} {
+            lappend reviewNodes $nodeId
+        }
+    }
+
+    set planningNodes [lsort -unique $planningNodes]
+    set implementNodes [lsort -unique $implementNodes]
+    set validationNodes [lsort -unique $validationNodes]
+    set reviewNodes [lsort -unique $reviewNodes]
+
+    if {[llength $planningNodes] == 0} {
+        lappend errors "missing planning stage (id/label should indicate plan)"
+    }
+    if {[llength $implementNodes] == 0} {
+        lappend errors "missing implementation stage (id/label should indicate implement/build/codergen)"
+    }
+    if {[llength $validationNodes] == 0} {
+        lappend errors "missing validation stage (id/label should indicate validate/test/check or use tool node)"
+    }
+    if {[llength $reviewNodes] == 0} {
+        lappend errors "missing review/decision stage (set goal_gate=true and review label)"
+    }
+
+    if {[llength $errors] > 0} {
+        return $errors
+    }
+
+    set exitNode [::attractor::__find_exit $graph]
+    if {$exitNode eq ""} {
+        lappend errors "cannot determine unique exit node"
+        return $errors
+    }
+
+    set implementTargets [lsort -unique [concat $planningNodes $implementNodes]]
+    set implementToValidate 0
+    set validateToReview 0
+    set retryRoute 0
+    set successRoute 0
+    set failRoute 0
+
+    foreach edge $edges {
+        set from [dict get $edge from]
+        set to [dict get $edge to]
+        set edgeText [::attractor_web::__dot_edge_text $edge]
+
+        if {[lsearch -exact $implementNodes $from] >= 0 && [lsearch -exact $validationNodes $to] >= 0} {
+            set implementToValidate 1
+        }
+        if {[lsearch -exact $validationNodes $from] >= 0 && [lsearch -exact $reviewNodes $to] >= 0} {
+            set validateToReview 1
+        }
+
+        set retrySource [expr {[lsearch -exact $reviewNodes $from] >= 0 || [lsearch -exact $validationNodes $from] >= 0}]
+        if {$retrySource && [lsearch -exact $implementTargets $to] >= 0} {
+            if {$edgeText eq "" || [::attractor_web::__dot_text_contains_any $edgeText {retry rework revise fix again iterate change improve refine}]} {
+                set retryRoute 1
+            }
+        }
+
+        if {[lsearch -exact $reviewNodes $from] >= 0 && $to eq $exitNode} {
+            if {[::attractor_web::__dot_text_contains_any $edgeText {success approve approved pass done complete}]} {
+                set successRoute 1
+            }
+            if {[::attractor_web::__dot_text_contains_any $edgeText {fail failed reject rejected abort blocked}]} {
+                set failRoute 1
+            }
+        }
+    }
+
+    if {!$implementToValidate} {
+        lappend errors "missing implementation -> validation handoff edge"
+    }
+    if {!$validateToReview} {
+        lappend errors "missing validation -> review handoff edge"
+    }
+    if {!$retryRoute} {
+        lappend errors "missing retry/rework loop back to planning or implementation"
+    }
+    if {!$successRoute} {
+        lappend errors "missing explicit review success -> exit route"
+    }
+    if {!$failRoute} {
+        lappend errors "missing explicit review fail -> exit route"
+    }
+
+    return $errors
+}
+
+proc ::attractor_web::__dot_find_stage_node {nodes keywords} {
+    foreach nodeId [dict keys $nodes] {
+        set attrs [dict get $nodes $nodeId attrs]
+        set nodeText [::attractor_web::__dot_node_text $nodeId $attrs]
+        if {[::attractor_web::__dot_text_contains_any $nodeText $keywords]} {
+            return $nodeId
+        }
+    }
+    return ""
+}
+
+proc ::attractor_web::__dot_unique_node_id {nodes baseId} {
+    set candidate [::attractor_web::__dot_sanitize_id $baseId]
+    if {$candidate eq ""} {
+        set candidate node
+    }
+    if {![dict exists $nodes $candidate]} {
+        return $candidate
+    }
+    set idx 2
+    while {[dict exists $nodes "${candidate}_$idx"]} {
+        incr idx
+    }
+    return "${candidate}_$idx"
+}
+
+proc ::attractor_web::__dot_edge_exists {edges from to keywords} {
+    foreach edge $edges {
+        if {[dict get $edge from] ne $from || [dict get $edge to] ne $to} {
+            continue
+        }
+        if {[llength $keywords] == 0} {
+            return 1
+        }
+        set edgeText [::attractor_web::__dot_edge_text $edge]
+        if {[::attractor_web::__dot_text_contains_any $edgeText $keywords]} {
+            return 1
+        }
+    }
+    return 0
+}
+
+proc ::attractor_web::__dot_enforce_quality_graph {graph} {
+    set nodes [dict get $graph nodes]
+    set edges [dict get $graph edges]
+
+    set startNode [::attractor::__find_start $graph]
+    if {$startNode eq ""} {
+        set startNode [::attractor_web::__dot_unique_node_id $nodes start]
+        dict set nodes $startNode [dict create id $startNode attrs [dict create shape Mdiamond label Start]]
+    }
+    set exitNode [::attractor::__find_exit $graph]
+    if {$exitNode eq ""} {
+        set exitNode [::attractor_web::__dot_unique_node_id $nodes exit]
+        dict set nodes $exitNode [dict create id $exitNode attrs [dict create shape Msquare label Exit]]
+    }
+
+    set planNode [::attractor_web::__dot_find_stage_node $nodes {plan planning analysis design strategy requirements}]
+    if {$planNode eq ""} {
+        set planNode [::attractor_web::__dot_unique_node_id $nodes plan]
+        dict set nodes $planNode [dict create id $planNode attrs [dict create label Plan prompt "Plan implementation and validation steps against the task requirements."]]
+    }
+
+    set implementNode [::attractor_web::__dot_find_stage_node $nodes {implement implementation build codergen codegen develop author create render produce craft}]
+    if {$implementNode eq ""} {
+        set implementNode [::attractor_web::__dot_unique_node_id $nodes implement]
+        dict set nodes $implementNode [dict create id $implementNode attrs [dict create label Implement prompt "Implement the requested deliverable for the task objective."]]
+    }
+
+    set validationNode [::attractor_web::__dot_find_stage_node $nodes {validate verification verify test qa check lint assert proof}]
+    if {$validationNode eq ""} {
+        set validationNode [::attractor_web::__dot_unique_node_id $nodes validate_outputs]
+        dict set nodes $validationNode [dict create id $validationNode attrs [dict create type tool label "Validate Outputs" tool_command "echo validate_artifact_requirements"]]
+    } else {
+        set attrs [dict get $nodes $validationNode attrs]
+        if {![dict exists $attrs label] || [string trim [dict get $attrs label]] eq ""} {
+            dict set attrs label "Validate Outputs"
+        }
+        if {![dict exists $attrs type] && ![dict exists $attrs tool_command]} {
+            dict set attrs type tool
+            dict set attrs tool_command "echo validate_artifact_requirements"
+        }
+        dict set nodes $validationNode attrs $attrs
+    }
+
+    set reviewNode [::attractor_web::__dot_find_stage_node $nodes {review consensus gate decision approve adjudicate}]
+    if {$reviewNode eq ""} {
+        set reviewNode [::attractor_web::__dot_unique_node_id $nodes review_decision]
+        dict set nodes $reviewNode [dict create id $reviewNode attrs [dict create label "Review Decision" goal_gate true retry_target $implementNode prompt "Review validation evidence and return success, retry, or fail."]]
+    } else {
+        set attrs [dict get $nodes $reviewNode attrs]
+        dict set attrs goal_gate true
+        dict set attrs retry_target $implementNode
+        if {![dict exists $attrs label] || [string trim [dict get $attrs label]] eq ""} {
+            dict set attrs label "Review Decision"
+        }
+        if {![dict exists $attrs prompt] || [string trim [dict get $attrs prompt]] eq ""} {
+            dict set attrs prompt "Review validation evidence and return success, retry, or fail."
+        }
+        dict set nodes $reviewNode attrs $attrs
+    }
+
+    if {![::attractor_web::__dot_edge_exists $edges $startNode $planNode {}]} {
+        lappend edges [dict create from $startNode to $planNode attrs [dict create]]
+    }
+    if {![::attractor_web::__dot_edge_exists $edges $planNode $implementNode {}]} {
+        lappend edges [dict create from $planNode to $implementNode attrs [dict create]]
+    }
+    if {![::attractor_web::__dot_edge_exists $edges $implementNode $validationNode {}]} {
+        lappend edges [dict create from $implementNode to $validationNode attrs [dict create]]
+    }
+    if {![::attractor_web::__dot_edge_exists $edges $validationNode $reviewNode {}]} {
+        lappend edges [dict create from $validationNode to $reviewNode attrs [dict create]]
+    }
+    if {![::attractor_web::__dot_edge_exists $edges $reviewNode $implementNode {retry rework revise fix again iterate change improve refine}]} {
+        lappend edges [dict create from $reviewNode to $implementNode attrs [dict create label retry condition "outcome=retry"]]
+    }
+    if {![::attractor_web::__dot_edge_exists $edges $reviewNode $exitNode {success approve approved pass done complete}]} {
+        lappend edges [dict create from $reviewNode to $exitNode attrs [dict create label success condition "outcome=success"]]
+    }
+    if {![::attractor_web::__dot_edge_exists $edges $reviewNode $exitNode {fail failed reject rejected abort blocked}]} {
+        lappend edges [dict create from $reviewNode to $exitNode attrs [dict create label fail condition "outcome=fail"]]
+    }
+
+    set out $graph
+    dict set out nodes $nodes
+    dict set out edges $edges
+    return $out
+}
+
 proc ::attractor_web::__dot_sanitize_id {raw} {
     set candidate [string trim [string map [list "-" "_"] $raw]]
     regsub -all {[^A-Za-z0-9_]} $candidate "_" candidate
@@ -471,11 +771,28 @@ proc ::attractor_web::__dot_validate_result {dotSource} {
         return [dict create valid 0 dot_source $normalized reason "validation error(s):\n$summary" diagnostics $diagnostics]
     }
 
+    set qualityErrors [::attractor_web::__dot_quality_errors $graph]
+    if {[llength $qualityErrors] > 0} {
+        set enforced [::attractor_web::__dot_enforce_quality_graph $graph]
+        set enforcedDot [::attractor_web::__dot_graph_to_source $enforced]
+        if {![catch {set enforcedGraph [::attractor::parse_dot $enforcedDot]}]} {
+            set enforcedDiagnostics [::attractor::validate $enforcedGraph]
+            if {![::attractor::__has_validation_errors $enforcedDiagnostics]} {
+                set enforcedQualityErrors [::attractor_web::__dot_quality_errors $enforcedGraph]
+                if {[llength $enforcedQualityErrors] == 0} {
+                    return [dict create valid 1 dot_source $enforcedDot diagnostics $enforcedDiagnostics]
+                }
+            }
+        }
+        set summary [::attractor_web::__dot_quality_summary $qualityErrors]
+        return [dict create valid 0 dot_source $normalized reason "semantic quality error(s):\n$summary" quality_errors $qualityErrors]
+    }
+
     return [dict create valid 1 dot_source $normalized diagnostics $diagnostics]
 }
 
 proc ::attractor_web::__dot_repair_prompt {objectivePrompt invalidDot reason} {
-    return "You previously returned Attractor DOT that failed strict parse/validation.\n\nOriginal objective:\n$objectivePrompt\n\nInvalid DOT:\n$invalidDot\n\nDetected failures:\n$reason\n\nRepair the DOT so it is syntactically valid Graphviz and passes Attractor validation rules. Preserve the objective intent. Output ONLY raw DOT."
+    return "You previously returned Attractor DOT that failed strict parse/validation or semantic loop quality checks.\n\nOriginal objective:\n$objectivePrompt\n\nInvalid DOT:\n$invalidDot\n\nDetected failures:\n$reason\n\nRepair the DOT so it is syntactically valid Graphviz, passes Attractor validation rules, and includes a sensible iterative quality loop (plan -> implement -> validate -> review with success/retry/fail routes). Preserve the objective intent. Output ONLY raw DOT."
 }
 
 proc ::attractor_web::__extract_svg_markup {payload} {
@@ -600,6 +917,15 @@ Validation-first requirements (mandatory for generated workflows):
     - fail -> exit (or postmortem -> exit)
 14. Prefer deterministic verification using tool nodes for validation commands whenever possible.
 
+Loop architecture contract (mandatory for every prompt, even simple ones):
+15. Do NOT produce one-shot linear pipelines.
+16. Include a full refinement loop: plan -> implement -> validate -> review -> (retry to plan/implement) until success.
+17. Include explicit edges labeled/conditioned for at least: `success`, `retry`, and `fail`.
+18. Keep retry routes semantically sensible:
+    - validation failures should route to implement (or plan when requirements are unclear)
+    - review failures should route to implement/plan, not directly to exit
+19. The graph must represent how quality is proven, not just how output is produced.
+
 Common shapes:
 - `box` (default): LLM step
 - `parallelogram`: tool step
@@ -614,7 +940,7 @@ digraph PipelineName {
   start [shape=Mdiamond, label="Start"];
   plan [label="Plan", prompt="Plan implementation steps against requirements"];
   implement [label="Implement", prompt="Implement the planned changes"];
-  validate_outputs [type=tool, label="Validate Outputs", tool_command="echo validate"];
+  validate_outputs [type=tool, label="Validate Outputs", tool_command="echo validate_artifact_requirements"];
   review_consensus [label="Review Consensus", goal_gate=true, retry_target="implement", prompt="Verify requirements are satisfied; return success/retry/fail."];
   exit [shape=Msquare, label="Exit"];
   start -> plan;
@@ -792,6 +1118,9 @@ proc ::attractor_web::__dot_user_prompt {mode payload} {
             append prompt "- Include explicit planning, implementation, validation, and review/decision stages.\n"
             append prompt "- Validation must verify work against requirements with concrete evidence checks.\n"
             append prompt "- Review/decision must support success/retry/fail and kick rework to planning or implementation using retry routing.\n"
+            append prompt "- Even for simple tasks, build an iterative quality loop (not a one-shot linear flow).\n"
+            append prompt "- Include explicit labeled outcome routes: success, retry, fail.\n"
+            append prompt "- The implementation stage prompt must directly encode the user task objective.\n"
             append prompt "- Output ONLY valid raw DOT."
             return $prompt
         }
@@ -845,7 +1174,7 @@ proc ::attractor_web::__dot_stream_generate {state payload mode chan} {
         set dotSource ""
         set workingPrompt $userPrompt
         set attempt 0
-        set maxAttempts 3
+        set maxAttempts 4
         while {$attempt < $maxAttempts} {
             incr attempt
             set requestArgs [::attractor_web::__dot_build_request $state $payload $workingPrompt $client $mode]
