@@ -16,6 +16,15 @@ digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }
 ```}
 } -result {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }}
 
+test attractor_web-extract-svg-markup-1.0 {svg extraction trims non-svg noise and returns svg block only} -body {
+    set payload "warning: ignored\n<?xml version=\"1.0\"?>\n<svg><g><text>ok</text></g></svg>\ntrailer"
+    ::attractor_web::__extract_svg_markup $payload
+} -result {<svg><g><text>ok</text></g></svg>}
+
+test attractor_web-extract-svg-markup-2.0 {non-svg payload yields empty string} -body {
+    ::attractor_web::__extract_svg_markup {digraph x { start -> exit; }}
+} -result {}
+
 test attractor_web-filename-validation-1.0 {filename validation enforces leaf-only names} -body {
     list \
       [::attractor_web::__filename_valid "flow.dot"] \
@@ -38,8 +47,9 @@ test attractor_web-dashboard-template-1.0 {dashboard html contains expected mark
       [expr {[string first "Attractor Web Dashboard" $html] >= 0}] \
       [expr {[string first "EventSource('/events')" $html] >= 0}] \
       [expr {[string first "Generate DOT" $html] >= 0}] \
-      [expr {[string first "/api/v1/dot/generate/stream" $html] >= 0}]
-} -result {1 1 1 1}
+      [expr {[string first "/api/v1/dot/generate/stream" $html] >= 0}] \
+      [expr {[string first "Preview DOT" $html] >= 0}]
+} -result {1 1 1 1 1}
 
 test attractor_web-dot-user-prompt-1.0 {dot stream payload validation enforces required fields} -body {
     list \

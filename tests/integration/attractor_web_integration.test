@@ -357,6 +357,28 @@ digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }
     file delete -force $runsRoot
 } -result {200 1 500 DOT_BINARY_MISSING}
 
+test integration-attractor-web-render-endpoint-1.1 {render endpoint rejects non-svg command output} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root render-endpoint-invalid-output]
+    set fakeDot [file join $runsRoot fake-dot.sh]
+    set fh [open $fakeDot w]
+    puts $fh "#!/usr/bin/env bash"
+    puts $fh "cat \"\$2\""
+    close $fh
+    file attributes $fakeDot -permissions 0755
+
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot -dot_bin $fakeDot]
+    set base [$server url]
+} -body {
+    set resp [::tests::http_client::json_post "$base/api/render" [dict create dotSource {digraph x { start [shape=Mdiamond]; exit [shape=Msquare]; start -> exit; }}]]
+    list \
+      [dict get $resp status] \
+      [dict get [dict get $resp body] code] \
+      [expr {[string first "SVG markup" [dict get [dict get $resp body] error]] >= 0}]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {500 DOT_RENDER_INVALID_OUTPUT 1}
+
 
 test integration-attractor-web-sse-1.0 {global and per-run sse endpoints stream data} -setup {
     set runsRoot [::tests::integration::attractor_web::new_runs_root sse]

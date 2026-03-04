@@ -185,6 +185,23 @@ proc ::attractor_web::normalize_dot_source {dotSource} {
     return $trimmed
 }
 
+proc ::attractor_web::__extract_svg_markup {payload} {
+    set text [string trim $payload]
+    if {$text eq ""} {
+        return ""
+    }
+    set lower [string tolower $text]
+    set start [string first "<svg" $lower]
+    if {$start < 0} {
+        return ""
+    }
+    set end [string first "</svg>" $lower $start]
+    if {$end < 0} {
+        return ""
+    }
+    return [string trim [string range $text $start [expr {$end + 5}]]]
+}
+
 proc ::attractor_web::__env_nonempty {name} {
     return [expr {[info exists ::env($name)] && [string trim $::env($name)] ne ""}]
 }
@@ -550,6 +567,9 @@ proc ::attractor_web::__html_dashboard {} {
       <textarea id="dotChanges" class="small" placeholder="Iterate changes (optional)"></textarea>
       <textarea id="dotFixErr" class="small" placeholder="Graphviz/validation error for Fix (optional)"></textarea>
       <div class="row">
+        <button id="previewBtn">Preview DOT</button>
+      </div>
+      <div class="row">
         <button id="iterateBtn">Iterate DOT</button>
         <button id="fixBtn">Fix DOT</button>
       </div>
@@ -574,7 +594,7 @@ proc ::attractor_web::__html_dashboard {} {
     </section>
   </main>
   <script>
-    const state = { runs: [], selected: null, fileName: '', eventSource: null, runEventSource: null, runEvents: [] };
+    const state = { runs: [], selected: null, fileName: '', eventSource: null, runEventSource: null, runEvents: [], previewReq: 0, previewTimer: null };
 
     function setConn(ok) {
       const el = document.getElementById('conn');
@@ -584,6 +604,61 @@ proc ::attractor_web::__html_dashboard {} {
 
     function showError(msg) {
       document.getElementById('runErr').textContent = msg || '';
+    }
+
+    function extractSvgMarkup(value) {
+      const text = (value || '').trim();
+      const start = text.search(/<svg[\s>]/i);
+      if (start < 0) return '';
+      const endMatch = text.slice(start).match(/<\/svg>/i);
+      if (!endMatch) return '';
+      return text.slice(start, start + endMatch.index + endMatch[0].length);
+    }
+
+    async function renderGraphFromDot(dotSource, opts) {
+      const options = opts || {};
+      const quiet = Boolean(options.quiet);
+      const reqId = ++state.previewReq;
+      const graph = document.getElementById('graph');
+
+      if (!dotSource || !dotSource.trim()) {
+        if (!quiet) {
+          graph.textContent = '(DOT source is empty)';
+        }
+        return;
+      }
+
+      try {
+        const rendered = await api('/api/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dotSource })
+        });
+        if (reqId !== state.previewReq) return;
+        const svg = extractSvgMarkup(rendered.svg || '');
+        if (!svg) {
+          throw new Error('DOT_RENDER_INVALID_OUTPUT: renderer returned non-SVG output');
+        }
+        graph.innerHTML = svg;
+      } catch (err) {
+        if (reqId !== state.previewReq) return;
+        graph.textContent = err.message;
+        if (!quiet) {
+          showError(err.message);
+        }
+      }
+    }
+
+    async function previewDot(opts) {
+      showError('');
+      await renderGraphFromDot(document.getElementById('dot').value, opts);
+    }
+
+    function schedulePreview() {
+      if (state.previewTimer) clearTimeout(state.previewTimer);
+      state.previewTimer = setTimeout(() => {
+        previewDot({ quiet: true });
+      }, 300);
     }
 
     async function api(path, opts) {
@@ -684,6 +759,7 @@ proc ::attractor_web::__html_dashboard {} {
           dotEl.value += delta;
         });
         dotEl.value = finalDot;
+        await previewDot({ quiet: true });
       } catch (err) {
         showError(err.message);
       }
@@ -708,6 +784,7 @@ proc ::attractor_web::__html_dashboard {} {
           dotEl.value += delta;
         });
         dotEl.value = finalDot;
+        await previewDot({ quiet: true });
       } catch (err) {
         showError(err.message);
       }
@@ -732,6 +809,7 @@ proc ::attractor_web::__html_dashboard {} {
           dotEl.value += delta;
         });
         dotEl.value = finalDot;
+        await previewDot({ quiet: true });
       } catch (err) {
         showError(err.message);
       }
@@ -782,16 +860,7 @@ proc ::attractor_web::__html_dashboard {} {
       document.getElementById('title').textContent = `Run ${run.id}`;
       document.getElementById('summary').textContent = JSON.stringify({ status: run.status, current_node: run.current_node, web: run.web }, null, 2);
 
-      try {
-        const rendered = await api('/api/render', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dotSource: run.dotSource })
-        });
-        document.getElementById('graph').innerHTML = rendered.svg || '';
-      } catch (err) {
-        document.getElementById('graph').textContent = err.message;
-      }
+      await renderGraphFromDot(run.dotSource, { quiet: true });
 
       const qWrap = document.getElementById('questions');
       qWrap.innerHTML = '';
@@ -861,15 +930,18 @@ proc ::attractor_web::__html_dashboard {} {
     }
 
     document.getElementById('generateBtn').onclick = generateDot;
+    document.getElementById('previewBtn').onclick = () => previewDot({ quiet: false });
     document.getElementById('fixBtn').onclick = fixDot;
     document.getElementById('iterateBtn').onclick = iterateDot;
     document.getElementById('runBtn').onclick = startRun;
     document.getElementById('refreshBtn').onclick = refreshRuns;
+    document.getElementById('dot').addEventListener('input', schedulePreview);
     document.getElementById('dotfile').onchange = async (evt) => {
       const file = evt.target.files && evt.target.files[0];
       if (!file) return;
       state.fileName = file.name;
       document.getElementById('dot').value = await file.text();
+      await previewDot({ quiet: true });
     };
 
     refreshRuns().then(connectGlobalSse);
@@ -1646,8 +1718,13 @@ proc ::attractor_web::__dispatch_route {id chan request} {
             ::attractor_web::__send_json $chan 500 [::attractor_web::__json_error $renderErr DOT_RENDER_FAILED]
             return 0
         }
+        set svg [::attractor_web::__extract_svg_markup $svg]
+        if {[string trim $svg] eq ""} {
+            ::attractor_web::__send_json $chan 500 [::attractor_web::__json_error "Graphviz dot output did not contain SVG markup" DOT_RENDER_INVALID_OUTPUT]
+            return 0
+        }
 
-        ::attractor_web::__send_json $chan 200 [dict create ok true svg $svg]
+        ::attractor_web::__send_response $chan 200 application/json "{\"ok\":true,\"svg\":[::attractor_web::__json_quote $svg]}"
         return 0
     }
 

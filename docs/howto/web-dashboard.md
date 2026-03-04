@@ -17,6 +17,7 @@ Navigate to:
 The dashboard supports:
 - pasting DOT source
 - uploading `.dot` files
+- previewing DOT to rendered SVG before running
 - starting runs
 - viewing stage artifacts
 - answering `wait.human` prompts
