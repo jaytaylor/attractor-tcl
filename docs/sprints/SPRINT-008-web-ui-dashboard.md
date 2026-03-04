@@ -100,6 +100,18 @@ Relative paths below are from this sprint doc (`docs/sprints/`):
   - `../../.scratch/coreys-attractor/src/test/kotlin/attractor/cli/commands/DotCommandsTest.kt`
   - `../../.scratch/coreys-attractor/src/test/kotlin/attractor/web/RestApiRouterTest.kt`
 
+Key anchors to review (Corey):
+- DOT fence-stripping that makes generated DOT immediately runnable:
+  - `../../.scratch/coreys-attractor/src/main/kotlin/attractor/web/DotGenerator.kt` (`extractDotSource()`)
+- "Dotfile" upload UX (preserve file name; prevent auto-generation from overwriting uploaded DOT):
+  - `../../.scratch/coreys-attractor/src/main/kotlin/attractor/web/WebMonitorServer.kt` (`onDotFileSelected()`)
+- Core execution loop invariants (stage lifecycle events, checkpointing, and loop restart semantics):
+  - `../../.scratch/coreys-attractor/src/main/kotlin/attractor/engine/Engine.kt` (`runLoop()`, `loop_restart`)
+- Tool-call execution loop (how a single generation can repeatedly call tools and continue):
+  - `../../.scratch/coreys-attractor/src/main/kotlin/attractor/llm/Client.kt` ("Tool execution loop")
+- Supervisor loop + child dotfile launch:
+  - `../../.scratch/coreys-attractor/src/main/kotlin/attractor/handlers/ManagerLoopHandler.kt` (`stack.child_dotfile`, `startChildPipeline()`)
+
 Critical carry-over requirement for this sprint (dotfile expansion/generation compatibility):
 - `POST /api/run` must accept DOT source pasted from agentic systems (often wrapped in markdown fences) by stripping fences before validation/execute, matching the intent of `extractDotSource()` in `DotGenerator`.
 
@@ -120,7 +132,7 @@ In scope (Sprint #008):
 - Deterministic automated tests for server/API/SSE + human-gate flow.
 
 Out of scope (explicitly not in Sprint #008):
-- Natural-language DOT generation/iteration (Corey’s `/api/generate*` family).
+- LLM-backed DOT generation/iteration endpoints (Corey’s generate/fix/iterate families). Note: compatibility with generated DOT is in scope via markdown-fence stripping on `POST /api/run` and `POST /api/render`.
 - Authentication/multi-user security model (assume localhost developer use).
 - A full REST API v1 surface (we keep endpoints minimal and versionless for now).
 - Non-local deployment hardening (TLS, reverse proxies, etc).
@@ -477,7 +489,7 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - If `fileName` is provided, reject path-like values (must not contain `/`, `\\`, or `..`), and persist it into `web.json.file_name` for UI display (reference UX patterns: `../../.scratch/coreys-attractor/src/main/kotlin/attractor/web/WebMonitorServer.kt` `onDotFileSelected()`).
   - Tests:
     - Positive: start a run and fetch hydrated state + per-node artifacts.
-    - Positive: `POST /api/run` accepts DOT wrapped in markdown fences and runs successfully.
+    - Positive: `POST /api/run` accepts DOT wrapped in markdown fences and runs successfully (plain fences, `dot`, `DOT`, and `graphviz` fence tags).
     - Negative: invalid `run_id`/`node_id` rejected; `node_id` not in run returns `not_found`.
     - Negative: `POST /api/run` rejects `fileName` containing `/`, `\\`, or `..` with error code `INVALID_FILE_NAME`.
     - Negative: `POST /api/run` rejects `dotSource` that becomes empty after fence-stripping with error code `INVALID_DOT_SOURCE`.
@@ -495,7 +507,7 @@ Track 0 -> Track A -> Track B -> Track C -> Track D -> Final.
     - Accept DOT wrapped in markdown fences (same normalization behavior as `POST /api/run`).
   - Tests:
     - Positive: render a known-good DOT into SVG.
-    - Positive: render a markdown-fenced DOT into SVG (fences are stripped).
+    - Positive: render a markdown-fenced DOT into SVG (plain fences, `dot`, `DOT`, and `graphviz` fence tags; fences are stripped).
     - Negative: missing `dot` binary returns a deterministic error code.
     - Negative: `POST /api/render` rejects `dotSource` that becomes empty after fence-stripping with error code `INVALID_DOT_SOURCE`.
   - Verification:
