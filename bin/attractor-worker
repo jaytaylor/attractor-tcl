@@ -8,12 +8,14 @@ namespace eval ::attractor_worker {
     variable run_id ""
     variable run_dir ""
     variable max_wait_ms 300000
+    variable provider ""
+    variable model ""
     variable question_seq 0
     variable event_seq 0
 }
 
 proc ::attractor_worker::usage {} {
-    puts stderr "usage: bin/attractor-worker --run-id ID --run-dir PATH ?--max-question-wait-ms N?"
+    puts stderr "usage: bin/attractor-worker --run-id ID --run-dir PATH ?--max-question-wait-ms N? ?--provider NAME? ?--model MODEL?"
     exit 2
 }
 
@@ -136,6 +138,20 @@ while {$idx < $argc} {
             }
             set ::attractor_worker::max_wait_ms [lindex $argv $idx]
         }
+        --provider {
+            incr idx
+            if {$idx >= $argc} {
+                ::attractor_worker::usage
+            }
+            set ::attractor_worker::provider [string tolower [string trim [lindex $argv $idx]]]
+        }
+        --model {
+            incr idx
+            if {$idx >= $argc} {
+                ::attractor_worker::usage
+            }
+            set ::attractor_worker::model [string trim [lindex $argv $idx]]
+        }
         default {
             ::attractor_worker::usage
         }
@@ -149,6 +165,21 @@ if {$::attractor_worker::run_id eq "" || $::attractor_worker::run_dir eq ""} {
 if {![string is integer -strict $::attractor_worker::max_wait_ms] || $::attractor_worker::max_wait_ms < 1} {
     puts stderr "invalid --max-question-wait-ms: $::attractor_worker::max_wait_ms"
     exit 2
+}
+if {$::attractor_worker::provider ne "" && $::attractor_worker::provider ni {openai anthropic gemini}} {
+    puts stderr "invalid --provider: $::attractor_worker::provider"
+    exit 2
+}
+if {$::attractor_worker::provider ne ""} {
+    set ::env(ATTRACTOR_PROVIDER) $::attractor_worker::provider
+    set ::env(UNIFIED_LLM_PROVIDER) $::attractor_worker::provider
+}
+if {$::attractor_worker::model ne ""} {
+    switch -- $::attractor_worker::provider {
+        openai { set ::env(OPENAI_MODEL) $::attractor_worker::model }
+        anthropic { set ::env(ANTHROPIC_MODEL) $::attractor_worker::model }
+        gemini { set ::env(GEMINI_MODEL) $::attractor_worker::model }
+    }
 }
 
 file mkdir $::attractor_worker::run_dir

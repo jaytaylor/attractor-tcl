@@ -236,14 +236,50 @@ test integration-attractor-web-api-validation-1.0 {api rejects invalid file name
     file delete -force $runsRoot
 } -result {400 INVALID_FILE_NAME 400 INVALID_DOT_SOURCE}
 
+test integration-attractor-web-api-validation-1.1 {api rejects unsupported run provider} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root api-provider-validation]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+} -body {
+    set resp [::tests::http_client::json_post "$base/api/run" [dict create \
+        dotSource {digraph x { start [shape=Mdiamond]; build [type=tool, tool_command="echo ok"]; exit [shape=Msquare]; start -> build; build -> exit; }} \
+        provider badprovider]]
+    list [dict get $resp status] [dict get [dict get $resp body] code]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {400 BAD_REQUEST}
+
+test integration-attractor-web-run-provider-metadata-1.0 {run payload provider and model are persisted in web metadata} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root run-provider-metadata]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+} -body {
+    set dot {digraph x { start [shape=Mdiamond]; build [type=tool, tool_command="echo ok"]; exit [shape=Msquare]; start -> build; build -> exit; }}
+    set startResp [::tests::http_client::json_post "$base/api/run" [dict create dotSource $dot provider anthropic model claude-haiku-4-5]]
+    set runId [dict get [dict get $startResp body] id]
+    set _done [::tests::integration::attractor_web::wait_for_run_status $base $runId success 5000]
+    set detail [::tests::http_client::json_get "$base/api/pipeline?id=$runId"]
+    set web [dict get [dict get $detail body] web]
+    list \
+      [dict get $startResp status] \
+      [dict get $detail status] \
+      [dict get $web provider] \
+      [dict get $web model]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {200 200 anthropic claude-haiku-4-5}
+
 
 test integration-attractor-web-dot-stream-endpoints-1.0 {dot generate/fix/iterate stream endpoints emit delta and done payloads} -setup {
     set runsRoot [::tests::integration::attractor_web::new_runs_root dot-stream]
+    set dotClient [::unified_llm::client_new -provider openai -transport ::tests::integration::attractor_web::dot_llm_transport]
     set server [::attractor_web::server_new \
         -bind 127.0.0.1 \
         -web_port 0 \
         -runs_root $runsRoot \
-        -dot_llm_transport ::tests::integration::attractor_web::dot_llm_transport \
+        -dot_llm_client $dotClient \
         -dot_llm_provider openai \
         -dot_llm_model gpt-5.2]
     set base [$server url]
@@ -294,6 +330,7 @@ test integration-attractor-web-dot-stream-endpoints-1.0 {dot generate/fix/iterat
       [expr {[dict exists $iteratedGraph id] && [dict get $iteratedGraph id] ne ""}]
 } -cleanup {
     $server close
+    $dotClient close
     file delete -force $runsRoot
 } -result {200 1 1 1 200 1 1 200 1 1}
 

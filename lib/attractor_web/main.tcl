@@ -244,60 +244,40 @@ proc ::attractor_web::__dot_model_default {provider} {
 }
 
 proc ::attractor_web::__dot_system_prompt {} {
-    return {You are an expert at writing Attractor pipeline files in Graphviz DOT format.
-Attractor is a DOT-based pipeline runner that orchestrates multi-stage AI workflows.
+    return {You write Attractor pipeline files in Graphviz DOT.
 
-## Pipeline Structure
+Output MUST be directly accepted by a strict parser.
+Do not output markdown, explanations, comments, or code fences.
+Output only raw DOT.
 
-Every pipeline is a `digraph` with required graph attributes:
-  digraph PipelineName {
-    graph [goal="High-level goal description", label="Human-readable name"]
-    ...
-  }
+Hard constraints:
+1. Start with `digraph Name {` and end with `}`.
+2. Do NOT emit `graph [...]`, `node [...]`, `edge [...]`, `subgraph`, `rankdir`, or any global attributes.
+3. Node IDs must match: `[A-Za-z_][A-Za-z0-9_]*` (no spaces, no hyphens).
+4. Include exactly one start node: `start [shape=Mdiamond, label="Start"];`
+5. Include exactly one exit node: `exit [shape=Msquare, label="Exit"];`
+6. Every non-start/non-exit node must have a `label`.
+7. Keep all nodes reachable from `start` and ensure a path to `exit`.
+8. Use double quotes around attribute string values.
+9. For tool stages, use `type=tool` and `tool_command="..."`.
 
-## Node Types (by shape attribute)
+Common shapes:
+- `box` (default): LLM step
+- `parallelogram`: tool step
+- `hexagon`: wait.human step
+- `diamond`: conditional router
+- `component`: fan-out
+- `tripleoctagon`: fan-in
+- `house`: manager loop
 
-| shape         | purpose                                            |
-|---------------|----------------------------------------------------|
-| Mdiamond      | Start node - exactly one required                  |
-| Msquare       | Exit node - exactly one required                   |
-| box           | LLM codergen stage (default shape)                 |
-| hexagon       | Wait for human approval / input                    |
-| diamond       | Conditional branch - routes by edge label          |
-| component     | Spawn parallel branches                            |
-| tripleoctagon | Fan-in - joins parallel branches back together     |
-| parallelogram | Tool / shell execution stage                       |
-| house         | Stack manager loop                                 |
-
-## Key Node Attributes
-
-- label       - display name (required on all nodes)
-- prompt      - LLM prompt for box nodes; supports $variable and $goal substitution
-- max_retries - integer, how many times to retry on failure (default 3)
-- timeout     - duration string e.g. "30s", "5m", "1h"
-- goal_gate   - condition expression checked at exit node
-
-## Edge Attributes (for conditional routing out of diamond nodes)
-
-- label     - branch name shown in UI
-- condition - expression like "outcome=success", "outcome!=success", "score>80"
-
-## Variable Expansion in Prompts
-
-Use $name syntax to reference context values set by previous stages:
-- $goal         - the pipeline's graph[goal] attribute
-- $variableName - any key set by a prior stage's output
-
-## Rules
-
-1. Exactly one start node (shape=Mdiamond)
-2. Exactly one exit node (shape=Msquare)
-3. All nodes must be reachable; no isolated nodes
-4. Conditional (diamond) nodes must have labelled outgoing edges for every branch
-5. For parallel execution: component fan-out node -> parallel work -> tripleoctagon fan-in
-6. Keep prompts specific, actionable, and relevant to the pipeline goal
-7. Use concise camelCase or snake_case for node IDs (no spaces)
-8. Output ONLY the raw DOT source - no markdown fences, no explanations}
+Canonical minimal template:
+digraph PipelineName {
+  start [shape=Mdiamond, label="Start"];
+  build [label="Build", prompt="Do the work"];
+  exit [shape=Msquare, label="Exit"];
+  start -> build;
+  build -> exit;
+}}
 }
 
 proc ::attractor_web::__json_safe_text {text} {
@@ -517,71 +497,263 @@ proc ::attractor_web::__html_dashboard {} {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Attractor Dashboard</title>
   <style>
-    :root { color-scheme: light; }
-    body { margin: 0; font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif; background: linear-gradient(135deg, #f4f8ff, #eef7ec); color: #132a1f; }
-    header { padding: 14px 18px; background: #113a2d; color: #f2fff2; display: flex; justify-content: space-between; align-items: center; }
-    main { display: grid; grid-template-columns: 340px 1fr; min-height: calc(100vh - 56px); }
-    aside { border-right: 1px solid #d5e4d7; padding: 14px; overflow: auto; }
-    section { padding: 14px; overflow: auto; }
-    textarea { width: 100%; min-height: 140px; }
-    textarea.small { min-height: 72px; }
-    input, button, textarea { font: inherit; }
-    button { cursor: pointer; }
-    .run { border: 1px solid #cadccf; padding: 10px; border-radius: 10px; margin-bottom: 10px; background: #fff; }
-    .run.active { border-color: #1b6c4e; box-shadow: 0 0 0 2px #d6ebdf; }
-    .status { font-weight: 600; }
-    pre { background: #0f1d17; color: #d9fbe9; padding: 12px; border-radius: 8px; overflow: auto; }
-    .row { display: flex; gap: 8px; margin: 8px 0; }
+    :root {
+      color-scheme: light;
+      --bg-a: #f7fbff;
+      --bg-b: #eff6f1;
+      --surface: #ffffff;
+      --line: #d5e3d7;
+      --ink: #173126;
+      --ink-muted: #577266;
+      --accent: #14593d;
+      --accent-soft: #d4eadf;
+      --danger: #a32121;
+      --danger-soft: #ffe8e8;
+      --code-bg: #0d1d16;
+      --code-ink: #d7f7e9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1400px 520px at 8% -15%, #dff0ff 0%, transparent 65%),
+        radial-gradient(1200px 520px at 100% -10%, #dbf3e3 0%, transparent 62%),
+        linear-gradient(145deg, var(--bg-a), var(--bg-b));
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 14px 18px;
+      background: linear-gradient(90deg, #0f4331, #14553b);
+      color: #f4fff7;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #0d3d2b;
+    }
+    .brand-title { font-weight: 700; letter-spacing: 0.2px; }
+    .brand-sub { font-size: 12px; opacity: 0.86; margin-top: 2px; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .indicator {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #1e6f4d;
+      border: 1px solid #2e8b63;
+    }
+    .indicator.offline { background: #762a2a; border-color: #934040; }
+    .activity {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    main {
+      display: grid;
+      grid-template-columns: 376px 1fr;
+      min-height: calc(100vh - 62px);
+      gap: 14px;
+      padding: 14px;
+    }
+    aside, section { overflow: auto; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(18, 40, 30, 0.05);
+    }
+    h3 { margin: 0 0 10px 0; }
+    h4 { margin: 14px 0 8px 0; }
+    .label {
+      margin: 2px 0 6px 1px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+    }
+    textarea, input, select {
+      width: 100%;
+      border: 1px solid #c8d7cc;
+      border-radius: 10px;
+      background: #fbfefd;
+      color: var(--ink);
+      padding: 8px 9px;
+      font: inherit;
+      line-height: 1.35;
+    }
+    textarea { min-height: 144px; resize: vertical; }
+    textarea.small { min-height: 78px; }
+    .row { display: flex; gap: 8px; margin: 8px 0; align-items: center; }
     .grow { flex: 1; }
+    button {
+      border: 1px solid #b8cfc0;
+      background: #f4fbf7;
+      color: #103226;
+      border-radius: 10px;
+      padding: 7px 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 120ms ease, transform 120ms ease;
+    }
+    button:hover { background: #e8f6ee; transform: translateY(-1px); }
+    button:disabled { opacity: 0.58; cursor: not-allowed; transform: none; }
+    #generateBtn, #runBtn, #previewBtn { background: #def4e7; border-color: #9dcfb2; }
+    #generateBtn:hover, #runBtn:hover, #previewBtn:hover { background: #d0eedf; }
+    .hint { color: var(--ink-muted); font-size: 12px; margin: 6px 0 2px 1px; }
+    .workflow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .step {
+      font-size: 12px;
+      border: 1px solid #cad9ce;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #f7fbf8;
+      color: #557166;
+    }
+    .step.active { background: var(--accent); color: #f5fff9; border-color: var(--accent); }
+    .step.done { background: var(--accent-soft); color: #0f4630; border-color: #9dcdb4; }
+    .run {
+      border: 1px solid #cadccf;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .run.active { border-color: #1b6c4e; box-shadow: 0 0 0 2px #d6ebdf; }
+    .status { font-weight: 700; }
+    .meta { color: var(--ink-muted); font-size: 12px; }
+    #graph {
+      min-height: 230px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background:
+        linear-gradient(45deg, rgba(190, 214, 201, 0.12) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(190, 214, 201, 0.12) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(190, 214, 201, 0.12) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(190, 214, 201, 0.12) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      padding: 10px;
+      display: flex;
+      align-items: flex-start;
+      overflow: auto;
+    }
+    #graph svg { width: min(560px, 100%); height: auto; display: block; }
+    #summary {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+      color: var(--ink);
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      padding: 12px;
+      border-radius: 10px;
+      overflow: auto;
+      min-height: 60px;
+      max-height: 240px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
     .question { border: 1px solid #f5d06f; background: #fff9ea; padding: 10px; border-radius: 10px; margin: 8px 0; }
-    .indicator { font-size: 12px; padding: 4px 8px; border-radius: 999px; background: #274e3f; }
-    .indicator.offline { background: #712626; }
-    .meta { color: #476155; font-size: 12px; }
+    .error { color: var(--danger); font-weight: 600; margin: 8px 2px 2px; }
+    .error-meta {
+      margin: 2px 2px 8px;
+      border-left: 3px solid #e68f8f;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: var(--danger-soft);
+      color: #682020;
+      font-size: 12px;
+      white-space: pre-wrap;
+      display: none;
+    }
+    @media (max-width: 1080px) {
+      main { grid-template-columns: 1fr; }
+      aside { order: 2; }
+      section { order: 1; }
+      header { position: static; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <div>Attractor Web Dashboard</div>
-    <div id="conn" class="indicator offline">SSE offline</div>
+    <div>
+      <div class="brand-title">Attractor Web Dashboard</div>
+      <div class="brand-sub">Prompt -> DOT -> Preview -> Run</div>
+    </div>
+    <div class="header-right">
+      <div id="conn" class="indicator offline">SSE offline</div>
+      <div id="activity" class="activity">Idle</div>
+    </div>
   </header>
   <main>
     <aside>
-      <h3>Start Run</h3>
-      <textarea id="dotPrompt" class="small" placeholder="Describe the pipeline you want"></textarea>
-      <div class="row">
-        <select id="provider">
-          <option value="">auto provider</option>
-          <option value="openai">openai</option>
-          <option value="anthropic">anthropic</option>
-          <option value="gemini">gemini</option>
-        </select>
-        <input id="model" class="grow" placeholder="optional model override">
+      <div class="panel">
+        <h3>Compose</h3>
+        <div class="label">Prompt</div>
+        <textarea id="dotPrompt" class="small" placeholder="Describe the pipeline you want"></textarea>
+        <div class="row">
+          <select id="provider">
+            <option value="">auto provider</option>
+            <option value="openai">openai</option>
+            <option value="anthropic">anthropic</option>
+            <option value="gemini">gemini</option>
+          </select>
+          <input id="model" class="grow" placeholder="optional model override">
+        </div>
+        <div class="row">
+          <button id="generateBtn">Generate DOT</button>
+          <button id="previewBtn">Preview DOT</button>
+        </div>
+        <div class="row">
+          <input id="dotfile" class="grow" type="file" accept=".dot,text/plain">
+        </div>
+
+        <div class="label">DOT Source</div>
+        <textarea id="dot" placeholder="Paste DOT source"></textarea>
+
+        <div class="label">Iterate DOT</div>
+        <textarea id="dotChanges" class="small" placeholder="Describe what should change in the graph"></textarea>
+        <div class="row">
+          <button id="iterateBtn">Iterate DOT</button>
+        </div>
+        <div class="label">Fix DOT</div>
+        <textarea id="dotFixErr" class="small" placeholder="Paste Graphviz or validation errors to guide fixes"></textarea>
+        <div class="row">
+          <button id="fixBtn">Fix DOT</button>
+          <button id="runBtn">Run</button>
+          <button id="refreshBtn">Refresh</button>
+        </div>
+        <p class="hint">Tip: edit DOT directly and press Preview for instant validation feedback.</p>
+        <div id="runErr" class="error"></div>
+        <div id="runErrMeta" class="error-meta"></div>
       </div>
-      <div class="row">
-        <button id="generateBtn">Generate DOT</button>
+
+      <div class="panel">
+        <h3>Runs</h3>
+        <div id="runs"></div>
       </div>
-      <div class="row">
-        <input id="dotfile" class="grow" type="file" accept=".dot,text/plain">
-      </div>
-      <textarea id="dot" placeholder="Paste DOT source"></textarea>
-      <textarea id="dotChanges" class="small" placeholder="Iterate changes (optional)"></textarea>
-      <textarea id="dotFixErr" class="small" placeholder="Graphviz/validation error for Fix (optional)"></textarea>
-      <div class="row">
-        <button id="previewBtn">Preview DOT</button>
-      </div>
-      <div class="row">
-        <button id="iterateBtn">Iterate DOT</button>
-        <button id="fixBtn">Fix DOT</button>
-      </div>
-      <div class="row">
-        <button id="runBtn">Run</button>
-        <button id="refreshBtn">Refresh</button>
-      </div>
-      <p id="runErr" style="color:#9f1f1f"></p>
-      <h3>Runs</h3>
-      <div id="runs"></div>
     </aside>
     <section>
+      <div id="workflow" class="workflow">
+        <div class="step active" data-step="prompt">1 Prompt</div>
+        <div class="step" data-step="generate">2 Generate</div>
+        <div class="step" data-step="preview">3 Preview</div>
+        <div class="step" data-step="iterate">4 Iterate</div>
+        <div class="step" data-step="run">5 Run</div>
+      </div>
       <h3 id="title">Select a run</h3>
       <div id="summary"></div>
       <div id="questions"></div>
@@ -594,7 +766,17 @@ proc ::attractor_web::__html_dashboard {} {
     </section>
   </main>
   <script>
-    const state = { runs: [], selected: null, fileName: '', eventSource: null, runEventSource: null, runEvents: [], previewReq: 0, previewTimer: null };
+    const state = {
+      runs: [],
+      selected: null,
+      fileName: '',
+      eventSource: null,
+      runEventSource: null,
+      runEvents: [],
+      previewReq: 0,
+      previewTimer: null,
+      busy: false
+    };
 
     function setConn(ok) {
       const el = document.getElementById('conn');
@@ -602,8 +784,57 @@ proc ::attractor_web::__html_dashboard {} {
       el.textContent = ok ? 'SSE online' : 'SSE offline';
     }
 
-    function showError(msg) {
-      document.getElementById('runErr').textContent = msg || '';
+    function setActivity(message) {
+      document.getElementById('activity').textContent = message || 'Idle';
+    }
+
+    function setWorkflow(stepName) {
+      const order = ['prompt', 'generate', 'preview', 'iterate', 'run'];
+      const idx = order.indexOf(stepName);
+      const steps = document.querySelectorAll('#workflow .step');
+      steps.forEach((el) => {
+        const cur = order.indexOf(el.getAttribute('data-step'));
+        el.classList.remove('active', 'done');
+        if (cur < idx) el.classList.add('done');
+        if (cur === idx) el.classList.add('active');
+      });
+    }
+
+    function setBusy(isBusy) {
+      state.busy = isBusy;
+      const ids = ['generateBtn', 'previewBtn', 'iterateBtn', 'fixBtn', 'runBtn', 'refreshBtn'];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isBusy;
+      }
+    }
+
+    function formatDiagnostics(details) {
+      if (!details || !Array.isArray(details.diagnostics) || details.diagnostics.length === 0) {
+        return '';
+      }
+      const lines = [];
+      for (const d of details.diagnostics.slice(0, 6)) {
+        const sev = d && d.severity ? `[${d.severity}] ` : '';
+        const rule = d && d.rule ? `${d.rule}: ` : '';
+        const msg = d && d.message ? d.message : JSON.stringify(d);
+        lines.push(`${sev}${rule}${msg}`);
+      }
+      return lines.join('\n');
+    }
+
+    function showError(msg, details) {
+      const text = msg || '';
+      document.getElementById('runErr').textContent = text;
+      const meta = document.getElementById('runErrMeta');
+      const diag = formatDiagnostics(details);
+      if (diag) {
+        meta.style.display = 'block';
+        meta.textContent = diag;
+      } else {
+        meta.style.display = 'none';
+        meta.textContent = '';
+      }
     }
 
     function extractSvgMarkup(value) {
@@ -629,6 +860,7 @@ proc ::attractor_web::__html_dashboard {} {
       }
 
       try {
+        if (!quiet) setActivity('Rendering graph preview');
         const rendered = await api('/api/render', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -640,17 +872,20 @@ proc ::attractor_web::__html_dashboard {} {
           throw new Error('DOT_RENDER_INVALID_OUTPUT: renderer returned non-SVG output');
         }
         graph.innerHTML = svg;
+        if (!quiet) setActivity('Preview updated');
       } catch (err) {
         if (reqId !== state.previewReq) return;
         graph.textContent = err.message;
         if (!quiet) {
-          showError(err.message);
+          showError(err.message, err.details);
+          setActivity('Preview failed');
         }
       }
     }
 
     async function previewDot(opts) {
       showError('');
+      setWorkflow('preview');
       await renderGraphFromDot(document.getElementById('dot').value, opts);
     }
 
@@ -658,7 +893,7 @@ proc ::attractor_web::__html_dashboard {} {
       if (state.previewTimer) clearTimeout(state.previewTimer);
       state.previewTimer = setTimeout(() => {
         previewDot({ quiet: true });
-      }, 300);
+      }, 420);
     }
 
     async function api(path, opts) {
@@ -667,7 +902,9 @@ proc ::attractor_web::__html_dashboard {} {
       const body = ct.includes('application/json') ? await res.json() : await res.text();
       if (!res.ok) {
         const msg = body && body.error ? `${body.code || 'ERROR'}: ${body.error}` : `HTTP ${res.status}`;
-        throw new Error(msg);
+        const err = new Error(msg);
+        err.details = body;
+        throw err;
       }
       return body;
     }
@@ -679,6 +916,18 @@ proc ::attractor_web::__html_dashboard {} {
       if (provider) out.provider = provider;
       if (model) out.model = model;
       return out;
+    }
+
+    function runSummaryText(run) {
+      const web = run.web || {};
+      const lines = [
+        `Status: ${run.status || '-'}`,
+        `Current Node: ${run.current_node || '-'}`,
+        `Run ID: ${run.id || web.run_id || '-'}`,
+        `Provider: ${web.provider || 'default'}`,
+        `Model: ${web.model || 'default'}`
+      ];
+      return lines.join('\n');
     }
 
     async function readSseJsonFrames(response, onEvent) {
@@ -747,6 +996,7 @@ proc ::attractor_web::__html_dashboard {} {
 
     async function generateDot() {
       showError('');
+      setWorkflow('generate');
       const prompt = document.getElementById('dotPrompt').value.trim();
       if (!prompt) {
         showError('Prompt is required for DOT generation');
@@ -754,19 +1004,26 @@ proc ::attractor_web::__html_dashboard {} {
       }
       const dotEl = document.getElementById('dot');
       dotEl.value = '';
+      setBusy(true);
+      setActivity('Generating DOT');
       try {
         const finalDot = await streamDot('/api/v1/dot/generate/stream', { prompt, ...dotOptions() }, (delta) => {
           dotEl.value += delta;
         });
         dotEl.value = finalDot;
         await previewDot({ quiet: true });
+        setActivity('DOT generated');
       } catch (err) {
-        showError(err.message);
+        showError(err.message, err.details);
+        setActivity('Generation failed');
+      } finally {
+        setBusy(false);
       }
     }
 
     async function fixDot() {
       showError('');
+      setWorkflow('iterate');
       const dotSource = document.getElementById('dot').value;
       const error = document.getElementById('dotFixErr').value.trim();
       if (!dotSource.trim()) {
@@ -779,19 +1036,26 @@ proc ::attractor_web::__html_dashboard {} {
       }
       const dotEl = document.getElementById('dot');
       dotEl.value = '';
+      setBusy(true);
+      setActivity('Fixing DOT');
       try {
         const finalDot = await streamDot('/api/v1/dot/fix/stream', { dotSource, error, ...dotOptions() }, (delta) => {
           dotEl.value += delta;
         });
         dotEl.value = finalDot;
         await previewDot({ quiet: true });
+        setActivity('DOT fixed');
       } catch (err) {
-        showError(err.message);
+        showError(err.message, err.details);
+        setActivity('Fix failed');
+      } finally {
+        setBusy(false);
       }
     }
 
     async function iterateDot() {
       showError('');
+      setWorkflow('iterate');
       const baseDot = document.getElementById('dot').value;
       const changes = document.getElementById('dotChanges').value.trim();
       if (!baseDot.trim()) {
@@ -804,20 +1068,30 @@ proc ::attractor_web::__html_dashboard {} {
       }
       const dotEl = document.getElementById('dot');
       dotEl.value = '';
+      setBusy(true);
+      setActivity('Iterating DOT');
       try {
         const finalDot = await streamDot('/api/v1/dot/iterate/stream', { baseDot, changes, ...dotOptions() }, (delta) => {
           dotEl.value += delta;
         });
         dotEl.value = finalDot;
         await previewDot({ quiet: true });
+        setActivity('DOT updated');
       } catch (err) {
-        showError(err.message);
+        showError(err.message, err.details);
+        setActivity('Iterate failed');
+      } finally {
+        setBusy(false);
       }
     }
 
     function renderRuns() {
       const wrap = document.getElementById('runs');
       wrap.innerHTML = '';
+      if (!state.runs.length) {
+        wrap.innerHTML = '<div class="meta">No runs yet. Generate or paste DOT and click Run.</div>';
+        return;
+      }
       for (const run of state.runs) {
         const el = document.createElement('div');
         el.className = `run${state.selected === run.id ? ' active' : ''}`;
@@ -828,20 +1102,30 @@ proc ::attractor_web::__html_dashboard {} {
     }
 
     async function refreshRuns() {
-      state.runs = await api('/api/pipelines');
-      renderRuns();
-      if (state.selected && !state.runs.find(r => r.id === state.selected)) {
-        state.selected = null;
-      }
-      if (state.selected) {
-        await loadRun(state.selected);
+      try {
+        state.runs = await api('/api/pipelines');
+        renderRuns();
+        if (state.selected && !state.runs.find(r => r.id === state.selected)) {
+          state.selected = null;
+        }
+        if (state.selected) {
+          await loadRun(state.selected);
+        }
+      } catch (err) {
+        showError(err.message, err.details);
       }
     }
 
     async function startRun() {
       showError('');
+      setWorkflow('run');
+      setBusy(true);
+      setActivity('Starting run');
       try {
         const payload = { dotSource: document.getElementById('dot').value };
+        const opts = dotOptions();
+        if (opts.provider) payload.provider = opts.provider;
+        if (opts.model) payload.model = opts.model;
         if (state.fileName) payload.fileName = state.fileName;
         const out = await api('/api/run', {
           method: 'POST',
@@ -850,15 +1134,26 @@ proc ::attractor_web::__html_dashboard {} {
         });
         await refreshRuns();
         await selectRun(out.id);
+        setActivity('Run started');
       } catch (err) {
-        showError(err.message);
+        showError(err.message, err.details);
+        if (err.details && err.details.code === 'INVALID_DOT_SOURCE') {
+          const diagnosticText = formatDiagnostics(err.details);
+          if (diagnosticText) {
+            document.getElementById('dotFixErr').value = diagnosticText;
+          }
+        }
+        setActivity('Run failed');
+      } finally {
+        setBusy(false);
       }
     }
 
     async function loadRun(runId) {
       const run = await api(`/api/pipeline?id=${encodeURIComponent(runId)}`);
       document.getElementById('title').textContent = `Run ${run.id}`;
-      document.getElementById('summary').textContent = JSON.stringify({ status: run.status, current_node: run.current_node, web: run.web }, null, 2);
+      document.getElementById('summary').textContent = runSummaryText(run);
+      setWorkflow('run');
 
       await renderGraphFromDot(run.dotSource, { quiet: true });
 
@@ -908,6 +1203,7 @@ proc ::attractor_web::__html_dashboard {} {
         state.runEvents.push(evt.data);
         if (state.runEvents.length > 80) state.runEvents.shift();
         document.getElementById('events').textContent = state.runEvents.join('\n');
+        setActivity(`Streaming events: ${runId}`);
       };
       state.runEventSource.onerror = () => {};
     }
@@ -929,6 +1225,18 @@ proc ::attractor_web::__html_dashboard {} {
       };
     }
 
+    document.addEventListener('keydown', async (evt) => {
+      if (!(evt.ctrlKey || evt.metaKey)) return;
+      if (evt.key === 'Enter') {
+        evt.preventDefault();
+        if (evt.shiftKey) {
+          await previewDot({ quiet: false });
+        } else {
+          await startRun();
+        }
+      }
+    });
+
     document.getElementById('generateBtn').onclick = generateDot;
     document.getElementById('previewBtn').onclick = () => previewDot({ quiet: false });
     document.getElementById('fixBtn').onclick = fixDot;
@@ -944,6 +1252,8 @@ proc ::attractor_web::__html_dashboard {} {
       await previewDot({ quiet: true });
     };
 
+    setWorkflow('prompt');
+    setActivity('Idle');
     refreshRuns().then(connectGlobalSse);
   </script>
 </body>
@@ -1284,12 +1594,18 @@ proc ::attractor_web::__worker_script_path {} {
     return [file join $root bin attractor-worker]
 }
 
-proc ::attractor_web::__spawn_worker {id runId runDir} {
+proc ::attractor_web::__spawn_worker {id runId runDir {provider ""} {model ""}} {
     variable servers
     set state [dict get $servers $id]
 
     set workerScript [::attractor_web::__worker_script_path]
     set cmd [list [info nameofexecutable] $workerScript --run-id $runId --run-dir $runDir --max-question-wait-ms [dict get $state max_question_wait_ms]]
+    if {[string trim $provider] ne ""} {
+        lappend cmd --provider [string trim $provider]
+    }
+    if {[string trim $model] ne ""} {
+        lappend cmd --model [string trim $model]
+    }
     set pipeline [linsert $cmd 0 |]
 
     if {[catch {set chan [open $pipeline r]} err]} {
@@ -1565,6 +1881,23 @@ proc ::attractor_web::__dispatch_route {id chan request} {
             }
         }
 
+        set runProvider [::attractor_web::__dot_provider_default]
+        if {[dict exists $payload provider] && [string trim [dict get $payload provider]] ne ""} {
+            set runProvider [string tolower [string trim [dict get $payload provider]]]
+        }
+        if {$runProvider eq ""} {
+            set runProvider openai
+        }
+        if {$runProvider ni {openai anthropic gemini}} {
+            ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error "provider must be one of openai, anthropic, gemini" BAD_REQUEST]
+            return 0
+        }
+
+        set runModel ""
+        if {[dict exists $payload model]} {
+            set runModel [string trim [dict get $payload model]]
+        }
+
         if {[catch {set _graph [::attractor::parse_dot $dotSource]} parseErr]} {
             ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error $parseErr INVALID_DOT_SOURCE]
             return 0
@@ -1584,13 +1917,19 @@ proc ::attractor_web::__dispatch_route {id chan request} {
         ::attractor_web::__write_text_file [file join $runDir pipeline.dot] $dotSource
         set webMeta [dict create \
             run_id $runId \
-            file_name $fileName \
             created_at [::attractor_web::__iso8601_now] \
+            provider $runProvider \
             dot_sha256 [::attractor_web::__sha256_hex $dotSource] \
             worker_pid ""]
+        if {$fileName ne ""} {
+            dict set webMeta file_name $fileName
+        }
+        if {$runModel ne ""} {
+            dict set webMeta model $runModel
+        }
         ::attractor_web::__write_json_file [file join $runDir web.json] $webMeta
 
-        if {[catch {set pid [::attractor_web::__spawn_worker $id $runId $runDir]} spawnErr]} {
+        if {[catch {set pid [::attractor_web::__spawn_worker $id $runId $runDir $runProvider $runModel]} spawnErr]} {
             ::attractor_web::__write_json_file [file join $runDir worker-result.json] [dict create run_id $runId status failed reason worker_spawn_failed error $spawnErr ended_at [::attractor_web::__iso8601_now]]
             ::attractor_web::__send_json $chan 500 [::attractor_web::__json_error $spawnErr WORKER_SPAWN_FAILED]
             return 0
@@ -1920,7 +2259,6 @@ proc ::attractor_web::server_new {args} {
         -dot_bin dot
         -dot_llm_provider ""
         -dot_llm_model ""
-        -dot_llm_transport ""
         -dot_llm_client ""
     }
     array set opts $args
@@ -1950,7 +2288,6 @@ proc ::attractor_web::server_new {args} {
         dot_bin $opts(-dot_bin) \
         dot_llm_provider $opts(-dot_llm_provider) \
         dot_llm_model $opts(-dot_llm_model) \
-        dot_llm_transport $opts(-dot_llm_transport) \
         dot_llm_client $opts(-dot_llm_client) \
         clients {} \
         sse_clients {} \
