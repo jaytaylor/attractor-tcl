@@ -434,7 +434,11 @@ proc ::attractor::__condition_matches {condition context outcome preferredLabel}
         set actual ""
         set exists 1
         if {$lhs eq "outcome"} {
-            set actual $outcome
+            if {[string trim $preferredLabel] ne "" && ($outcome eq "success" || $outcome eq "failed")} {
+                set actual $preferredLabel
+            } else {
+                set actual $outcome
+            }
         } elseif {$lhs eq "preferred_label"} {
             set actual $preferredLabel
         } elseif {[string first "context." $lhs] == 0} {
@@ -464,6 +468,66 @@ proc ::attractor::__condition_matches {condition context outcome preferredLabel}
     }
 
     return 1
+}
+
+proc ::attractor::__normalize_outcome_label {label} {
+    set normalized [string tolower [string trim "$label"]]
+    if {$normalized eq ""} {
+        return ""
+    }
+    if {$normalized eq "pass"} {
+        return success
+    }
+    if {$normalized eq "failed"} {
+        return fail
+    }
+    if {$normalized in {success retry fail}} {
+        return $normalized
+    }
+    return ""
+}
+
+proc ::attractor::__extract_outcome_label {text} {
+    if {![regexp -nocase {(^|\n)\s*outcome\s*=\s*([A-Za-z_]+)} "$text" -> _rawPrefix raw]} {
+        return ""
+    }
+    return [::attractor::__normalize_outcome_label $raw]
+}
+
+proc ::attractor::__extract_svg_markup {payload} {
+    set text [string trim $payload]
+    if {$text eq ""} {
+        return ""
+    }
+
+    if {[regexp -nocase -line -- {```(?:svg)?\s*\n(.*?)\n```$} $text -> fenced]} {
+        set text [string trim $fenced]
+    }
+
+    set lower [string tolower $text]
+    set start [string first "<svg" $lower]
+    if {$start < 0} {
+        return ""
+    }
+    set end [string first "</svg>" $lower $start]
+    if {$end < 0} {
+        return ""
+    }
+    incr end 5
+    return [string range $text $start $end]
+}
+
+proc ::attractor::__materialize_response_artifacts {logsRoot nodeId responseText} {
+    set updates {}
+    set svg [::attractor::__extract_svg_markup $responseText]
+    if {[string trim $svg] ne ""} {
+        set relPath [file join artifacts "${nodeId}.svg"]
+        set absPath [file join $logsRoot $relPath]
+        ::attractor::__write_text_file $absPath $svg
+        dict set updates last_svg_path $absPath
+        dict set updates last_svg_relpath $relPath
+    }
+    return $updates
 }
 
 proc ::attractor::__select_next_edge {edges outcome context} {
@@ -755,6 +819,16 @@ proc ::attractor::__execute_handler {handler nodeId nodeAttrs context backend in
                 set prompt [dict get $nodeAttrs prompt]
             }
             set prompt [::attractor::__expand_prompt_vars $prompt $context]
+            set isGoalGate 0
+            if {[dict exists $nodeAttrs goal_gate]} {
+                set isGoalGate [::attractor::__to_bool [dict get $nodeAttrs goal_gate] 0]
+            }
+            if {$isGoalGate && [dict exists $context last_response_text]} {
+                set lastResponse [string trim [dict get $context last_response_text]]
+                if {$lastResponse ne ""} {
+                    append prompt "\n\nArtifact to verify:\n$lastResponse"
+                }
+            }
             set backendResponse [{*}$backend [dict create node_id $nodeId prompt $prompt context $context attrs $nodeAttrs outgoing_edges $outgoingEdges]]
 
             set text ""
@@ -766,10 +840,26 @@ proc ::attractor::__execute_handler {handler nodeId nodeAttrs context backend in
             if {[dict exists $backendResponse context_updates]} {
                 set updates [dict get $backendResponse context_updates]
             }
+            dict set updates last_response_text $text
+            dict set updates last_response_node_id $nodeId
+            set responseKey [string map [list "." "_" "-" "_"] $nodeId]
+            dict set updates "last_response_${responseKey}" $text
+            set updates [dict merge $updates [::attractor::__materialize_response_artifacts $logsRoot $nodeId $text]]
+
+            set preferredLabel ""
+            if {[dict exists $backendResponse preferred_label]} {
+                set preferredLabel [::attractor::__normalize_outcome_label [dict get $backendResponse preferred_label]]
+                if {$preferredLabel eq ""} {
+                    set preferredLabel [string trim [dict get $backendResponse preferred_label]]
+                }
+            }
+            if {$preferredLabel eq ""} {
+                set preferredLabel [::attractor::__extract_outcome_label $text]
+            }
 
             return [dict create \
                 status success \
-                preferred_label [expr {[dict exists $backendResponse preferred_label] ? [dict get $backendResponse preferred_label] : ""}] \
+                preferred_label $preferredLabel \
                 suggested_next_ids [expr {[dict exists $backendResponse suggested_next_ids] ? [dict get $backendResponse suggested_next_ids] : {}}] \
                 context_updates $updates \
                 notes $text \

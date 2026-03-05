@@ -16,6 +16,22 @@ proc ::tests::attractor::backend {request} {
     return [dict create text "ok"]
 }
 
+proc ::tests::attractor::verify_loop_backend {request} {
+    variable verify_calls
+    set nodeId [dict get $request node_id]
+    if {$nodeId eq "draft_artifact"} {
+        return [dict create text "```svg\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 120 80\"><circle cx=\"30\" cy=\"45\" r=\"10\"/><rect x=\"40\" y=\"35\" width=\"60\" height=\"20\"/></svg>\n```"]
+    }
+    if {$nodeId eq "verify_artifact"} {
+        incr verify_calls
+        if {$verify_calls == 1} {
+            return [dict create text "outcome=retry\nlegs look incomplete"]
+        }
+        return [dict create text "outcome=success\ndog is recognizable and valid svg"]
+    }
+    return [dict create text "ok"]
+}
+
 proc ::tests::attractor::event_sink {event} {
     variable events
     lappend events $event
@@ -115,8 +131,42 @@ test attractor-condition-1.0 {condition evaluator supports = != && and context.*
       [::attractor::__condition_matches {branch=left && context.x=1} $context success ok] \
       [::attractor::__condition_matches {preferred_label=ok} $context success ok] \
       [::attractor::__condition_matches {outcome!=failed} $context success ok] \
-      [::attractor::__condition_matches {branch=right} $context success ok]
-} -result {1 1 1 0}
+      [::attractor::__condition_matches {branch=right} $context success ok] \
+      [::attractor::__condition_matches {outcome=retry} $context success retry]
+} -result {1 1 1 0 1}
+
+test attractor-run-verify-loop-and-svg-artifact-1.0 {run routes retry loops by outcome label, injects prior artifact for verification, and persists svg artifact} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-008 attractor verify-loop-[pid]]
+    file delete -force $logsRoot
+    namespace eval ::tests::attractor { variable verify_calls 0 }
+    set graph [::attractor::parse_dot {
+        digraph verify_loop {
+            start [shape=Mdiamond];
+            draft_artifact [handler=codergen, prompt="Draft svg dog."];
+            verify_artifact [handler=codergen, goal_gate=true, prompt="Verify the artifact and return outcome=success or outcome=retry."];
+            exit [shape=Msquare];
+            start -> draft_artifact;
+            draft_artifact -> verify_artifact;
+            verify_artifact -> draft_artifact [condition="outcome=retry", label=retry];
+            verify_artifact -> exit [condition="outcome=success", label=success];
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::attractor::verify_loop_backend -logs_root $logsRoot]
+    set verifyPromptPath [file join $logsRoot verify_artifact prompt.md]
+    set fh [open $verifyPromptPath r]
+    set verifyPrompt [read $fh]
+    close $fh
+    set svgPath [file join $logsRoot artifacts draft_artifact.svg]
+    list \
+      [dict get $result status] \
+      $::tests::attractor::verify_calls \
+      [file exists $svgPath] \
+      [expr {[string first "<svg" $verifyPrompt] >= 0}]
+} -cleanup {
+    file delete -force $logsRoot
+    namespace eval ::tests::attractor { unset -nocomplain verify_calls }
+} -result {success 2 1 1}
 
 test attractor-style-apply-1.0 {model stylesheet applies by specificity} -body {
     set graph [::attractor::parse_dot {
