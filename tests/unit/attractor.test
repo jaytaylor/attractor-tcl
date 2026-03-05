@@ -32,6 +32,22 @@ proc ::tests::attractor::verify_loop_backend {request} {
     return [dict create text "ok"]
 }
 
+proc ::tests::attractor::python_artifact_backend {request} {
+    set nodeId [dict get $request node_id]
+    if {$nodeId eq "draft_artifact"} {
+        return [dict create text "```python\nprint(\"Hello, World!\")\n```"]
+    }
+    return [dict create text "ok"]
+}
+
+proc ::tests::attractor::sql_artifact_backend {request} {
+    set nodeId [dict get $request node_id]
+    if {$nodeId eq "draft_query"} {
+        return [dict create text "```sql\nSELECT 1;\n```"]
+    }
+    return [dict create text "ok"]
+}
+
 proc ::tests::attractor::event_sink {event} {
     variable events
     lappend events $event
@@ -167,6 +183,52 @@ test attractor-run-verify-loop-and-svg-artifact-1.0 {run routes retry loops by o
     file delete -force $logsRoot
     namespace eval ::tests::attractor { unset -nocomplain verify_calls }
 } -result {success 2 1 1}
+
+test attractor-run-python-artifact-1.0 {run materializes requested python file artifact from fenced output} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-008 attractor python-artifact-[pid]]
+    file delete -force $logsRoot
+    set graph [::attractor::parse_dot {
+        digraph py_artifact {
+            start [shape=Mdiamond];
+            draft_artifact [handler=codergen, label="Draft hello_world.py", prompt="Write a hello_world.py Python program and output only file contents."];
+            exit [shape=Msquare];
+            start -> draft_artifact;
+            draft_artifact -> exit;
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::attractor::python_artifact_backend -logs_root $logsRoot]
+    set outPath [file join $logsRoot artifacts hello_world.py]
+    set contents ""
+    if {[file exists $outPath]} {
+        set fh [open $outPath r]
+        set contents [string trim [read $fh]]
+        close $fh
+    }
+    list [dict get $result status] [file exists $outPath] $contents
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1 {print("Hello, World!")}}
+
+test attractor-run-fallback-language-extension-1.0 {run falls back to node-based name and language extension when filename is not provided} -setup {
+    set logsRoot [file join $root .scratch verification SPRINT-008 attractor sql-artifact-[pid]]
+    file delete -force $logsRoot
+    set graph [::attractor::parse_dot {
+        digraph sql_artifact {
+            start [shape=Mdiamond];
+            draft_query [handler=codergen, prompt="Draft a SQL statement."];
+            exit [shape=Msquare];
+            start -> draft_query;
+            draft_query -> exit;
+        }
+    }]
+} -body {
+    set result [::attractor::run $graph -backend ::tests::attractor::sql_artifact_backend -logs_root $logsRoot]
+    set outPath [file join $logsRoot artifacts draft_query.sql]
+    list [dict get $result status] [file exists $outPath]
+} -cleanup {
+    file delete -force $logsRoot
+} -result {success 1}
 
 test attractor-style-apply-1.0 {model stylesheet applies by specificity} -body {
     set graph [::attractor::parse_dot {

@@ -517,15 +517,221 @@ proc ::attractor::__extract_svg_markup {payload} {
     return [string range $text $start $end]
 }
 
-proc ::attractor::__materialize_response_artifacts {logsRoot nodeId responseText} {
+proc ::attractor::__artifact_extension_for_language {language} {
+    set lang [string tolower [string trim $language]]
+    switch -- $lang {
+        py -
+        python { return py }
+        js -
+        javascript { return js }
+        ts -
+        typescript { return ts }
+        json { return json }
+        yaml -
+        yml { return yml }
+        bash -
+        sh -
+        shell { return sh }
+        tcl { return tcl }
+        html { return html }
+        css { return css }
+        md -
+        markdown { return md }
+        sql { return sql }
+        toml { return toml }
+        xml { return xml }
+        svg { return svg }
+        default { return "" }
+    }
+}
+
+proc ::attractor::__artifact_extract_fenced_blocks {payload} {
+    set blocks {}
+    set inBlock 0
+    set header ""
+    set body {}
+    foreach line [split $payload "\n"] {
+        if {!$inBlock} {
+            if {[regexp {^```(.*)$} $line -> rawHeader]} {
+                set inBlock 1
+                set header [string trim $rawHeader]
+                set body {}
+            }
+            continue
+        }
+        if {[regexp {^```[ \t]*$} $line]} {
+            lappend blocks [dict create header $header content [join $body "\n"]]
+            set inBlock 0
+            set header ""
+            set body {}
+            continue
+        }
+        lappend body $line
+    }
+    return $blocks
+}
+
+proc ::attractor::__artifact_parse_header {header} {
+    set header [string trim $header]
+    set language ""
+    set filename ""
+    if {$header eq ""} {
+        return [dict create language $language filename $filename]
+    }
+
+    if {[regexp -nocase {^file\s*:\s*(\S+)$} $header -> candidate]} {
+        set filename $candidate
+        return [dict create language $language filename $filename]
+    }
+    if {[regexp -nocase {^(\S+)\s+file\s*:\s*(\S+)$} $header -> lang candidate]} {
+        set language $lang
+        set filename $candidate
+        return [dict create language $language filename $filename]
+    }
+    if {[regexp {^(\S+)\s+(\S+\.[A-Za-z0-9_+-]+)$} $header -> lang candidate]} {
+        set language $lang
+        set filename $candidate
+        return [dict create language $language filename $filename]
+    }
+    if {[regexp {^(\S+\.[A-Za-z0-9_+-]+)$} $header -> candidate]} {
+        set filename $candidate
+        return [dict create language $language filename $filename]
+    }
+    set language [lindex [split $header] 0]
+    return [dict create language $language filename $filename]
+}
+
+proc ::attractor::__artifact_candidate_from_text {text} {
+    if {![regexp -nocase -- {([A-Za-z0-9][A-Za-z0-9_./-]*\.[A-Za-z0-9_+-]+)} $text -> candidate]} {
+        return ""
+    }
+    set cleaned [string trim $candidate " \t\r\n\"'`.,;:()[]{}<>"]
+    return $cleaned
+}
+
+proc ::attractor::__artifact_candidate_filename {nodeId nodeAttrs} {
+    foreach key {artifact_path output_path out_path filename output_file file path} {
+        if {[dict exists $nodeAttrs $key]} {
+            set raw [string trim [dict get $nodeAttrs $key]]
+            if {$raw ne ""} {
+                return $raw
+            }
+        }
+    }
+
+    set scan ""
+    foreach key {label prompt} {
+        if {[dict exists $nodeAttrs $key]} {
+            append scan "\n" [dict get $nodeAttrs $key]
+        }
+    }
+    set fromText [::attractor::__artifact_candidate_from_text $scan]
+    if {$fromText ne ""} {
+        return $fromText
+    }
+    return ""
+}
+
+proc ::attractor::__artifact_safe_relpath {candidate fallback} {
+    set path [string trim $candidate " \t\r\n\"'"]
+    set path [string map [list "\\" "/"] $path]
+    if {$path eq ""} {
+        return $fallback
+    }
+    if {[string first "/" $path] == 0 || [regexp {^[A-Za-z]:/} $path]} {
+        set path [file tail $path]
+    }
+    if {[string first ".." $path] >= 0} {
+        set path [file tail $path]
+    }
+    set path [string trim $path "/"]
+    if {$path eq ""} {
+        return $fallback
+    }
+    return $path
+}
+
+proc ::attractor::__materialize_response_artifacts {logsRoot nodeId nodeAttrs responseText isGoalGate} {
     set updates {}
-    set svg [::attractor::__extract_svg_markup $responseText]
-    if {[string trim $svg] ne ""} {
-        set relPath [file join artifacts "${nodeId}.svg"]
-        set absPath [file join $logsRoot $relPath]
-        ::attractor::__write_text_file $absPath $svg
-        dict set updates last_svg_path $absPath
-        dict set updates last_svg_relpath $relPath
+    if {$isGoalGate} {
+        return $updates
+    }
+
+    set candidateHint [::attractor::__artifact_candidate_filename $nodeId $nodeAttrs]
+    set fenced [::attractor::__artifact_extract_fenced_blocks $responseText]
+    set written {}
+    set relWritten {}
+
+    set blockCount [llength $fenced]
+    if {$blockCount > 0} {
+        set idx 0
+        foreach block $fenced {
+            incr idx
+            set content [string trim [dict get $block content]]
+            if {$content eq ""} {
+                continue
+            }
+            set headerMeta [::attractor::__artifact_parse_header [dict get $block header]]
+            set language [dict get $headerMeta language]
+            set explicitName [dict get $headerMeta filename]
+
+            set candidate ""
+            if {$explicitName ne ""} {
+                set candidate $explicitName
+            } elseif {$candidateHint ne "" && $blockCount == 1} {
+                set candidate $candidateHint
+            } else {
+                set ext [::attractor::__artifact_extension_for_language $language]
+                if {$ext eq ""} {
+                    set ext txt
+                }
+                if {$blockCount == 1} {
+                    set candidate "${nodeId}.${ext}"
+                } else {
+                    set candidate "${nodeId}-${idx}.${ext}"
+                }
+            }
+
+            set fallbackName [expr {$blockCount == 1 ? "${nodeId}.txt" : "${nodeId}-${idx}.txt"}]
+            set safeRel [::attractor::__artifact_safe_relpath $candidate $fallbackName]
+            set relPath [file join artifacts $safeRel]
+            set absPath [file join $logsRoot $relPath]
+            ::attractor::__write_text_file $absPath $content
+            lappend written $absPath
+            lappend relWritten $relPath
+        }
+    } else {
+        set svg [::attractor::__extract_svg_markup $responseText]
+        if {[string trim $svg] ne ""} {
+            set relPath [file join artifacts "${nodeId}.svg"]
+            set absPath [file join $logsRoot $relPath]
+            ::attractor::__write_text_file $absPath $svg
+            lappend written $absPath
+            lappend relWritten $relPath
+        } elseif {$candidateHint ne "" && ![regexp -nocase {^\s*outcome\s*=} $responseText]} {
+            set safeRel [::attractor::__artifact_safe_relpath $candidateHint "${nodeId}.txt"]
+            set relPath [file join artifacts $safeRel]
+            set absPath [file join $logsRoot $relPath]
+            ::attractor::__write_text_file $absPath [string trim $responseText]
+            lappend written $absPath
+            lappend relWritten $relPath
+        }
+    }
+
+    if {[llength $written] > 0} {
+        dict set updates artifact_paths $written
+        dict set updates artifact_relpaths $relWritten
+        dict set updates last_artifact_path [lindex $written end]
+        dict set updates last_artifact_relpath [lindex $relWritten end]
+    }
+    if {[llength $relWritten] > 0} {
+        foreach relPath $relWritten {
+            if {[string tolower [file extension $relPath]] eq ".svg"} {
+                set idx [lsearch -exact $relWritten $relPath]
+                dict set updates last_svg_path [lindex $written $idx]
+                dict set updates last_svg_relpath $relPath
+            }
+        }
     }
     return $updates
 }
@@ -844,7 +1050,7 @@ proc ::attractor::__execute_handler {handler nodeId nodeAttrs context backend in
             dict set updates last_response_node_id $nodeId
             set responseKey [string map [list "." "_" "-" "_"] $nodeId]
             dict set updates "last_response_${responseKey}" $text
-            set updates [dict merge $updates [::attractor::__materialize_response_artifacts $logsRoot $nodeId $text]]
+            set updates [dict merge $updates [::attractor::__materialize_response_artifacts $logsRoot $nodeId $nodeAttrs $text $isGoalGate]]
 
             set preferredLabel ""
             if {[dict exists $backendResponse preferred_label]} {
