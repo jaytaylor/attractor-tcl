@@ -295,126 +295,77 @@ proc ::attractor_web::__dot_quality_errors {graph} {
     set errors {}
     set nodes [dict get $graph nodes]
     set edges [dict get $graph edges]
-
-    set planningNodes {}
-    set implementNodes {}
-    set validationNodes {}
-    set reviewNodes {}
-
-    foreach nodeId [dict keys $nodes] {
-        set attrs [dict get $nodes $nodeId attrs]
-        set nodeText [::attractor_web::__dot_node_text $nodeId $attrs]
-
-        if {[::attractor_web::__dot_text_contains_any $nodeText {plan planning analysis design strategy requirements}]} {
-            lappend planningNodes $nodeId
-        }
-        if {[::attractor_web::__dot_text_contains_any $nodeText {implement implementation build codergen codegen develop author create render produce craft}]} {
-            lappend implementNodes $nodeId
-        } elseif {[dict exists $attrs handler] && [string tolower [dict get $attrs handler]] eq "codergen"} {
-            lappend implementNodes $nodeId
-        }
-
-        set isTool 0
-        if {[dict exists $attrs type] && [string tolower [dict get $attrs type]] eq "tool"} {
-            set isTool 1
-        }
-        if {[dict exists $attrs tool_command]} {
-            set isTool 1
-        }
-        if {$isTool || [::attractor_web::__dot_text_contains_any $nodeText {validate verification verify test qa check lint assert proof}]} {
-            lappend validationNodes $nodeId
-        }
-
-        set goalGate 0
-        if {[dict exists $attrs goal_gate]} {
-            set raw [string tolower [string trim [dict get $attrs goal_gate]]]
-            if {$raw in {"1" "true" "yes"}} {
-                set goalGate 1
-            }
-        }
-        if {$goalGate || [::attractor_web::__dot_text_contains_any $nodeText {review consensus gate decision approve adjudicate}]} {
-            lappend reviewNodes $nodeId
-        }
-    }
-
-    set planningNodes [lsort -unique $planningNodes]
-    set implementNodes [lsort -unique $implementNodes]
-    set validationNodes [lsort -unique $validationNodes]
-    set reviewNodes [lsort -unique $reviewNodes]
-
-    if {[llength $planningNodes] == 0} {
-        lappend errors "missing planning stage (id/label should indicate plan)"
-    }
-    if {[llength $implementNodes] == 0} {
-        lappend errors "missing implementation stage (id/label should indicate implement/build/codergen)"
-    }
-    if {[llength $validationNodes] == 0} {
-        lappend errors "missing validation stage (id/label should indicate validate/test/check or use tool node)"
-    }
-    if {[llength $reviewNodes] == 0} {
-        lappend errors "missing review/decision stage (set goal_gate=true and review label)"
-    }
-
-    if {[llength $errors] > 0} {
-        return $errors
-    }
-
     set exitNode [::attractor::__find_exit $graph]
     if {$exitNode eq ""} {
         lappend errors "cannot determine unique exit node"
         return $errors
     }
 
-    set implementTargets [lsort -unique [concat $planningNodes $implementNodes]]
-    set implementToValidate 0
-    set validateToReview 0
+    set draftNodes {}
+    set verifyNodes {}
+    foreach nodeId [dict keys $nodes] {
+        set attrs [dict get $nodes $nodeId attrs]
+        set nodeText [::attractor_web::__dot_node_text $nodeId $attrs]
+
+        if {[::attractor_web::__dot_text_contains_any $nodeText {draft implement build create generate author produce render compose craft write}] || ([dict exists $attrs handler] && [string tolower [dict get $attrs handler]] eq "codergen")} {
+            lappend draftNodes $nodeId
+        }
+        set gateLike 0
+        if {[dict exists $attrs goal_gate]} {
+            set raw [string tolower [string trim [dict get $attrs goal_gate]]]
+            if {$raw in {"1" "true" "yes"}} {
+                set gateLike 1
+            }
+        }
+        if {$gateLike || [::attractor_web::__dot_text_contains_any $nodeText {verify validation validate review check inspect assess test qa gate}]} {
+            lappend verifyNodes $nodeId
+        }
+    }
+    set draftNodes [lsort -unique $draftNodes]
+    set verifyNodes [lsort -unique $verifyNodes]
+
+    if {[llength $draftNodes] == 0} {
+        lappend errors "missing draft/implement stage"
+    }
+    if {[llength $verifyNodes] == 0} {
+        lappend errors "missing verify/review stage"
+    }
+    if {[llength $errors] > 0} {
+        return $errors
+    }
+
+    set draftToVerify 0
     set retryRoute 0
     set successRoute 0
-    set failRoute 0
 
     foreach edge $edges {
         set from [dict get $edge from]
         set to [dict get $edge to]
         set edgeText [::attractor_web::__dot_edge_text $edge]
 
-        if {[lsearch -exact $implementNodes $from] >= 0 && [lsearch -exact $validationNodes $to] >= 0} {
-            set implementToValidate 1
+        if {[lsearch -exact $draftNodes $from] >= 0 && [lsearch -exact $verifyNodes $to] >= 0} {
+            set draftToVerify 1
         }
-        if {[lsearch -exact $validationNodes $from] >= 0 && [lsearch -exact $reviewNodes $to] >= 0} {
-            set validateToReview 1
-        }
-
-        set retrySource [expr {[lsearch -exact $reviewNodes $from] >= 0 || [lsearch -exact $validationNodes $from] >= 0}]
-        if {$retrySource && [lsearch -exact $implementTargets $to] >= 0} {
-            if {$edgeText eq "" || [::attractor_web::__dot_text_contains_any $edgeText {retry rework revise fix again iterate change improve refine}]} {
+        if {[lsearch -exact $verifyNodes $from] >= 0 && [lsearch -exact $draftNodes $to] >= 0} {
+            if {$edgeText eq "" || [::attractor_web::__dot_text_contains_any $edgeText {retry fail failed rework revise fix again iterate change improve refine}]} {
                 set retryRoute 1
             }
         }
-
-        if {[lsearch -exact $reviewNodes $from] >= 0 && $to eq $exitNode} {
-            if {[::attractor_web::__dot_text_contains_any $edgeText {success approve approved pass done complete}]} {
+        if {[lsearch -exact $verifyNodes $from] >= 0 && $to eq $exitNode} {
+            if {$edgeText eq "" || [::attractor_web::__dot_text_contains_any $edgeText {success approve approved pass done complete}]} {
                 set successRoute 1
-            }
-            if {[::attractor_web::__dot_text_contains_any $edgeText {fail failed reject rejected abort blocked}]} {
-                set failRoute 1
             }
         }
     }
 
-    if {!$implementToValidate} {
-        lappend errors "missing implementation -> validation handoff edge"
-    }
-    if {!$validateToReview} {
-        lappend errors "missing validation -> review handoff edge"
+    if {!$draftToVerify} {
+        lappend errors "missing draft/implement -> verify/review handoff edge"
     }
     if {!$retryRoute} {
-        lappend errors "missing retry/rework loop back to planning or implementation"
+        lappend errors "missing retry/rework loop from verify/review back to draft/implement"
     }
     if {!$successRoute} {
-        lappend errors "missing explicit review success -> exit route"
-    }
-    if {!$failRoute} {
-        lappend errors "missing explicit review fail -> exit route"
+        lappend errors "missing verify/review success -> exit route"
     }
 
     return $errors
@@ -477,71 +428,43 @@ proc ::attractor_web::__dot_enforce_quality_graph {graph} {
         dict set nodes $exitNode [dict create id $exitNode attrs [dict create shape Msquare label Exit]]
     }
 
-    set planNode [::attractor_web::__dot_find_stage_node $nodes {plan planning analysis design strategy requirements}]
-    if {$planNode eq ""} {
-        set planNode [::attractor_web::__dot_unique_node_id $nodes plan]
-        dict set nodes $planNode [dict create id $planNode attrs [dict create label Plan prompt "Plan implementation and validation steps against the task requirements."]]
+    set draftNode [::attractor_web::__dot_find_stage_node $nodes {draft implement implementation build codergen codegen create generate produce render compose craft write}]
+    if {$draftNode eq ""} {
+        set draftNode [::attractor_web::__dot_unique_node_id $nodes draft_artifact]
+        dict set nodes $draftNode [dict create id $draftNode attrs [dict create label "Draft Artifact" prompt "Draft the requested output artifact from the user objective."]]
     }
 
-    set implementNode [::attractor_web::__dot_find_stage_node $nodes {implement implementation build codergen codegen develop author create render produce craft}]
-    if {$implementNode eq ""} {
-        set implementNode [::attractor_web::__dot_unique_node_id $nodes implement]
-        dict set nodes $implementNode [dict create id $implementNode attrs [dict create label Implement prompt "Implement the requested deliverable for the task objective."]]
-    }
-
-    set validationNode [::attractor_web::__dot_find_stage_node $nodes {validate verification verify test qa check lint assert proof}]
-    if {$validationNode eq ""} {
-        set validationNode [::attractor_web::__dot_unique_node_id $nodes validate_outputs]
-        dict set nodes $validationNode [dict create id $validationNode attrs [dict create type tool label "Validate Outputs" tool_command "echo validate_artifact_requirements"]]
+    set verifyNode [::attractor_web::__dot_find_stage_node $nodes {verify validation validate review check inspect assess test qa gate}]
+    if {$verifyNode eq ""} {
+        set verifyNode [::attractor_web::__dot_unique_node_id $nodes verify_artifact]
+        dict set nodes $verifyNode [dict create id $verifyNode attrs [dict create label "Verify Artifact" goal_gate true retry_target $draftNode prompt "Verify the artifact satisfies the objective. Return outcome=success or outcome=retry with specific issues."]]
     } else {
-        set attrs [dict get $nodes $validationNode attrs]
+        set attrs [dict get $nodes $verifyNode attrs]
         if {![dict exists $attrs label] || [string trim [dict get $attrs label]] eq ""} {
-            dict set attrs label "Validate Outputs"
+            dict set attrs label "Verify Artifact"
         }
-        if {![dict exists $attrs type] && ![dict exists $attrs tool_command]} {
-            dict set attrs type tool
-            dict set attrs tool_command "echo validate_artifact_requirements"
-        }
-        dict set nodes $validationNode attrs $attrs
-    }
-
-    set reviewNode [::attractor_web::__dot_find_stage_node $nodes {review consensus gate decision approve adjudicate}]
-    if {$reviewNode eq ""} {
-        set reviewNode [::attractor_web::__dot_unique_node_id $nodes review_decision]
-        dict set nodes $reviewNode [dict create id $reviewNode attrs [dict create label "Review Decision" goal_gate true retry_target $implementNode prompt "Review validation evidence and return success, retry, or fail."]]
-    } else {
-        set attrs [dict get $nodes $reviewNode attrs]
         dict set attrs goal_gate true
-        dict set attrs retry_target $implementNode
-        if {![dict exists $attrs label] || [string trim [dict get $attrs label]] eq ""} {
-            dict set attrs label "Review Decision"
-        }
+        dict set attrs retry_target $draftNode
         if {![dict exists $attrs prompt] || [string trim [dict get $attrs prompt]] eq ""} {
-            dict set attrs prompt "Review validation evidence and return success, retry, or fail."
+            dict set attrs prompt "Verify the artifact against the objective and return outcome=success or outcome=retry."
         }
-        dict set nodes $reviewNode attrs $attrs
+        dict set nodes $verifyNode attrs $attrs
     }
 
-    if {![::attractor_web::__dot_edge_exists $edges $startNode $planNode {}]} {
-        lappend edges [dict create from $startNode to $planNode attrs [dict create]]
+    if {![::attractor_web::__dot_edge_exists $edges $startNode $draftNode {}]} {
+        lappend edges [dict create from $startNode to $draftNode attrs [dict create]]
     }
-    if {![::attractor_web::__dot_edge_exists $edges $planNode $implementNode {}]} {
-        lappend edges [dict create from $planNode to $implementNode attrs [dict create]]
+    if {![::attractor_web::__dot_edge_exists $edges $draftNode $verifyNode {}]} {
+        lappend edges [dict create from $draftNode to $verifyNode attrs [dict create]]
     }
-    if {![::attractor_web::__dot_edge_exists $edges $implementNode $validationNode {}]} {
-        lappend edges [dict create from $implementNode to $validationNode attrs [dict create]]
+    if {![::attractor_web::__dot_edge_exists $edges $verifyNode $draftNode {retry fail failed rework revise fix again iterate change improve refine}]} {
+        lappend edges [dict create from $verifyNode to $draftNode attrs [dict create label retry condition "outcome=retry"]]
     }
-    if {![::attractor_web::__dot_edge_exists $edges $validationNode $reviewNode {}]} {
-        lappend edges [dict create from $validationNode to $reviewNode attrs [dict create]]
+    if {![::attractor_web::__dot_edge_exists $edges $verifyNode $draftNode {fail failed reject rejected}]} {
+        lappend edges [dict create from $verifyNode to $draftNode attrs [dict create label fail condition "outcome=fail"]]
     }
-    if {![::attractor_web::__dot_edge_exists $edges $reviewNode $implementNode {retry rework revise fix again iterate change improve refine}]} {
-        lappend edges [dict create from $reviewNode to $implementNode attrs [dict create label retry condition "outcome=retry"]]
-    }
-    if {![::attractor_web::__dot_edge_exists $edges $reviewNode $exitNode {success approve approved pass done complete}]} {
-        lappend edges [dict create from $reviewNode to $exitNode attrs [dict create label success condition "outcome=success"]]
-    }
-    if {![::attractor_web::__dot_edge_exists $edges $reviewNode $exitNode {fail failed reject rejected abort blocked}]} {
-        lappend edges [dict create from $reviewNode to $exitNode attrs [dict create label fail condition "outcome=fail"]]
+    if {![::attractor_web::__dot_edge_exists $edges $verifyNode $exitNode {success approve approved pass done complete}]} {
+        lappend edges [dict create from $verifyNode to $exitNode attrs [dict create label success condition "outcome=success"]]
     }
 
     set out $graph
@@ -907,24 +830,15 @@ Hard constraints:
 8. Use double quotes around attribute string values.
 9. For tool stages, use `type=tool` and `tool_command="..."`.
 
-Validation-first requirements (mandatory for generated workflows):
-10. Include an explicit validation stage (e.g., `validate_outputs`) that checks outputs against requirements.
-11. Include an explicit review/decision stage (e.g., `review_consensus`) with `goal_gate=true`.
-12. The review/decision stage must be able to kick work back via `retry_target` to an implementation or planning stage.
-13. Route review outcomes explicitly:
-    - success -> exit
-    - retry -> implementation or planning stage
-    - fail -> exit (or postmortem -> exit)
-14. Prefer deterministic verification using tool nodes for validation commands whenever possible.
-
-Loop architecture contract (mandatory for every prompt, even simple ones):
-15. Do NOT produce one-shot linear pipelines.
-16. Include a full refinement loop: plan -> implement -> validate -> review -> (retry to plan/implement) until success.
-17. Include explicit edges labeled/conditioned for at least: `success`, `retry`, and `fail`.
-18. Keep retry routes semantically sensible:
-    - validation failures should route to implement (or plan when requirements are unclear)
-    - review failures should route to implement/plan, not directly to exit
-19. The graph must represent how quality is proven, not just how output is produced.
+Default workflow policy:
+10. Prefer the smallest sensible workflow for the user objective.
+11. For simple single-artifact prompts (for example: "draw a dog with svg"), use a compact loop:
+    start -> draft_artifact -> verify_artifact -> (success -> exit, retry/fail -> draft_artifact).
+12. Do NOT produce one-shot linear pipelines.
+13. Include explicit outcome routes labeled/conditioned as `success` and `retry` (optionally `fail`).
+14. Use `goal_gate=true` on the verify/review stage and set `retry_target` to the draft stage.
+15. Only add extra stages (plan, tools, multiple validation passes, handoff stages) when the user prompt explicitly requires multi-step orchestration.
+16. Avoid redundant nodes and duplicate validation/review phases for simple tasks.
 
 Common shapes:
 - `box` (default): LLM step
@@ -938,18 +852,14 @@ Common shapes:
 Canonical minimal template:
 digraph PipelineName {
   start [shape=Mdiamond, label="Start"];
-  plan [label="Plan", prompt="Plan implementation steps against requirements"];
-  implement [label="Implement", prompt="Implement the planned changes"];
-  validate_outputs [type=tool, label="Validate Outputs", tool_command="echo validate_artifact_requirements"];
-  review_consensus [label="Review Consensus", goal_gate=true, retry_target="implement", prompt="Verify requirements are satisfied; return success/retry/fail."];
+  draft_artifact [label="Draft Artifact", prompt="Create the requested output artifact."];
+  verify_artifact [label="Verify Artifact", goal_gate=true, retry_target="draft_artifact", prompt="Verify artifact quality against the objective; return success or retry."];
   exit [shape=Msquare, label="Exit"];
-  start -> plan;
-  plan -> implement;
-  implement -> validate_outputs;
-  validate_outputs -> review_consensus;
-  review_consensus -> exit [condition="outcome=success", label="success"];
-  review_consensus -> implement [condition="outcome=retry", label="retry"];
-  review_consensus -> exit [condition="outcome=fail", label="fail"];
+  start -> draft_artifact;
+  draft_artifact -> verify_artifact;
+  verify_artifact -> exit [condition="outcome=success", label="success"];
+  verify_artifact -> draft_artifact [condition="outcome=retry", label="retry"];
+  verify_artifact -> draft_artifact [condition="outcome=fail", label="fail"];
 }}
 }
 
@@ -1115,12 +1025,11 @@ proc ::attractor_web::__dot_user_prompt {mode payload} {
             }
             set prompt [string trim [dict get $payload prompt]]
             append prompt "\n\nMandatory workflow requirements:\n"
-            append prompt "- Include explicit planning, implementation, validation, and review/decision stages.\n"
-            append prompt "- Validation must verify work against requirements with concrete evidence checks.\n"
-            append prompt "- Review/decision must support success/retry/fail and kick rework to planning or implementation using retry routing.\n"
-            append prompt "- Even for simple tasks, build an iterative quality loop (not a one-shot linear flow).\n"
-            append prompt "- Include explicit labeled outcome routes: success, retry, fail.\n"
-            append prompt "- The implementation stage prompt must directly encode the user task objective.\n"
+            append prompt "- Use the smallest sensible loop for the task.\n"
+            append prompt "- For simple single-output tasks, prefer: draft -> verify -> (retry back to draft) -> success exit.\n"
+            append prompt "- Avoid extra phases unless the prompt clearly requires complex orchestration.\n"
+            append prompt "- Include explicit labeled outcome routes: success and retry (optional fail).\n"
+            append prompt "- The draft stage prompt must directly encode the user task objective.\n"
             append prompt "- Output ONLY valid raw DOT."
             return $prompt
         }
