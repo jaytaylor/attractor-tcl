@@ -88,6 +88,13 @@ proc ::attractor_web::__write_json_file {path payload} {
     ::attractor_web::__write_text_file $path [::attractor_core::json_encode $payload]
 }
 
+proc ::attractor_web::__fconfigure_binary {chan} {
+    fconfigure $chan -translation binary
+    if {[catch {fconfigure $chan -encoding binary}]} {
+        catch {fconfigure $chan -encoding iso8859-1}
+    }
+}
+
 proc ::attractor_web::__sha256_hex {payload} {
     if {[catch {package require sha256}]} {
         return ""
@@ -1323,6 +1330,12 @@ proc ::attractor_web::__html_dashboard {} {
       white-space: pre-wrap;
       color: var(--ink);
     }
+    .run-actions {
+      display: flex;
+      gap: 8px;
+      margin: 8px 0 10px;
+      flex-wrap: wrap;
+    }
     pre {
       background: var(--code-bg);
       color: var(--code-ink);
@@ -1429,6 +1442,10 @@ proc ::attractor_web::__html_dashboard {} {
       </div>
       <h3 id="title">Select a run</h3>
       <div id="summary"></div>
+      <div class="run-actions">
+        <button id="downloadArtifactsBtn" disabled>Download Artifacts ZIP</button>
+        <button id="downloadRunBtn" disabled>Download Full Run ZIP</button>
+      </div>
       <div id="questions"></div>
       <h4>Rendered Graph</h4>
       <div id="graph"></div>
@@ -1916,12 +1933,32 @@ proc ::attractor_web::__html_dashboard {} {
       }
     }
 
+    function updateDownloadButtons() {
+      const enabled = Boolean(state.selected);
+      const artifactsBtn = document.getElementById('downloadArtifactsBtn');
+      const runBtn = document.getElementById('downloadRunBtn');
+      if (artifactsBtn) artifactsBtn.disabled = !enabled;
+      if (runBtn) runBtn.disabled = !enabled;
+    }
+
+    function downloadCurrent(scope) {
+      if (!state.selected) return;
+      const url = `/api/download?id=${encodeURIComponent(state.selected)}&scope=${encodeURIComponent(scope)}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
     async function refreshRuns() {
       try {
         state.runs = await api('/api/pipelines');
         renderRuns();
         if (state.selected && !state.runs.find(r => r.id === state.selected)) {
           state.selected = null;
+          updateDownloadButtons();
         }
         if (state.selected) {
           await loadRun(state.selected);
@@ -2043,6 +2080,7 @@ proc ::attractor_web::__html_dashboard {} {
     async function selectRun(runId) {
       state.selected = runId;
       renderRuns();
+      updateDownloadButtons();
       await loadRun(runId);
       if (state.runEventSource) state.runEventSource.close();
       state.runEvents = [];
@@ -2092,6 +2130,8 @@ proc ::attractor_web::__html_dashboard {} {
     document.getElementById('iterateBtn').onclick = iterateDot;
     document.getElementById('runBtn').onclick = startRun;
     document.getElementById('refreshBtn').onclick = refreshRuns;
+    document.getElementById('downloadArtifactsBtn').onclick = () => downloadCurrent('artifacts');
+    document.getElementById('downloadRunBtn').onclick = () => downloadCurrent('run');
     document.getElementById('dot').addEventListener('input', schedulePreview);
     document.getElementById('dotfile').onchange = async (evt) => {
       const file = evt.target.files && evt.target.files[0];
@@ -2103,6 +2143,7 @@ proc ::attractor_web::__html_dashboard {} {
 
     setWorkflow('prompt');
     setActivity('Idle');
+    updateDownloadButtons();
     refreshRuns().then(connectGlobalSse);
   </script>
 </body>
@@ -2121,6 +2162,40 @@ proc ::attractor_web::__server_path_safe {base path} {
 
 proc ::attractor_web::__run_dir {runsRoot runId} {
     return [file normalize [file join $runsRoot $runId]]
+}
+
+proc ::attractor_web::__zip_dir_bytes {sourceDir entryName} {
+    set zipBin [auto_execok zip]
+    if {$zipBin eq ""} {
+        return -code error -errorcode [list ATTRACTOR_WEB ZIP_BINARY_MISSING] "zip binary not found"
+    }
+    if {![file isdirectory $sourceDir]} {
+        return -code error -errorcode [list ATTRACTOR_WEB NOT_FOUND] "directory not found"
+    }
+
+    set sourceDir [file normalize $sourceDir]
+    set parentDir [file dirname $sourceDir]
+    set zipName ".download-[pid]-[::attractor_web::__millis_now].zip"
+    set zipPath [file join $parentDir $zipName]
+    file delete -force $zipPath
+
+    set prev [pwd]
+    set code [catch {
+        cd $parentDir
+        exec $zipBin -q -r $zipPath $entryName
+    } err opts]
+    catch {cd $prev}
+    if {$code != 0} {
+        file delete -force $zipPath
+        return -options $opts $err
+    }
+
+    set fh [open $zipPath r]
+    ::attractor_web::__fconfigure_binary $fh
+    set payload [read $fh]
+    close $fh
+    file delete -force $zipPath
+    return $payload
 }
 
 proc ::attractor_web::__run_ids {runsRoot} {
@@ -2552,6 +2627,26 @@ proc ::attractor_web::__send_response {chan status contentType body {extraHeader
     flush $chan
 }
 
+proc ::attractor_web::__send_binary_response {chan status contentType body {extraHeaders {}}} {
+    set reason [::attractor_web::__http_reason $status]
+    set headers [dict create \
+        Content-Type $contentType \
+        Content-Length [string length $body] \
+        Connection close]
+    foreach {k v} $extraHeaders {
+        dict set headers $k $v
+    }
+
+    ::attractor_web::__fconfigure_binary $chan
+    puts -nonewline $chan "HTTP/1.1 $status $reason\r\n"
+    foreach key [dict keys $headers] {
+        puts -nonewline $chan "$key: [dict get $headers $key]\r\n"
+    }
+    puts -nonewline $chan "\r\n"
+    puts -nonewline $chan $body
+    flush $chan
+}
+
 proc ::attractor_web::__send_json {chan status payload} {
     ::attractor_web::__send_response $chan $status application/json [::attractor_core::json_encode $payload]
 }
@@ -2850,6 +2945,72 @@ proc ::attractor_web::__dispatch_route {id chan request} {
             return 0
         }
         ::attractor_web::__send_response $chan 200 application/json $detailJson
+        return 0
+    }
+
+    if {$method eq "GET" && $path eq "/api/download"} {
+        if {![dict exists $query id]} {
+            ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error "id is required" INVALID_ID]
+            return 0
+        }
+
+        set runId [dict get $query id]
+        if {![::attractor_web::__run_id_valid $runId]} {
+            ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error "invalid id" INVALID_ID]
+            return 0
+        }
+
+        set runDir [::attractor_web::__run_dir $runsRoot $runId]
+        if {![::attractor_web::__server_path_safe $runsRoot $runDir] || ![file isdirectory $runDir]} {
+            ::attractor_web::__send_json $chan 404 [::attractor_web::__json_error "run not found" NOT_FOUND]
+            return 0
+        }
+
+        set scope artifacts
+        if {[dict exists $query scope] && [string trim [dict get $query scope]] ne ""} {
+            set scope [string tolower [string trim [dict get $query scope]]]
+        }
+
+        set targetDir ""
+        set entryName ""
+        set downloadName ""
+        switch -- $scope {
+            artifacts {
+                set targetDir [file join $runDir artifacts]
+                set entryName artifacts
+                set downloadName "${runId}-artifacts.zip"
+            }
+            run {
+                set targetDir $runDir
+                set entryName [file tail $runDir]
+                set downloadName "${runId}-run.zip"
+            }
+            default {
+                ::attractor_web::__send_json $chan 400 [::attractor_web::__json_error "scope must be one of: artifacts, run" BAD_REQUEST]
+                return 0
+            }
+        }
+
+        if {![::attractor_web::__server_path_safe $runDir $targetDir] || ![file isdirectory $targetDir]} {
+            ::attractor_web::__send_json $chan 404 [::attractor_web::__json_error "download scope not found" NOT_FOUND]
+            return 0
+        }
+
+        if {[catch {set zipBody [::attractor_web::__zip_dir_bytes $targetDir $entryName]} err opts]} {
+            set code [expr {[dict exists $opts -errorcode] ? [lindex [dict get $opts -errorcode] end] : ""}]
+            if {$code eq "ZIP_BINARY_MISSING"} {
+                ::attractor_web::__send_json $chan 500 [::attractor_web::__json_error $err ZIP_BINARY_MISSING]
+            } elseif {$code eq "NOT_FOUND"} {
+                ::attractor_web::__send_json $chan 404 [::attractor_web::__json_error $err NOT_FOUND]
+            } else {
+                ::attractor_web::__send_json $chan 500 [::attractor_web::__json_error $err ZIP_CREATE_FAILED]
+            }
+            return 0
+        }
+
+        ::attractor_web::__send_binary_response $chan 200 application/zip $zipBody [list \
+            Content-Disposition "attachment; filename=\"$downloadName\"" \
+            Cache-Control "no-store"]
         return 0
     }
 

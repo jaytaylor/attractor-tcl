@@ -24,6 +24,16 @@ proc ::tests::integration::attractor_web::read_file {path} {
     return $data
 }
 
+proc ::tests::integration::attractor_web::header_value {headers name} {
+    set needle [string tolower $name]
+    foreach {k v} $headers {
+        if {[string tolower $k] eq $needle} {
+            return $v
+        }
+    }
+    return ""
+}
+
 proc ::tests::integration::attractor_web::capture_sse {host port path duration_ms} {
     set chan [socket $host $port]
     fconfigure $chan -blocking 0 -buffering none -translation binary -encoding utf-8
@@ -362,6 +372,48 @@ test integration-attractor-web-stage-endpoint-1.0 {stage endpoint returns artifa
     $server close
     file delete -force $runsRoot
 } -result {1 200 400 INVALID_ID 404}
+
+test integration-attractor-web-download-zip-endpoint-1.0 {download endpoint returns artifacts and full-run zip payloads with attachment headers} -setup {
+    set runsRoot [::tests::integration::attractor_web::new_runs_root download-zip]
+    set server [::attractor_web::server_new -bind 127.0.0.1 -web_port 0 -runs_root $runsRoot]
+    set base [$server url]
+    set dotSource {
+        digraph download_tool {
+            start [shape=Mdiamond];
+            build [type=tool, tool_command="echo download-ok"];
+            exit [shape=Msquare];
+            start -> build;
+            build -> exit;
+        }
+    }
+} -body {
+    set startResp [::tests::http_client::json_post "$base/api/run" [dict create dotSource $dotSource]]
+    set runId [dict get [dict get $startResp body] id]
+    set done [::tests::integration::attractor_web::wait_for_run_status $base $runId success 5000]
+
+    set artifactsResp [::tests::http_client::request "$base/api/download?id=$runId&scope=artifacts"]
+    set runResp [::tests::http_client::request "$base/api/download?id=$runId&scope=run"]
+    set badScope [::tests::http_client::json_get "$base/api/download?id=$runId&scope=nope"]
+
+    set artifactsCt [::tests::integration::attractor_web::header_value [dict get $artifactsResp headers] Content-Type]
+    set artifactsCd [::tests::integration::attractor_web::header_value [dict get $artifactsResp headers] Content-Disposition]
+    set runCd [::tests::integration::attractor_web::header_value [dict get $runResp headers] Content-Disposition]
+
+    list \
+      $done \
+      [dict get $artifactsResp status] \
+      [dict get $runResp status] \
+      [expr {[string range [dict get $artifactsResp body] 0 1] eq "PK"}] \
+      [expr {[string range [dict get $runResp body] 0 1] eq "PK"}] \
+      [expr {[string first "application/zip" [string tolower $artifactsCt]] >= 0}] \
+      [expr {[string first "${runId}-artifacts.zip" $artifactsCd] >= 0}] \
+      [expr {[string first "${runId}-run.zip" $runCd] >= 0}] \
+      [dict get $badScope status] \
+      [dict get [dict get $badScope body] code]
+} -cleanup {
+    $server close
+    file delete -force $runsRoot
+} -result {1 200 200 1 1 1 1 1 400 BAD_REQUEST}
 
 
 test integration-attractor-web-render-endpoint-1.0 {render endpoint handles positive and missing-binary paths deterministically} -setup {
